@@ -177,6 +177,40 @@ namespace mwi {
 			std::memset(new_data + offset, 0, (new_capacity - min_capacity) * sizeof(def::uword_t));
 		}
 
+		def::uword_t back() const{
+				return *(first_free - 1);
+		}
+
+		/* calculate kernels */
+
+		static inline std::pair<def::uword_t, def::uword_t> add_kernel(def::uword_t src1, def::uword_t src2, def::uword_t carry) noexcept{
+			def::udword_t s = static_cast<def::udword_t>(src1),
+										t = static_cast<def::udword_t>(src2);
+			s = s + t + carry;
+			carry = static_cast<def::uword_t>(s >> def::shift_bits);
+			return std::pair<def::uword_t, def::uword_t>(s, carry);
+		}
+
+		static inline std::pair<def::uword_t, def::uword_t> sub_kernel(def::uword_t src1, def:: uword_t src2, def::uword_t carry){
+			def::udword_t s = static_cast<def::udword_t>(src1),
+										t = static_cast<def::udword_t>(src2);
+			s = s - t - carry;
+			carry = static_cast<def::uword_t>((s >> def::shift_bits) & 1);
+			return std::pair<def::uword_t, def::uword_t>(s, carry);
+		}
+
+		static inline std::pair<def::uword_t, def::uword_t> mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower, def::uword_t add_src){
+			def::udword_t s = static_cast<def::udword_t>(src),
+										f = static_cast<def::udword_t>(factor);
+			def::udword_t p = s * f;
+			p += from_lower + add_src;
+
+			from_lower = static_cast<def::uword_t>(p >> def::shift_bits);
+			p = static_cast<def::uword_t>(p);
+			return std::pair<def::uword_t, def::uword_t>(p, from_lower);
+		}
+
+
 	public:
 
 		/* constructor, copy/move overload = operator and destructor */
@@ -274,6 +308,7 @@ namespace mwi {
 			}
 		}
 
+		
 
 		void set_one_word(def::uword_t value)noexcept{
 			data[0] = value;
@@ -288,34 +323,22 @@ namespace mwi {
 
 		big_int &operator+= (const big_int &rhs) noexcept{
 
-			auto add_kernel = [](def::uword_t src1, def::uword_t src2, def::uword_t carry){
-				def::udword_t s = static_cast<def::udword_t>(src1),
-											t = static_cast<def::udword_t>(src2);
-				s = s + t + carry;
-				carry = static_cast<def::uword_t>(s >> def::shift_bits);
-				s = static_cast<def::uword_t>(s);
-				return std::pair<def::uword_t, def::uword_t>(s, carry);
-				/* s is the add result of s + t under the meaning of uword_t
-				** carry is the overflow of s + t 
-				*/
-			};
-
 			std::size_t this_oldsz = size();
 			std::size_t rhs_sz = rhs.size();
 
-			def::uword_t this_sign_bits = def::full_sign_word(data[this_oldsz - 1]);
-			def::uword_t rhs_sign_bits = def::full_sign_word(rhs[rhs_sz - 1]);
+			def::uword_t this_sign_bits = def::full_sign_word(back());
+			def::uword_t rhs_sign_bits = def::full_sign_word(rhs.back());
 
 			def::uword_t carry = 0;
 
 			if(rhs_sz <= this_oldsz){
 				realloc(this_oldsz + 1);
-				for(int i = 0; i < rhs_sz; i++){
-					auto [s, overflow] = add_kernel(this -> data[i], rhs[i], carry);
+				for(std::size_t i = 0; i < rhs_sz; i++){
+					auto [s, overflow] = add_kernel( this -> data[i], rhs[i], carry);
 					this -> data[i] = s;
 					carry = overflow;
 				}
-				for(int i = rhs_sz; i < this_oldsz; i++){
+				for(std::size_t i = rhs_sz; i < this_oldsz; i++){
 					auto [s, overflow] = add_kernel( this -> data[i], rhs_sign_bits, carry);
 					this -> data[i] = s;
 					carry = overflow;
@@ -323,12 +346,12 @@ namespace mwi {
 			}else{
 				realloc(rhs_sz + 1);
 				first_free = data + rhs_sz;
-				for(int i = 0; i < this_oldsz; i++){
+				for(std::size_t i = 0; i < this_oldsz; i++){
 					auto [s, overflow] = add_kernel(this -> data[i], rhs[i], carry);
 					this -> data[i] = s;
 					carry = overflow;
 				}
-				for(int i = this_oldsz; i < rhs_sz; i++){
+				for(std::size_t i = this_oldsz; i < rhs_sz; i++){
 					auto [s, overflow] = add_kernel(this_sign_bits, rhs[i], carry);
 					this -> data[i] = s;
 					carry = overflow;
@@ -338,9 +361,75 @@ namespace mwi {
 			def::uword_t next_word = this_sign_bits + rhs_sign_bits + carry;
 			def::uword_t next_sign_word = def::full_sign_word(next_word);
 
-			if(next_word != next_sign_word || ((next_word ^ (*(first_free - 1)) & def::sign_bit))){
-				*(this -> first_free) = next_word;
-				first_free++;
+			if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
+
+				/* the first condition is never trigged at any time. 
+				** the seconde condition aims to find if there's sign bit change when overflow occurs. 
+				*/
+
+				*first_free++ = next_word;
+			}
+
+			return *this;
+		}
+
+		big_int &operator-= (const big_int &rhs) noexcept{
+
+			std::size_t this_oldsz = size();
+			std::size_t rhs_sz = rhs.size();
+
+			def::uword_t this_sign_bits = def::full_sign_word(back());
+			def::uword_t rhs_sign_bits = def::full_sign_word(rhs.back());
+
+			def::uword_t carry = 0;
+			if(rhs_sz <= this_oldsz){
+				realloc(this_oldsz + 1);
+				for(std::size_t i = 0; i < rhs_sz; i++){
+					auto [s, borrow] = sub_kernel(this -> data[i], rhs[i], carry);
+					this -> data[i] = s;
+					carry = borrow;
+				}
+				for(std::size_t i = rhs_sz; i < this_oldsz; i++){
+					auto[s, borrow] = sub_kernel(this -> data[i], rhs_sign_bits, carry);
+					this -> data[i] = s;
+					carry = borrow;
+				}
+			}else{
+				realloc(rhs_sz + 1);
+				first_free = data + rhs_sz;
+				for(std::size_t i = 0; i < this_oldsz; i++){
+					auto [s, borrow] = sub_kernel(this -> data[i], rhs[i], carry);
+					this -> data[i] = s;
+					carry = borrow;
+				}
+				for(std::size_t i = this_oldsz; i < rhs_sz; i++){
+					auto [s, borrow] = sub_kernel(this_sign_bits, rhs[i], carry);
+					this -> data[i] = s;
+					carry = borrow;
+				}
+			}
+
+			def::uword_t next_word = this_sign_bits - rhs_sign_bits - carry;
+			def::uword_t next_sign_word = def::full_sign_word(next_word);
+			if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
+				/* same as the += operator */
+				*first_free++ = next_word;
+			}
+
+			return *this;
+		}
+
+		/* only for unsigner factors */
+		big_int& operator*= (def::uword_t factor) noexcept{
+			realloc(size() + 1);
+			def::uword_t from_lower = 0;
+			for(std::size_t i = 0; i < size(); i++){
+				auto [p, next_lower] = mul_kernel(this -> data[i], factor, from_lower, 0);
+				this -> data[i] = p;
+				from_lower = next_lower;
+			}
+			if(from_lower || back() & def::sign_bit){
+				*first_free++ = from_lower;
 			}
 
 			return *this;
