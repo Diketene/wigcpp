@@ -41,7 +41,7 @@ TEST(test_mwi, big_int_test){
 	EXPECT_EQ(c.size(), 1);
 	EXPECT_EQ(c.capacity(), 8);
 
-	c.set_one_word(42); // set one word
+	c = 42;
 	EXPECT_EQ(c.size(), 1);
 	EXPECT_EQ(c[0], 42);
 
@@ -87,17 +87,19 @@ TEST(test_mwi, test_operator){
 	big_int a;
 	big_int b;
 
-	a.set_one_word(5);
-	b.set_one_word(3);
+	a = 5;
+	b = 3;
 	a += b;
 	EXPECT_EQ(a[0], 8);
 
-	a.set_one_word(full_sign_word(-1l));
-	b.set_one_word(1);
+	a = full_sign_word(-1l);
+	EXPECT_EQ(a[0] >> (def::shift_bits - 1), 1);
+	b = 1;
 	a += b;
 
 	EXPECT_EQ(a[0], 0);
 	EXPECT_EQ(a.size(), 1); 
-	EXPECT_EQ(a[1], 0); 
+	EXPECT_EQ(a[1], 0);
+
 }
 
