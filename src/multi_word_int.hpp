@@ -76,49 +76,6 @@ namespace mwi {
 		inline constexpr uword_t sign_bit = ((uword_t)1) << (shift_bits - 1);
 	}
 
-	/*template <class Allocator = nothrow_allocator<def::uword_t>>
-	class big_int {
-		private:
-			def::uword_t *data; //pointer to the data
-			std::size_t size;	 //number of words used
-			std::size_t capacity; //allocated size
-			static Allocator alloc;
-		public:
-			big_int(std::size_t sz, std::size_t cap): size(sz), capacity(cap){
-				data = alloc.allocate(capacity);
-				std::memset(data, 0, capacity * sizeof(def::uword_t));
-			}
-
-			big_int(): big_int(1, 8){}
-			
-			~big_int(){
-				free();
-			}
-			void free(){
-				if(data){
-					alloc.deallocate(data, capacity);
-				}
-			}
-
-			void realloc(std::size_t min_size){
-				std::size_t new_capacity = capacity;
-				if(min_size <= capacity) return;
-				while(new_capacity < min_size){
-					new_capacity *= 2;
-				}
-				def::uword_t *new_data = alloc.reallocate(new_capacity);
-				if(!new_data){
-					std::println("reallocation failed in big_int");
-					std::println("wigcpp aborted.");
-					std::abort();
-				}
-				std::copy(data, data + size, new_data);
-				alloc.deallocate(data, capacity);
-				data = new_data;
-				capacity = new_capacity;
-			}
-	};*/
-
 	template <class Allocator = nothrow_allocator<def::uword_t>>
 	class big_int{
 	private:
@@ -222,6 +179,13 @@ namespace mwi {
 			cap = data + 8;
 		}
 
+		big_int(def::uword_t init_value){
+			data = alloc(8);
+			first_free = data + 1;
+			cap = data + 8;
+			*data = init_value;
+		}
+
 		big_int(const big_int &src){
 			data = alloc(src.size());
 			std::memcpy(data, src.data, src.size() * sizeof(def::uword_t));
@@ -308,17 +272,19 @@ namespace mwi {
 			}
 		}
 
-		
-
-		void set_one_word(def::uword_t value)noexcept{
-			data[0] = value;
-			first_free = data + 1;
-		}
-
 		/* operator overloading */
 
 		def::uword_t operator[](std::size_t index)const noexcept{
 			return *(data + index);
+		}
+
+		big_int &operator=(def::uword_t v){
+			if(size() > 1){
+				std::cerr << "Error in big_int::operator=(def::uword_t):\n";
+				error::error_process(error::ErrorCode::Bad_Shrink);
+			}
+			*data = v;
+			return *this;
 		}
 
 		big_int &operator+= (const big_int &rhs) noexcept{
