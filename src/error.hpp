@@ -5,7 +5,8 @@
 #include <iostream>
 namespace mwi::error {
   enum class ErrorCode{
-    Bad_Alloc
+    Bad_Alloc,
+    Bad_Shrink
   };
 
   class ErrorHandler{
@@ -19,6 +20,9 @@ namespace mwi::error {
       switch (code) {
         case ErrorCode::Bad_Alloc:
           std::cerr << "Memory allocation failed.\n wigcpp: aborted.\n";
+          std::abort();
+        case ErrorCode::Bad_Shrink:
+          std::cerr << "Can't shrink a multi word integer to a one word integer.\n";
           std::abort();
         default:
           std::cerr << "Unknown error occurred.\n wigcpp: aborted.\n";
