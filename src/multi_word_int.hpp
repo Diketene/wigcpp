@@ -179,7 +179,7 @@ namespace mwi {
 			cap = data + 8;
 		}
 
-		big_int(def::uword_t init_value){
+		explicit big_int(def::uword_t init_value){
 			data = alloc(8);
 			first_free = data + 1;
 			cap = data + 8;
@@ -399,6 +399,22 @@ namespace mwi {
 			}
 
 			return *this;
+		}
+
+		big_int &operator*=(const big_int &rhs){
+		}
+
+		/* friend functions */
+
+		friend big_int operator *(const big_int &src, const big_int &factor) noexcept{
+			big_int result;
+			std::size_t min_size = src.size() + factor.size();
+			result.realloc(min_size);
+
+			def::udword_t src_sign_bits = def::full_sign_word(src);
+			def::udword_t factor_sign_bits = def::full_sign_word(factor);
+
+
 		}
 	};
 
