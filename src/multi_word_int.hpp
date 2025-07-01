@@ -7,6 +7,7 @@
 #include "wigcpp_config.h"
 #include "nothrow_allocator.hpp"
 #include "error.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -140,7 +141,7 @@ namespace mwi {
 
 		/* calculate kernels */
 
-		static inline std::pair<def::uword_t, def::uword_t> add_kernel(def::uword_t src1, def::uword_t src2, def::uword_t carry) noexcept{
+		static inline auto add_kernel(def::uword_t src1, def::uword_t src2, def::uword_t carry){
 			def::udword_t s = static_cast<def::udword_t>(src1),
 										t = static_cast<def::udword_t>(src2);
 			s = s + t + carry;
@@ -148,7 +149,7 @@ namespace mwi {
 			return std::pair<def::uword_t, def::uword_t>(s, carry);
 		}
 
-		static inline std::pair<def::uword_t, def::uword_t> sub_kernel(def::uword_t src1, def:: uword_t src2, def::uword_t carry){
+		static inline auto sub_kernel(def::uword_t src1, def:: uword_t src2, def::uword_t carry){
 			def::udword_t s = static_cast<def::udword_t>(src1),
 										t = static_cast<def::udword_t>(src2);
 			s = s - t - carry;
@@ -156,7 +157,8 @@ namespace mwi {
 			return std::pair<def::uword_t, def::uword_t>(s, carry);
 		}
 
-		static inline std::pair<def::uword_t, def::uword_t> mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower, def::uword_t add_src){
+		/* MWI_MUL_KERNEL(dest, src, add_src) */
+		static inline auto mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower, def::uword_t add_src){
 			def::udword_t s = static_cast<def::udword_t>(src),
 										f = static_cast<def::udword_t>(factor);
 			def::udword_t p = s * f;
@@ -274,7 +276,11 @@ namespace mwi {
 
 		/* operator overloading */
 
-		def::uword_t operator[](std::size_t index)const noexcept{
+		const def::uword_t& operator[](std::size_t index)const noexcept{
+			return *(data + index);
+		}
+
+		def::uword_t& operator[](std::size_t index) noexcept{
 			return *(data + index);
 		}
 
@@ -289,11 +295,11 @@ namespace mwi {
 
 		big_int &operator+= (const big_int &rhs) noexcept{
 
-			std::size_t this_oldsz = size();
-			std::size_t rhs_sz = rhs.size();
+			const std::size_t this_oldsz = size();
+			const std::size_t rhs_sz = rhs.size();
 
-			def::uword_t this_sign_bits = def::full_sign_word(back());
-			def::uword_t rhs_sign_bits = def::full_sign_word(rhs.back());
+			const def::uword_t this_sign_bits = def::full_sign_word(back());
+			const def::uword_t rhs_sign_bits = def::full_sign_word(rhs.back());
 
 			def::uword_t carry = 0;
 
@@ -341,11 +347,11 @@ namespace mwi {
 
 		big_int &operator-= (const big_int &rhs) noexcept{
 
-			std::size_t this_oldsz = size();
-			std::size_t rhs_sz = rhs.size();
+			const std::size_t this_oldsz = size();
+			const std::size_t rhs_sz = rhs.size();
 
-			def::uword_t this_sign_bits = def::full_sign_word(back());
-			def::uword_t rhs_sign_bits = def::full_sign_word(rhs.back());
+			const def::uword_t this_sign_bits = def::full_sign_word(back());
+			const def::uword_t rhs_sign_bits = def::full_sign_word(rhs.back());
 
 			def::uword_t carry = 0;
 			if(rhs_sz <= this_oldsz){
@@ -385,7 +391,7 @@ namespace mwi {
 			return *this;
 		}
 
-		/* only for unsigner factors */
+		/* only for unsigned factors */
 		big_int& operator*= (def::uword_t factor) noexcept{
 			realloc(size() + 1);
 			def::uword_t from_lower = 0;
@@ -407,14 +413,83 @@ namespace mwi {
 		/* friend functions */
 
 		friend big_int operator *(const big_int &src, const big_int &factor) noexcept{
+
+			const std::size_t src_size = src.size();
+			const std::size_t factor_size = factor.size();
+			const std::size_t min_size = src_size + factor_size;
+
 			big_int result;
-			std::size_t min_size = src.size() + factor.size();
 			result.realloc(min_size);
+			result.first_free = result.data + min_size;
 
-			def::udword_t src_sign_bits = def::full_sign_word(src);
-			def::udword_t factor_sign_bits = def::full_sign_word(factor);
+			const std::size_t result_size = result.size();
 
+			const def::uword_t src_sign_bits = def::full_sign_word(src.back());
+			const def::uword_t factor_sign_bits = def::full_sign_word(factor.back());
 
+			for(std::size_t j = 0; j < factor_size; j++){
+				const std::size_t lim_i = result_size - j;
+				const std::size_t lim_i2 = std::min(lim_i, src_size);
+				const def::uword_t factor_j = factor[j];
+
+				def::uword_t from_lower = 0;
+
+		/* MWI_MUL_KERNEL(dest, src, add_src) */
+		/* mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower, def::uword_t add_src) */
+				for(std::size_t i = 0; i < lim_i2; i++){
+					auto [p, next_lower] = mul_kernel(src[i], factor_j, from_lower, static_cast<def::udword_t>(result[i+j]));
+					result[i + j] = p;
+					from_lower = next_lower;
+				}
+
+				if(src_sign_bits){
+					for(std::size_t i = lim_i2; i < lim_i; i++){
+						auto [p, next_lower] = mul_kernel(src_sign_bits, factor_j, from_lower, static_cast<def::udword_t>(result[i + j]));
+						result[i + j] = p;
+						from_lower = next_lower;
+					}
+				}else{
+					for(std::size_t i = lim_i2; i < lim_i; i++){
+						auto [p, next_lower] = mul_kernel(0, factor_j, from_lower, static_cast<def::udword_t>(result[i + j]));
+						result[i + j] = p;
+						from_lower = next_lower;
+					}
+				}
+			}
+
+			if (factor_sign_bits) {
+				for(std::size_t j = factor_size; j < result_size; j++){
+					const std::size_t lim_i = result_size - j;
+					const std::size_t lim_i2 = std::min(lim_i, src_size);
+
+					def::uword_t from_lower = 0;
+
+					for(std::size_t i = 0; i < lim_i2; i++){
+						auto [p, next_lower] = mul_kernel(src[i], factor_sign_bits, from_lower, static_cast<def::udword_t>(result[i + j]));
+						result[i + j] = p;
+						from_lower = next_lower;
+					}
+
+					if(src_sign_bits){
+						for(std::size_t i = lim_i2; i < lim_i; i++){
+							auto [p, next_lower] = mul_kernel(src_sign_bits, factor_sign_bits, from_lower, static_cast<def::udword_t>(result[i + j]));
+							result[i + j] = p;
+							from_lower = next_lower;
+						}
+					}else{
+						for(std::size_t i = lim_i2; i < lim_i; i++){
+							auto [p, next_lower] = mul_kernel(0, factor_sign_bits, from_lower, static_cast<def::udword_t>(result[i + j]));
+							result[i + j] = p;
+							from_lower = next_lower;
+						}
+					}
+				}
+			}
+
+			while(result.size() > 1 && result.back() == def::full_sign_word(result[result.size() - 2])){
+				result.first_free--;
+			}
+			return result;
 		}
 	};
 

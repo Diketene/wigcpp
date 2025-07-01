@@ -101,5 +101,12 @@ TEST(test_mwi, test_operator){
 	EXPECT_EQ(a.size(), 1); 
 	EXPECT_EQ(a[1], 0);
 
+	big_int c(5);
+	big_int d(3);
+
+	big_int e = c * d;
+	EXPECT_EQ(e.size(), 1);
+	EXPECT_EQ(e[0], 15);
+
 }
 
