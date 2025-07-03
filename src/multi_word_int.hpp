@@ -109,7 +109,7 @@ namespace mwi {
 
 			/* big_int::realloc() should only be used when it needs to grow the memory capacity
 			** of the bit_int object, it shouldn't be used when it needs to allocate a block 
-			** of memory, which is done by the alloc() method.
+			** of memory, which is done by the big_int::alloc() method.
 			*/
 
 			std::size_t thiscap = capacity();
@@ -293,6 +293,46 @@ namespace mwi {
 			return *this;
 		}
 
+		big_int &operator+= (def::uword_t scalar) noexcept{
+			const std::size_t this_oldsz = size();
+
+			const def::uword_t this_sign_bits = def::full_sign_word(back());
+			const def::uword_t scalar_sign_bits = def::full_sign_word(scalar);
+
+			def::uword_t carry = 0;
+
+			auto [s, overflow] = add_kernel(this -> data[0], scalar, carry);
+			this -> data[0] = s;
+			carry = overflow;
+
+			for(std::size_t i = 1; i < this_oldsz; i++){
+				auto [s, overflow] = add_kernel(this -> data[i], scalar_sign_bits, carry);
+				this -> data[i] = s;
+				carry = overflow;
+			}
+			
+			def::uword_t next_word = this_sign_bits + scalar_sign_bits + carry;
+			def::uword_t next_sign_word = def::full_sign_word(next_word);
+
+			if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
+				realloc(this_oldsz + 1);
+				*first_free++ = next_word;
+			}
+
+			return *this;
+		}
+
+		big_int &operator++() noexcept{
+			*this += 1;
+			return *this;
+		}
+
+		big_int operator++(int) noexcept{
+			big_int tmp = *this;
+			*this += 1;
+			return tmp;
+		}
+
 		big_int &operator+= (const big_int &rhs) noexcept{
 
 			const std::size_t this_oldsz = size();
@@ -343,6 +383,44 @@ namespace mwi {
 			}
 
 			return *this;
+		}
+
+		big_int &operator-=(def::uword_t scalar) noexcept{
+			const std::size_t this_oldsz = size();
+
+			const def::uword_t this_sign_bits = def::full_sign_word(back());
+			const def::uword_t scalar_sign_bits = def::full_sign_word(scalar);
+
+			def::uword_t carry = 0;
+
+			auto [s, borrow] = sub_kernel(this -> data[0], scalar, carry);
+			this -> data[0] = s;
+			carry = borrow;
+
+			for(std::size_t i = 0; i < this_oldsz && (carry != 0); i++){
+				auto [s, borrow] = sub_kernel(this -> data[i], scalar_sign_bits, carry);
+				this -> data[i] = s;
+				carry = borrow;
+			}
+
+			def::uword_t next_word = this_sign_bits - scalar_sign_bits - carry;
+			def::uword_t next_sign_word = def::full_sign_word(next_word);
+
+			if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
+				realloc(this_oldsz + 1);
+				*first_free++ = next_word;
+			}
+		}
+
+		big_int &operator--() noexcept{
+			*this -= 1;
+			return *this;
+		}
+
+		big_int operator--(int) noexcept{
+			big_int tmp = *this;
+			*this -= 1;
+			return tmp;
 		}
 
 		big_int &operator-= (const big_int &rhs) noexcept{
@@ -407,12 +485,62 @@ namespace mwi {
 			return *this;
 		}
 
-		big_int &operator*=(const big_int &rhs){
+		big_int &operator*= (const big_int &rhs){
+			*this = *this * rhs;
+			return *this;
 		}
 
 		/* friend functions */
 
-		friend big_int operator *(const big_int &src, const big_int &factor) noexcept{
+		[[nodiscard]] friend big_int operator+ (const big_int &src, def::uword_t scalar) noexcept{
+			big_int tmp = src;
+			tmp += scalar;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator+ (def::uword_t scalar, const big_int &src) noexcept{
+			big_int tmp = src;
+			tmp += scalar;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator+ (const big_int &lhs, const big_int &rhs) noexcept{
+			big_int tmp = lhs;
+			tmp += rhs;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator- (const big_int &src, def::uword_t scalar)noexcept{
+			big_int tmp = src;
+			tmp -= scalar;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator- (def::udword_t scalar, const big_int &src)noexcept{
+			big_int tmp = src;
+			tmp -= scalar;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator- (const big_int &lhs, const big_int &rhs)noexcept{
+			big_int tmp = lhs;
+			tmp -= rhs;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator* (const big_int &src, def::uword_t factor) noexcept{
+			big_int tmp = src;
+			tmp *= factor;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator* (def::uword_t factor, const big_int &src)noexcept{
+			big_int tmp = src;
+			tmp *= factor;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator* (const big_int &src, const big_int &factor) noexcept{
 
 			const std::size_t src_size = src.size();
 			const std::size_t factor_size = factor.size();

@@ -80,33 +80,37 @@ TEST(test_mwi, big_int_test){
 	EXPECT_EQ(e.size(), 16);
 }
 
-TEST(test_mwi, test_operator){
+TEST(test_mwi, test_operator_add){
 	using namespace mwi;
 	using namespace mwi::def;
+	big_int a(10);
+	big_int b(20);
 
-	big_int a;
-	big_int b;
+	a += b; // operator +=(const big_int &rhs)
+	EXPECT_EQ(a[0], 30);
 
-	a = 5;
-	b = 3;
-	a += b;
-	EXPECT_EQ(a[0], 8);
+	def::uword_t scalar = 5;
+	a += scalar; // operator +=(def::uword_t scalar)
+	EXPECT_EQ(a[0], 35);
 
-	a = full_sign_word(-1l);
-	EXPECT_EQ(a[0] >> (def::shift_bits - 1), 1);
-	b = 1;
-	a += b;
+	a = 10; //operator=(def::uword_t scalar)
+	big_int c = a + b; //operator +(const big_int &lhs, const big_int &rhs)
+	EXPECT_EQ(c[0], 30);
 
-	EXPECT_EQ(a[0], 0);
-	EXPECT_EQ(a.size(), 1); 
-	EXPECT_EQ(a[1], 0);
+	big_int d = a + scalar; //operator +(const big_int &src, def::uword_t scalar)
+	EXPECT_EQ(d[0], 15);
 
-	big_int c(5);
-	big_int d(3);
-
-	big_int e = c * d;
-	EXPECT_EQ(e.size(), 1);
+	big_int e = scalar + a; //operator + (def::uword_t scalar, const big_int &src)
 	EXPECT_EQ(e[0], 15);
+	EXPECT_EQ(e.size(), 1);
 
+	big_int f(0x7F'FF'FF'FF'FF'FF'FF'FF);
+	big_int h = f + big_int(1); //operator +(const big_int &lhs, const big_int &rhs)
+	EXPECT_EQ(h.size(), 2);
+	EXPECT_EQ(h[0], 0x80'00'00'00'00'00'00'00);
+	EXPECT_EQ(h[1], 0);
+	f += 1; //operator +=(def::uword_t scalar)
+	EXPECT_EQ(f.size(), 2);
+	EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'00);
 }
 
