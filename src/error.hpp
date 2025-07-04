@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 #include <iostream>
-namespace mwi::error {
+namespace wigcpp::internal::mwi::error {
   enum class ErrorCode{
     Bad_Alloc,
     Bad_Shrink

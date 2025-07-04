@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include "multi_word_int.hpp"
+#include "big_int.hpp"
 
 TEST(test_mwi, test_mwi_full_sign_word) {
-	using namespace mwi::def;
+	using namespace wigcpp::internal::mwi::def;
 
 #if MULTI_WORD_INT_SIZEOF_ITEM == 8
 	// Test with signed integers
@@ -26,8 +26,8 @@ TEST(test_mwi, test_mwi_full_sign_word) {
 }
 
 TEST(test_mwi, big_int_test){
-	using namespace mwi;
-	using namespace mwi::def;
+	using namespace wigcpp::internal::mwi;
+	using namespace wigcpp::internal::mwi::def;
 
 	big_int a; // default constructor
 	EXPECT_EQ(a.size(), 1);
@@ -81,8 +81,8 @@ TEST(test_mwi, big_int_test){
 }
 
 TEST(test_mwi, test_operator_add){
-	using namespace mwi;
-	using namespace mwi::def;
+	using namespace wigcpp::internal::mwi;
+	using namespace wigcpp::internal::mwi::def;
 	big_int a(10);
 	big_int b(20);
 
@@ -104,13 +104,33 @@ TEST(test_mwi, test_operator_add){
 	EXPECT_EQ(e[0], 15);
 	EXPECT_EQ(e.size(), 1);
 
-	big_int f(0x7F'FF'FF'FF'FF'FF'FF'FF);
+	big_int f(0x7F'FF'FF'FF'FF'FF'FF'FFu);
 	big_int h = f + big_int(1); //operator +(const big_int &lhs, const big_int &rhs)
 	EXPECT_EQ(h.size(), 2);
-	EXPECT_EQ(h[0], 0x80'00'00'00'00'00'00'00);
+	EXPECT_EQ(h[0], 0x80'00'00'00'00'00'00'00u);
 	EXPECT_EQ(h[1], 0);
+
 	f += 1; //operator +=(def::uword_t scalar)
 	EXPECT_EQ(f.size(), 2);
-	EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'00);
+	EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'00u);
+
+	++f; //operator ++()
+	EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'01u);
+	EXPECT_EQ(f[1], 0);
+	big_int i = f++; // operator ++(int)
+	EXPECT_EQ(i[0], 0x80'00'00'00'00'00'00'01u);
+	EXPECT_EQ(i[1], 0);
+	EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'02u);
+
+	a = -3, b = -5;
+	big_int j = a + b; // operator +(const big_int &lhs, const big_int &rhs)
+	EXPECT_EQ(j[0], -8);
+
+	a = 0x80'00'00'00'00'00'00'00u;
+	--a;
+
+	EXPECT_EQ(a.size(), 2);
+	EXPECT_EQ(a[0], 0x7F'FF'FF'FF'FF'FF'FF'FFu);
+	EXPECT_EQ(a[1], 0xFF'FF'FF'FF'FF'FF'FF'FFu);
 }
 

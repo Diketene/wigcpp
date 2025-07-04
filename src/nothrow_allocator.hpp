@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <type_traits>
-namespace mwi{
+namespace wigcpp::internal::mwi{
   template <typename T> // only for POD types
   class nothrow_allocator{
     public:
