@@ -118,7 +118,9 @@ namespace wigcpp{
 					** of memory, which is done by the big_int::alloc() method.
 					*/
 
-					std::size_t thiscap = capacity();
+					const std::size_t thiscap = capacity();
+					const std::size_t thissz = size();
+
 					if(min_capacity <= thiscap){
 						return;
 					}
@@ -135,11 +137,11 @@ namespace wigcpp{
 						return;
 					}
 
-					std::size_t offset = size();
 					this -> data = new_data;
-					first_free = new_data + offset;
-					cap = this -> data + new_capacity;
-					std::memset(new_data + offset, 0, (new_capacity - min_capacity) * sizeof(def::uword_t));
+					first_free = new_data + thissz;
+					cap = new_data + new_capacity;
+
+					std::memset(new_data + thiscap, 0, (new_capacity - thiscap) * sizeof(def::uword_t));
 				}
 
 				def::uword_t back() const{
@@ -682,7 +684,7 @@ namespace wigcpp{
 								from_lower = next_lower;
 							}
 						}else{
-							for(std::size_t i = lim_i2; i < lim_i; i++){
+							for(std::size_t i = lim_i2; from_lower && i < lim_i; i++){
 								auto [p, next_lower] = mul_kernel(0, factor_j, from_lower, static_cast<def::udword_t>(result[i + j]));
 								result[i + j] = p;
 								from_lower = next_lower;
@@ -710,7 +712,7 @@ namespace wigcpp{
 									from_lower = next_lower;
 								}
 							}else{
-								for(std::size_t i = lim_i2; i < lim_i; i++){
+								for(std::size_t i = lim_i2; from_lower && i < lim_i; i++){
 									auto [p, next_lower] = mul_kernel(0, factor_sign_bits, from_lower, static_cast<def::udword_t>(result[i + j]));
 									result[i + j] = p;
 									from_lower = next_lower;
