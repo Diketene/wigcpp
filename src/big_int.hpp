@@ -8,11 +8,15 @@
 #include "nothrow_allocator.hpp"
 #include "error.hpp"
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <array>
 #include <iostream>
+#include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 
@@ -96,13 +100,13 @@ namespace wigcpp{
 				/* memory acquazition and initialization are operated by the alloc() and realloc() private method, 
 				** which satisfies the RAII principle */	
 
-				[[nodiscard]] def::uword_t* alloc(std::size_t size)noexcept{
-					def::uword_t* new_data = allocator.allocate(size);
+				[[nodiscard]] def::uword_t* alloc(std::size_t capacity)noexcept{
+					def::uword_t* new_data = allocator.allocate(capacity);
 					if(!new_data){
 						std::cerr << "Error in big_int::alloc: allocation failed. \n";
 						error::error_process(error::ErrorCode::Bad_Alloc);
 					}
-					std::memset(new_data, 0, size * sizeof(def::uword_t));
+					std::memset(new_data, 0, capacity * sizeof(def::uword_t));
 					return new_data;
 				}
 
@@ -128,6 +132,7 @@ namespace wigcpp{
 					if(!new_data){
 						std::cout << "Error in big_int::realloc: reallocation failed. \n";
 						error::error_process(error::ErrorCode::Bad_Alloc);
+						return;
 					}
 
 					std::size_t offset = size();
@@ -159,7 +164,6 @@ namespace wigcpp{
 					return std::pair<def::uword_t, def::uword_t>(s, carry);
 				}
 
-				/* MWI_MUL_KERNEL(dest, src, add_src) */
 				static inline auto mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower, def::uword_t add_src){
 					def::udword_t s = static_cast<def::udword_t>(src),
 												f = static_cast<def::udword_t>(factor);
@@ -176,28 +180,28 @@ namespace wigcpp{
 
 				/* constructor, copy/move overload = operator and destructor */
 
-				big_int(){ 
+				big_int()noexcept{ 
 				/* default: creat a big_int object, size = 1, capcity = 8 */
 					data = alloc(8);
 					first_free = data + 1;
 					cap = data + 8;
 				}
 
-				explicit big_int(def::uword_t init_value){
+				explicit big_int(def::uword_t init_value)noexcept{
 					data = alloc(8);
 					first_free = data + 1;
 					cap = data + 8;
 					*data = init_value;
 				}
 
-				big_int(const big_int &src){
-					data = alloc(src.size());
+				big_int(const big_int &src)noexcept{
+					data = alloc(src.capacity());
 					std::memcpy(data, src.data, src.size() * sizeof(def::uword_t));
 					first_free = data + src.size();
 					cap = data + src.capacity();
 				}
 
-				big_int &operator= (const big_int &src){
+				big_int &operator= (const big_int &src)noexcept{
 					if(this == &src){
 						return *this;
 					}
@@ -210,7 +214,7 @@ namespace wigcpp{
 					return *this;
 				}
 
-				big_int(big_int &&src){
+				big_int(big_int &&src)noexcept{
 					data = src.data;
 					first_free = src.first_free;
 					cap = src.cap;
@@ -219,7 +223,7 @@ namespace wigcpp{
 					src.cap = nullptr;
 				}
 
-				big_int &operator= (big_int &&src){
+				big_int &operator= (big_int &&src)noexcept{
 					if(this == &src){
 						return *this;
 					}
@@ -274,6 +278,96 @@ namespace wigcpp{
 							std::memset(data + new_size, 0, (old_size - new_size) * sizeof(def::uword_t));
 						}
 					}
+				}
+
+				bool is_minus() const noexcept{
+					return back() & def::sign_bit;
+				}
+
+				std::string to_hex_str() const {
+
+					/*if(size() == 1){
+						std::ostringstream oss;
+						if(is_minus()){
+							oss << '-' << std::setbase(16) << -back();
+						}else{
+							oss << std::setbase(16) << back();
+						}
+						return oss.str();
+					}*/
+
+					constexpr std::size_t hex_digits_per_word = sizeof(def::uword_t) * 2;
+
+					auto parser = [](uint8_t nibble){
+						return nibble < 10 ? '0' + nibble : 'a' + (nibble - 10);
+					};
+
+					auto word_to_hex = [&parser](def::uword_t word, char *buffer_current){
+						std::uint8_t mask = 0x0F;
+						std::array<char, hex_digits_per_word> hex_digits;
+						for(std::size_t i = 0; i < hex_digits_per_word; i++){
+							hex_digits[i] = parser((word >> (hex_digits_per_word - 1 - i) * 4) & mask);
+						}
+						std::copy(hex_digits.begin(), hex_digits.end(), buffer_current);
+					};
+
+					auto remove_leading_zeros = [](const std::string_view str){
+						auto it = str.begin();
+						for( ; it != str.end(); it++){
+							if(*it != '0'){
+								break;
+							}
+						}
+						return it;
+					};
+
+					std::string buffer;
+
+					if(size() == 1){
+						buffer.resize(hex_digits_per_word, '0');
+						if(is_minus()){
+							word_to_hex(-back(), buffer.data());
+							auto non_zero_begin = remove_leading_zeros(buffer);
+							auto length = buffer.data() + buffer.size() - non_zero_begin;
+							return '-' + std::string(non_zero_begin, length);
+						}
+						word_to_hex(back(), buffer.data());
+						auto non_zero_begin = remove_leading_zeros(buffer);
+						auto length = buffer.data() + buffer.size() - non_zero_begin;
+						if(length == 0){
+							return "0";
+						}
+						return std::string(non_zero_begin, length);
+					}
+
+					big_int tmp;
+					if(is_minus()){
+						tmp = -*this;
+					}else{
+						tmp = *this;
+					}
+
+					std::size_t tmp_sz = tmp.size();
+					buffer.resize(tmp_sz * hex_digits_per_word, '0');
+					char *buffer_current = buffer.data();
+
+					for(std::size_t i = 0; i < tmp_sz; i++){
+						word_to_hex(tmp[tmp_sz - 1 - i], buffer_current);
+						buffer_current += hex_digits_per_word;
+					}
+
+					auto it = remove_leading_zeros(buffer);
+
+					auto length = buffer.data() + buffer.size() - it;
+					
+					if(length == 0){
+						return "0";
+					}else if(is_minus()){
+						return '-' + std::string(it, length);
+					}
+
+					return std::string(it, length);
+
 				}
 
 				/* operator overloading */
@@ -494,6 +588,15 @@ namespace wigcpp{
 					return *this;
 				}
 
+				[[nodiscard]] big_int operator-()const noexcept{
+					big_int tmp = *this;
+					for(std::size_t i = 0; i < size(); i++){
+						tmp.data[i] = ~tmp.data[i];
+					}
+					tmp += 1;
+					return tmp;
+				}
+
 				/* friend functions */
 
 				[[nodiscard]] friend big_int operator+ (const big_int &src, def::uword_t scalar) noexcept{
@@ -566,8 +669,6 @@ namespace wigcpp{
 
 						def::uword_t from_lower = 0;
 
-				/* MWI_MUL_KERNEL(dest, src, add_src) */
-				/* mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower, def::uword_t add_src) */
 						for(std::size_t i = 0; i < lim_i2; i++){
 							auto [p, next_lower] = mul_kernel(src[i], factor_j, from_lower, static_cast<def::udword_t>(result[i+j]));
 							result[i + j] = p;
@@ -627,7 +728,6 @@ namespace wigcpp{
 
 			template <class Allocator>
 			inline Allocator big_int<Allocator>::allocator;
-
 
 		}
 	}
