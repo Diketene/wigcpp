@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include <cstddef>
 #include <gtest/gtest.h>
 #include "big_int.hpp"
 
@@ -168,4 +169,33 @@ TEST(test_mwi, test_to_hex_str){
 	big_int a(-1);
 	EXPECT_EQ(a.to_hex_str(), "-1");
 
+	a = 0x80'00'00'00'00'00'00'00u;
+	EXPECT_EQ(a.to_hex_str(), "-8000000000000000");
+
+	a = 0;
+	EXPECT_EQ(a.to_hex_str(), "0");
+
+}
+
+TEST(test_mwi, test_operator_multiply){
+	using namespace wigcpp::internal::mwi;
+	using namespace wigcpp::internal::mwi::def;
+
+	big_int a(1);
+
+	for(std::size_t i = 0; i < 50; i++){
+		a *= (i + 1);
+	}
+
+	/*for(std::size_t i = 0; i < 50; i++){
+		a *= (i + 1);
+	}
+
+	EXPECT_EQ(a.to_hex_str(), "155a0630cfa22e0e013f309af07c4b5e8a371020910868a9124d9e634e3497a511f217ae7961097ae978400000000000000000000000");*/
+
+	big_int result = a;
+
+	result *= a;
+
+	EXPECT_EQ(result.to_hex_str(), "155a0630cfa22e0e013f309af07c4b5e8a371020910868a9124d9e634e3497a511f217ae7961097ae978400000000000000000000000");
 }
