@@ -17,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <sys/stat.h>
 #include <type_traits>
 #include <utility>
 
@@ -170,7 +171,9 @@ namespace wigcpp{
 					def::udword_t s = static_cast<def::udword_t>(src),
 												f = static_cast<def::udword_t>(factor);
 					def::udword_t p = s * f;
-					p += from_lower + add_src;
+					def::udword_t fl = static_cast<def::udword_t>(from_lower);
+					def::udword_t as = static_cast<def::udword_t>(add_src);
+					p += fl + as;
 
 					from_lower = static_cast<def::uword_t>(p >> def::shift_bits);
 					p = static_cast<def::uword_t>(p);
@@ -653,13 +656,11 @@ namespace wigcpp{
 
 					const std::size_t src_size = src.size();
 					const std::size_t factor_size = factor.size();
-					const std::size_t min_size = src_size + factor_size;
+					const std::size_t result_size = src_size + factor_size;
 
 					big_int result;
-					result.realloc(min_size);
-					result.first_free = result.data + min_size;
-
-					const std::size_t result_size = result.size();
+					result.realloc(result_size);
+					result.first_free = result.data + result_size;
 
 					const def::uword_t src_sign_bits = def::full_sign_word(src.back());
 					const def::uword_t factor_sign_bits = def::full_sign_word(factor.back());
@@ -672,20 +673,20 @@ namespace wigcpp{
 						def::uword_t from_lower = 0;
 
 						for(std::size_t i = 0; i < lim_i2; i++){
-							auto [p, next_lower] = mul_kernel(src[i], factor_j, from_lower, static_cast<def::udword_t>(result[i+j]));
+							auto [p, next_lower] = mul_kernel(src[i], factor_j, from_lower, result[i+j]);
 							result[i + j] = p;
 							from_lower = next_lower;
 						}
 
 						if(src_sign_bits){
 							for(std::size_t i = lim_i2; i < lim_i; i++){
-								auto [p, next_lower] = mul_kernel(src_sign_bits, factor_j, from_lower, static_cast<def::udword_t>(result[i + j]));
+								auto [p, next_lower] = mul_kernel(src_sign_bits, factor_j, from_lower, result[i + j]);
 								result[i + j] = p;
 								from_lower = next_lower;
 							}
 						}else{
 							for(std::size_t i = lim_i2; from_lower && i < lim_i; i++){
-								auto [p, next_lower] = mul_kernel(0, factor_j, from_lower, static_cast<def::udword_t>(result[i + j]));
+								auto [p, next_lower] = mul_kernel(0, factor_j, from_lower, result[i + j]);
 								result[i + j] = p;
 								from_lower = next_lower;
 							}
@@ -700,30 +701,33 @@ namespace wigcpp{
 							def::uword_t from_lower = 0;
 
 							for(std::size_t i = 0; i < lim_i2; i++){
-								auto [p, next_lower] = mul_kernel(src[i], factor_sign_bits, from_lower, static_cast<def::udword_t>(result[i + j]));
+								auto [p, next_lower] = mul_kernel(src[i], factor_sign_bits, from_lower, result[i + j]);
 								result[i + j] = p;
 								from_lower = next_lower;
 							}
 
 							if(src_sign_bits){
 								for(std::size_t i = lim_i2; i < lim_i; i++){
-									auto [p, next_lower] = mul_kernel(src_sign_bits, factor_sign_bits, from_lower, static_cast<def::udword_t>(result[i + j]));
+									auto [p, next_lower] = mul_kernel(src_sign_bits, factor_sign_bits, from_lower, result[i + j]);
 									result[i + j] = p;
 									from_lower = next_lower;
 								}
 							}else{
 								for(std::size_t i = lim_i2; from_lower && i < lim_i; i++){
-									auto [p, next_lower] = mul_kernel(0, factor_sign_bits, from_lower, static_cast<def::udword_t>(result[i + j]));
+									auto [p, next_lower] = mul_kernel(0, factor_sign_bits, from_lower, result[i + j]);
 									result[i + j] = p;
 									from_lower = next_lower;
 								}
 							}
 						}
 					}
+					def::uword_t *old_first_free = result.first_free;
 
 					while(result.size() > 1 && result.back() == def::full_sign_word(result[result.size() - 2])){
 						result.first_free--;
 					}
+
+					std::memset(result.first_free, 0, (old_first_free - result.first_free) * sizeof(def::uword_t));
 					return result;
 				}
 			};
