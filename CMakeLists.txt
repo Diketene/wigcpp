@@ -14,7 +14,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 check_cxx_source_compiles([[
     #include <iostream>
     auto main(void) -> int {
-        std::cout << "Hello, world!\n";
+        std::cout << "Hello, world!" << std::endl;
         return 0;
     }
 ]] CPP_SOURCE_COMPILATION_SUCCESS)
@@ -63,6 +63,7 @@ check_cxx_source_compiles([[
     auto main(void) -> int{
         __int128 a;
         __uint128_t b;
+        static_assert(sizeof(__int128) == 16, "Must have 16 bytes __int128 on 64-bits platform.");
         return 0;
     }
 ]] HAS_UINT128)
