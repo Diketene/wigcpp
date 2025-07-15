@@ -4,11 +4,10 @@
  */
 #ifndef __WIGCPP_BIG_INT_HPP__
 #define __WIGCPP_BIG_INT_HPP__
-#include "wigcpp_config.h"
+#include "definitions.hpp"
 #include "nothrow_allocator.hpp"
 #include "error.hpp"
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -17,735 +16,662 @@
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <type_traits>
 #include <utility>
 
-namespace wigcpp{
-	namespace internal {
-		namespace mwi {
-			/* multi word int namespace */
-			namespace def /* multi word int definitions */
-			{
-				template <unsigned size>
-				struct multi_word_traits{
-					static_assert(size == 4 || size == 8, "Invalid MULTI_WORD_INT_SIZEOF_ITEM value, must be 4 or 8");
-				};
+/* multi word int namespace */
+namespace wigcpp::internal::mwi{
 
-				template <>
-				struct multi_word_traits<8>{
-					using int128_t =  __int128;
-					using uint128_t = __uint128_t;
+	template <class Allocator = nothrow_allocator<def::uword_t>>
+	class big_int{
 
-					using uword_t = std::uint64_t;   	/* unsigned word type */
-					using udword_t = uint128_t; 	/* unsigned double word type */
+	private:
+		def::uword_t *data;
+		def::uword_t *first_free;
+		def::uword_t *cap;
+		static Allocator allocator;
 
-					using word_t = std::int64_t;     	/* signed word type */
-					using dword_t = int128_t;   	/* signed double word type */
+		void free(){
+			if(data){
+				allocator.deallocate(data, capacity());
+			}
+		}
+	
+		/* memory acquazition and initialization are operated by the alloc() and realloc() private method, 
+		** which satisfies the RAII principle */	
 
-					using u_mul_word_t = std::uint64_t; /* unsigned word type for multiplication */
+		[[nodiscard]] def::uword_t* alloc(std::size_t capacity)noexcept{
+			def::uword_t* new_data = allocator.allocate(capacity);
+			if(!new_data){
+				std::cerr << "Error in big_int::alloc: allocation failed. \n";
+				error::error_process(error::ErrorCode::Bad_Alloc);
+			}
+			std::memset(new_data, 0, capacity * sizeof(def::uword_t));
+			return new_data;
+		}
 
-					inline static constexpr bool MWI_MULW_LARGER = false;
 
-				};
+		void realloc(std::size_t min_capacity) noexcept{
 
-				template <>
-				struct multi_word_traits<4>{
-					using uword_t = std::uint32_t;   /* unsigned word type */
-					using udword_t = std::uint64_t; 	/* unsigned double word type */
+			/* big_int::realloc() should only be used when it needs to grow the memory capacity
+			** of the bit_int object, it shouldn't be used to allocate a block of memory, which
+			** is done by the big_int::alloc() method.
+			*/
 
-					using word_t = std::int32_t;     /* signed word type */
-					using dword_t = std::int64_t;   	/* signed double word type */
+			const std::size_t thiscap = capacity();
+			const std::size_t thissz = size();
 
-					#if MULTI_WORD_INT_SIZEOF_MULW == 8
-      		  using u_mul_word_t = std::uint64_t;
-      		  inline static constexpr bool MWI_MULW_LARGER = true;
-    			#elif MULTI_WORD_INT_SIZEOF_MULW == 4
-      		  using u_mul_word_t = std::uint32_t;
-      		  inline static constexpr bool MWI_MULW_LARGER = false;
-    			#else
-      			#error "Invalid MULTI_WORD_INT_SIZEOF_MULW value, must be 4 or 8"
-    			#endif
-				};
-
-				using Traits = multi_word_traits<MULTI_WORD_INT_SIZEOF_ITEM>;
-
-				using uword_t = Traits::uword_t;
-				using udword_t = Traits::udword_t;
-				using word_t = Traits::word_t;
-				using dword_t = Traits::dword_t;
-				using u_mul_word_t = Traits::u_mul_word_t;
-				constexpr inline static bool MWI_MULW_LARGER = Traits::MWI_MULW_LARGER;
-
-				inline constexpr uword_t shift_bits = sizeof(uword_t) << 3;
-
-				inline constexpr uword_t mulw_shift_bits = sizeof(u_mul_word_t) << 3;
-
-				template<typename T> 
-				/* only for def::uword_t and def:word_t*/
-				inline constexpr uword_t full_sign_word(T x) {
-					if constexpr (std::is_signed_v<T>) {
-						return static_cast<uword_t>(x >> (shift_bits - 1));
-					} else {
-						return static_cast<uword_t>(static_cast<word_t>(x) >> (shift_bits - 1));
-					}
-				}
-
-				inline constexpr uword_t sign_bit = ((uword_t)1) << (shift_bits - 1);
+			if(min_capacity <= thiscap){
+				return;
 			}
 
-			template <class Allocator = nothrow_allocator<def::uword_t>>
-			class big_int{
-			private:
-				def::uword_t *data;
-				def::uword_t *first_free;
-				def::uword_t *cap;
-				static Allocator allocator;
+			std::size_t new_capacity = thiscap;
+			while(new_capacity < min_capacity){
+				new_capacity *= 2;
+			}
 
-				void free(){
-					if(data){
-						allocator.deallocate(data, capacity());
+			def::uword_t *new_data = allocator.reallocate(this -> data, new_capacity);
+			if(!new_data){
+				std::cout << "Error in big_int::realloc: reallocation failed. \n";
+				error::error_process(error::ErrorCode::Bad_Alloc);
+				return;
+			}
+
+			this -> data = new_data;
+			first_free = new_data + thissz;
+			cap = new_data + new_capacity;
+
+			std::memset(new_data + thiscap, 0, (new_capacity - thiscap) * sizeof(def::uword_t));
+		}
+
+		def::uword_t back() const{
+				return *(first_free - 1);
+		}
+
+		/* calculate kernels */
+
+		static inline auto add_kernel(def::uword_t src1, def::uword_t src2, def::uword_t carry){
+			def::udword_t s = static_cast<def::udword_t>(src1),
+										t = static_cast<def::udword_t>(src2);
+			s = s + t + carry;
+			carry = static_cast<def::uword_t>(s >> def::shift_bits);
+			return std::pair<def::uword_t, def::uword_t>(s, carry);
+		}
+
+		static inline auto sub_kernel(def::uword_t src1, def:: uword_t src2, def::uword_t carry){
+			def::udword_t s = static_cast<def::udword_t>(src1),
+										t = static_cast<def::udword_t>(src2);
+			s = s - t - carry;
+			carry = static_cast<def::uword_t>((s >> def::shift_bits) & 1);
+			return std::pair<def::uword_t, def::uword_t>(s, carry);
+		}
+
+		static inline auto mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower, def::uword_t add_src){
+			def::udword_t s = static_cast<def::udword_t>(src),
+										f = static_cast<def::udword_t>(factor);
+			def::udword_t p = s * f;
+			def::udword_t fl = static_cast<def::udword_t>(from_lower);
+			def::udword_t as = static_cast<def::udword_t>(add_src);
+			p += fl + as;
+
+			from_lower = static_cast<def::uword_t>(p >> def::shift_bits);
+			p = static_cast<def::uword_t>(p);
+			return std::pair<def::uword_t, def::uword_t>(p, from_lower);
+		}
+
+	public:
+
+		/* constructor, copy/move overload = operator and destructor */
+
+		big_int()noexcept{ 
+		/* default: creat a big_int object, size = 1, capcity = 8 */
+			data = alloc(8);
+			first_free = data + 1;
+			cap = data + 8;
+		}
+
+		explicit big_int(def::uword_t init_value)noexcept{
+			data = alloc(8);
+			first_free = data + 1;
+			cap = data + 8;
+			*data = init_value;
+		}
+
+		big_int(const big_int &src)noexcept{
+			data = alloc(src.capacity());
+			std::memcpy(data, src.data, src.size() * sizeof(def::uword_t));
+			first_free = data + src.size();
+			cap = data + src.capacity();
+		}
+
+		big_int &operator= (const big_int &src)noexcept{
+			if(this == &src){
+				return *this;
+			}
+			def::uword_t *new_data = alloc(src.capacity());
+			free();
+			data = new_data;
+			std::memcpy(data, src.data, src.size() * sizeof(def::uword_t));
+			first_free = data + src.size();
+			cap = data + src.capacity();
+			return *this;
+		}
+
+		big_int(big_int &&src)noexcept{
+			data = src.data;
+			first_free = src.first_free;
+			cap = src.cap;
+			src.data = nullptr;
+			src.first_free = nullptr;
+			src.cap = nullptr;
+		}
+
+		big_int &operator= (big_int &&src)noexcept{
+			if(this == &src){
+				return *this;
+			}
+			free();
+			data = src.data;
+			first_free = src.first_free;
+			cap = src.cap;
+			src.data = nullptr;
+			src.first_free = nullptr;
+			src.cap = nullptr;
+			return *this;
+		}
+
+		~big_int(){
+			free();
+		}
+
+		/* methods */
+
+		std::size_t size() const{ 
+			/* size of big_int will never be 0 because of the big_int() */
+			return first_free - data;
+		}
+
+		std::size_t capacity() const {
+			return cap - data;
+		}
+
+		std::size_t capacity_bytes(){
+			return capacity()*sizeof(def::uword_t);
+		}
+
+		def::uword_t* begin(){
+			return this -> data;
+		}
+
+		def::uword_t* end(){
+			return this -> first_free;
+		}
+
+		void resize(std::size_t new_size) noexcept{
+			if(new_size > capacity()){
+				std::size_t old_size = size();
+				realloc(new_size);
+				first_free = data + new_size;
+			}else{
+				std::size_t old_size = size();
+				if(new_size > old_size){
+					first_free = data + new_size;
+				}else{
+					first_free = data + new_size;
+					std::memset(data + new_size, 0, (old_size - new_size) * sizeof(def::uword_t));
+				}
+			}
+		}
+
+		bool is_minus() const noexcept{
+			return back() & def::sign_bit;
+		}
+
+		std::string to_hex_str() const {
+
+			/*if(size() == 1){
+				std::ostringstream oss;
+				if(is_minus()){
+					oss << '-' << std::setbase(16) << -back();
+				}else{
+					oss << std::setbase(16) << back();
+				}
+				return oss.str();
+			}*/
+
+			constexpr std::size_t hex_digits_per_word = sizeof(def::uword_t) * 2;
+
+			auto parser = [](uint8_t nibble){
+				return nibble < 10 ? '0' + nibble : 'a' + (nibble - 10);
+			};
+
+			auto word_to_hex = [&parser](def::uword_t word, char *buffer_current){
+				std::uint8_t mask = 0x0F;
+				std::array<char, hex_digits_per_word> hex_digits;
+				for(std::size_t i = 0; i < hex_digits_per_word; i++){
+					hex_digits[i] = parser((word >> (hex_digits_per_word - 1 - i) * 4) & mask);
+				}
+				std::copy(hex_digits.begin(), hex_digits.end(), buffer_current);
+			};
+
+			auto remove_leading_zeros = [](const std::string_view str){
+				auto it = str.begin();
+				for( ; it != str.end(); it++){
+					if(*it != '0'){
+						break;
 					}
 				}
+				return it;
+			};
+
+			std::string buffer;
+
+			if(size() == 1){
+				buffer.resize(hex_digits_per_word, '0');
+				if(is_minus()){
+					word_to_hex(-back(), buffer.data());
+					auto non_zero_begin = remove_leading_zeros(buffer);
+					auto length = buffer.data() + buffer.size() - non_zero_begin;
+					return '-' + std::string(non_zero_begin, length);
+				}
+				word_to_hex(back(), buffer.data());
+				auto non_zero_begin = remove_leading_zeros(buffer);
+				auto length = buffer.data() + buffer.size() - non_zero_begin;
+				if(length == 0){
+					return "0";
+				}
+				return std::string(non_zero_begin, length);
+			}
+
+			big_int tmp;
+			if(is_minus()){
+				tmp = -*this;
+			}else{
+				tmp = *this;
+			}
+
+			std::size_t tmp_sz = tmp.size();
+			buffer.resize(tmp_sz * hex_digits_per_word, '0');
+			char *buffer_current = buffer.data();
+
+			for(std::size_t i = 0; i < tmp_sz; i++){
+				word_to_hex(tmp[tmp_sz - 1 - i], buffer_current);
+				buffer_current += hex_digits_per_word;
+			}
+
+			auto it = remove_leading_zeros(buffer);
+
+			auto length = buffer.data() + buffer.size() - it;
 			
-				/* memory acquazition and initialization are operated by the alloc() and realloc() private method, 
-				** which satisfies the RAII principle */	
+			if(length == 0){
+				return "0";
+			}else if(is_minus()){
+				return '-' + std::string(it, length);
+			}
 
-				[[nodiscard]] def::uword_t* alloc(std::size_t capacity)noexcept{
-					def::uword_t* new_data = allocator.allocate(capacity);
-					if(!new_data){
-						std::cerr << "Error in big_int::alloc: allocation failed. \n";
-						error::error_process(error::ErrorCode::Bad_Alloc);
-					}
-					std::memset(new_data, 0, capacity * sizeof(def::uword_t));
-					return new_data;
-				}
+			return std::string(it, length);
 
+		}
 
-				void realloc(std::size_t min_capacity) noexcept{
+		/* operator overloading */
 
-					/* big_int::realloc() should only be used when it needs to grow the memory capacity
-					** of the bit_int object, it shouldn't be used to allocate a block of memory, which
-					** is done by the big_int::alloc() method.
-					*/
+		const def::uword_t& operator[](std::size_t index)const noexcept{
+			return *(data + index);
+		}
 
-					const std::size_t thiscap = capacity();
-					const std::size_t thissz = size();
+		def::uword_t& operator[](std::size_t index) noexcept{
+			return *(data + index);
+		}
 
-					if(min_capacity <= thiscap){
-						return;
-					}
+		big_int &operator=(def::uword_t v){
+			if(size() > 1){
+				std::cerr << "Error in big_int::operator=(def::uword_t):\n";
+				error::error_process(error::ErrorCode::Bad_Shrink);
+			}
+			*data = v;
+			return *this;
+		}
 
-					std::size_t new_capacity = thiscap;
-					while(new_capacity < min_capacity){
-						new_capacity *= 2;
-					}
+		big_int &operator+= (def::uword_t scalar) noexcept{
+			const std::size_t this_oldsz = size();
 
-					def::uword_t *new_data = allocator.reallocate(this -> data, new_capacity);
-					if(!new_data){
-						std::cout << "Error in big_int::realloc: reallocation failed. \n";
-						error::error_process(error::ErrorCode::Bad_Alloc);
-						return;
-					}
+			const def::uword_t this_sign_bits = def::full_sign_word(back());
+			const def::uword_t scalar_sign_bits = def::full_sign_word(scalar);
 
-					this -> data = new_data;
-					first_free = new_data + thissz;
-					cap = new_data + new_capacity;
+			def::uword_t carry = 0;
 
-					std::memset(new_data + thiscap, 0, (new_capacity - thiscap) * sizeof(def::uword_t));
-				}
+			auto [s, overflow] = add_kernel(this -> data[0], scalar, carry);
+			this -> data[0] = s;
+			carry = overflow;
 
-				def::uword_t back() const{
-						return *(first_free - 1);
-				}
+			for(std::size_t i = 1; i < this_oldsz; i++){
+				auto [s, overflow] = add_kernel(this -> data[i], scalar_sign_bits, carry);
+				this -> data[i] = s;
+				carry = overflow;
+			}
+			
+			def::uword_t next_word = this_sign_bits + scalar_sign_bits + carry;
+			def::uword_t next_sign_word = def::full_sign_word(next_word);
 
-				/* calculate kernels */
+			if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
+				realloc(this_oldsz + 1);
+				*first_free++ = next_word;
+			}
 
-				static inline auto add_kernel(def::uword_t src1, def::uword_t src2, def::uword_t carry){
-					def::udword_t s = static_cast<def::udword_t>(src1),
-												t = static_cast<def::udword_t>(src2);
-					s = s + t + carry;
-					carry = static_cast<def::uword_t>(s >> def::shift_bits);
-					return std::pair<def::uword_t, def::uword_t>(s, carry);
-				}
+			return *this;
+		}
 
-				static inline auto sub_kernel(def::uword_t src1, def:: uword_t src2, def::uword_t carry){
-					def::udword_t s = static_cast<def::udword_t>(src1),
-												t = static_cast<def::udword_t>(src2);
-					s = s - t - carry;
-					carry = static_cast<def::uword_t>((s >> def::shift_bits) & 1);
-					return std::pair<def::uword_t, def::uword_t>(s, carry);
-				}
+		big_int &operator++() noexcept{
+			*this += 1;
+			return *this;
+		}
 
-				static inline auto mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower, def::uword_t add_src){
-					def::udword_t s = static_cast<def::udword_t>(src),
-												f = static_cast<def::udword_t>(factor);
-					def::udword_t p = s * f;
-					def::udword_t fl = static_cast<def::udword_t>(from_lower);
-					def::udword_t as = static_cast<def::udword_t>(add_src);
-					p += fl + as;
+		big_int operator++(int) noexcept{
+			big_int tmp = *this;
+			*this += 1;
+			return tmp;
+		}
 
-					from_lower = static_cast<def::uword_t>(p >> def::shift_bits);
-					p = static_cast<def::uword_t>(p);
-					return std::pair<def::uword_t, def::uword_t>(p, from_lower);
-				}
+		big_int &operator+= (const big_int &rhs) noexcept{
 
+			const std::size_t this_oldsz = size();
+			const std::size_t rhs_sz = rhs.size();
 
-			public:
+			const def::uword_t this_sign_bits = def::full_sign_word(back());
+			const def::uword_t rhs_sign_bits = def::full_sign_word(rhs.back());
 
-				/* constructor, copy/move overload = operator and destructor */
+			def::uword_t carry = 0;
 
-				big_int()noexcept{ 
-				/* default: creat a big_int object, size = 1, capcity = 8 */
-					data = alloc(8);
-					first_free = data + 1;
-					cap = data + 8;
-				}
-
-				explicit big_int(def::uword_t init_value)noexcept{
-					data = alloc(8);
-					first_free = data + 1;
-					cap = data + 8;
-					*data = init_value;
-				}
-
-				big_int(const big_int &src)noexcept{
-					data = alloc(src.capacity());
-					std::memcpy(data, src.data, src.size() * sizeof(def::uword_t));
-					first_free = data + src.size();
-					cap = data + src.capacity();
-				}
-
-				big_int &operator= (const big_int &src)noexcept{
-					if(this == &src){
-						return *this;
-					}
-					def::uword_t *new_data = alloc(src.capacity());
-					free();
-					data = new_data;
-					std::memcpy(data, src.data, src.size() * sizeof(def::uword_t));
-					first_free = data + src.size();
-					cap = data + src.capacity();
-					return *this;
-				}
-
-				big_int(big_int &&src)noexcept{
-					data = src.data;
-					first_free = src.first_free;
-					cap = src.cap;
-					src.data = nullptr;
-					src.first_free = nullptr;
-					src.cap = nullptr;
-				}
-
-				big_int &operator= (big_int &&src)noexcept{
-					if(this == &src){
-						return *this;
-					}
-					free();
-					data = src.data;
-					first_free = src.first_free;
-					cap = src.cap;
-					src.data = nullptr;
-					src.first_free = nullptr;
-					src.cap = nullptr;
-					return *this;
-				}
-
-				~big_int(){
-					free();
-				}
-
-				/* methods */
-
-				std::size_t size() const{ 
-					/* size of big_int will never be 0 because of the big_int() */
-					return first_free - data;
-				}
-
-				std::size_t capacity() const {
-					return cap - data;
-				}
-
-				std::size_t capacity_bytes(){
-					return capacity()*sizeof(def::uword_t);
-				}
-
-				def::uword_t* begin(){
-					return this -> data;
-				}
-
-				def::uword_t* end(){
-					return this -> first_free;
-				}
-
-				void resize(std::size_t new_size) noexcept{
-					if(new_size > capacity()){
-						std::size_t old_size = size();
-						realloc(new_size);
-						first_free = data + new_size;
-					}else{
-						std::size_t old_size = size();
-						if(new_size > old_size){
-							first_free = data + new_size;
-						}else{
-							first_free = data + new_size;
-							std::memset(data + new_size, 0, (old_size - new_size) * sizeof(def::uword_t));
-						}
-					}
-				}
-
-				bool is_minus() const noexcept{
-					return back() & def::sign_bit;
-				}
-
-				std::string to_hex_str() const {
-
-					/*if(size() == 1){
-						std::ostringstream oss;
-						if(is_minus()){
-							oss << '-' << std::setbase(16) << -back();
-						}else{
-							oss << std::setbase(16) << back();
-						}
-						return oss.str();
-					}*/
-
-					constexpr std::size_t hex_digits_per_word = sizeof(def::uword_t) * 2;
-
-					auto parser = [](uint8_t nibble){
-						return nibble < 10 ? '0' + nibble : 'a' + (nibble - 10);
-					};
-
-					auto word_to_hex = [&parser](def::uword_t word, char *buffer_current){
-						std::uint8_t mask = 0x0F;
-						std::array<char, hex_digits_per_word> hex_digits;
-						for(std::size_t i = 0; i < hex_digits_per_word; i++){
-							hex_digits[i] = parser((word >> (hex_digits_per_word - 1 - i) * 4) & mask);
-						}
-						std::copy(hex_digits.begin(), hex_digits.end(), buffer_current);
-					};
-
-					auto remove_leading_zeros = [](const std::string_view str){
-						auto it = str.begin();
-						for( ; it != str.end(); it++){
-							if(*it != '0'){
-								break;
-							}
-						}
-						return it;
-					};
-
-					std::string buffer;
-
-					if(size() == 1){
-						buffer.resize(hex_digits_per_word, '0');
-						if(is_minus()){
-							word_to_hex(-back(), buffer.data());
-							auto non_zero_begin = remove_leading_zeros(buffer);
-							auto length = buffer.data() + buffer.size() - non_zero_begin;
-							return '-' + std::string(non_zero_begin, length);
-						}
-						word_to_hex(back(), buffer.data());
-						auto non_zero_begin = remove_leading_zeros(buffer);
-						auto length = buffer.data() + buffer.size() - non_zero_begin;
-						if(length == 0){
-							return "0";
-						}
-						return std::string(non_zero_begin, length);
-					}
-
-					big_int tmp;
-					if(is_minus()){
-						tmp = -*this;
-					}else{
-						tmp = *this;
-					}
-
-					std::size_t tmp_sz = tmp.size();
-					buffer.resize(tmp_sz * hex_digits_per_word, '0');
-					char *buffer_current = buffer.data();
-
-					for(std::size_t i = 0; i < tmp_sz; i++){
-						word_to_hex(tmp[tmp_sz - 1 - i], buffer_current);
-						buffer_current += hex_digits_per_word;
-					}
-
-					auto it = remove_leading_zeros(buffer);
-
-					auto length = buffer.data() + buffer.size() - it;
-					
-					if(length == 0){
-						return "0";
-					}else if(is_minus()){
-						return '-' + std::string(it, length);
-					}
-
-					return std::string(it, length);
-
-				}
-
-				/* operator overloading */
-
-				const def::uword_t& operator[](std::size_t index)const noexcept{
-					return *(data + index);
-				}
-
-				def::uword_t& operator[](std::size_t index) noexcept{
-					return *(data + index);
-				}
-
-				big_int &operator=(def::uword_t v){
-					if(size() > 1){
-						std::cerr << "Error in big_int::operator=(def::uword_t):\n";
-						error::error_process(error::ErrorCode::Bad_Shrink);
-					}
-					*data = v;
-					return *this;
-				}
-
-				big_int &operator+= (def::uword_t scalar) noexcept{
-					const std::size_t this_oldsz = size();
-
-					const def::uword_t this_sign_bits = def::full_sign_word(back());
-					const def::uword_t scalar_sign_bits = def::full_sign_word(scalar);
-
-					def::uword_t carry = 0;
-
-					auto [s, overflow] = add_kernel(this -> data[0], scalar, carry);
-					this -> data[0] = s;
+			if(rhs_sz <= this_oldsz){
+				realloc(this_oldsz + 1);
+				for(std::size_t i = 0; i < rhs_sz; i++){
+					auto [s, overflow] = add_kernel( this -> data[i], rhs[i], carry);
+					this -> data[i] = s;
 					carry = overflow;
-
-					for(std::size_t i = 1; i < this_oldsz; i++){
-						auto [s, overflow] = add_kernel(this -> data[i], scalar_sign_bits, carry);
-						this -> data[i] = s;
-						carry = overflow;
-					}
-					
-					def::uword_t next_word = this_sign_bits + scalar_sign_bits + carry;
-					def::uword_t next_sign_word = def::full_sign_word(next_word);
-
-					if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
-						realloc(this_oldsz + 1);
-						*first_free++ = next_word;
-					}
-
-					return *this;
 				}
-
-				big_int &operator++() noexcept{
-					*this += 1;
-					return *this;
+				for(std::size_t i = rhs_sz; i < this_oldsz; i++){
+					auto [s, overflow] = add_kernel( this -> data[i], rhs_sign_bits, carry);
+					this -> data[i] = s;
+					carry = overflow;
 				}
-
-				big_int operator++(int) noexcept{
-					big_int tmp = *this;
-					*this += 1;
-					return tmp;
+			}else{
+				realloc(rhs_sz + 1);
+				first_free = data + rhs_sz;
+				for(std::size_t i = 0; i < this_oldsz; i++){
+					auto [s, overflow] = add_kernel(this -> data[i], rhs[i], carry);
+					this -> data[i] = s;
+					carry = overflow;
 				}
-
-				big_int &operator+= (const big_int &rhs) noexcept{
-
-					const std::size_t this_oldsz = size();
-					const std::size_t rhs_sz = rhs.size();
-
-					const def::uword_t this_sign_bits = def::full_sign_word(back());
-					const def::uword_t rhs_sign_bits = def::full_sign_word(rhs.back());
-
-					def::uword_t carry = 0;
-
-					if(rhs_sz <= this_oldsz){
-						realloc(this_oldsz + 1);
-						for(std::size_t i = 0; i < rhs_sz; i++){
-							auto [s, overflow] = add_kernel( this -> data[i], rhs[i], carry);
-							this -> data[i] = s;
-							carry = overflow;
-						}
-						for(std::size_t i = rhs_sz; i < this_oldsz; i++){
-							auto [s, overflow] = add_kernel( this -> data[i], rhs_sign_bits, carry);
-							this -> data[i] = s;
-							carry = overflow;
-						}
-					}else{
-						realloc(rhs_sz + 1);
-						first_free = data + rhs_sz;
-						for(std::size_t i = 0; i < this_oldsz; i++){
-							auto [s, overflow] = add_kernel(this -> data[i], rhs[i], carry);
-							this -> data[i] = s;
-							carry = overflow;
-						}
-						for(std::size_t i = this_oldsz; i < rhs_sz; i++){
-							auto [s, overflow] = add_kernel(this_sign_bits, rhs[i], carry);
-							this -> data[i] = s;
-							carry = overflow;
-						}
-					}
-
-					def::uword_t next_word = this_sign_bits + rhs_sign_bits + carry;
-					def::uword_t next_sign_word = def::full_sign_word(next_word);
-
-					if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
-
-						/* the first condition is never trigged at any time. 
-						** the seconde condition aims to find if there's sign bit change when overflow occurs. 
-						*/
-
-						*first_free++ = next_word;
-					}
-
-					return *this;
+				for(std::size_t i = this_oldsz; i < rhs_sz; i++){
+					auto [s, overflow] = add_kernel(this_sign_bits, rhs[i], carry);
+					this -> data[i] = s;
+					carry = overflow;
 				}
+			}
 
-				big_int &operator-=(def::uword_t scalar) noexcept{
-					const std::size_t this_oldsz = size();
+			def::uword_t next_word = this_sign_bits + rhs_sign_bits + carry;
+			def::uword_t next_sign_word = def::full_sign_word(next_word);
 
-					const def::uword_t this_sign_bits = def::full_sign_word(back());
-					const def::uword_t scalar_sign_bits = def::full_sign_word(scalar);
+			if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
 
-					def::uword_t carry = 0;
+				/* the first condition is never trigged at any time. 
+				** the seconde condition aims to find if there's sign bit change when overflow occurs. 
+				*/
 
-					auto [s, borrow] = sub_kernel(this -> data[0], scalar, carry);
-					this -> data[0] = s;
+				*first_free++ = next_word;
+			}
+
+			return *this;
+		}
+
+		big_int &operator-=(def::uword_t scalar) noexcept{
+			const std::size_t this_oldsz = size();
+
+			const def::uword_t this_sign_bits = def::full_sign_word(back());
+			const def::uword_t scalar_sign_bits = def::full_sign_word(scalar);
+
+			def::uword_t carry = 0;
+
+			auto [s, borrow] = sub_kernel(this -> data[0], scalar, carry);
+			this -> data[0] = s;
+			carry = borrow;
+
+			for(std::size_t i = 0; i < this_oldsz && (carry != 0); i++){
+				auto [s, borrow] = sub_kernel(this -> data[i], scalar_sign_bits, carry);
+				this -> data[i] = s;
+				carry = borrow;
+			}
+
+			def::uword_t next_word = this_sign_bits - scalar_sign_bits - carry;
+			def::uword_t next_sign_word = def::full_sign_word(next_word);
+
+			if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
+				realloc(this_oldsz + 1);
+				*first_free++ = next_word;
+			}
+
+			return *this;
+		}
+
+		big_int &operator--() noexcept{
+			*this -= 1;
+			return *this;
+		}
+
+		big_int operator--(int) noexcept{
+			big_int tmp = *this;
+			*this -= 1;
+			return tmp;
+		}
+
+		big_int &operator-= (const big_int &rhs) noexcept{
+
+			const std::size_t this_oldsz = size();
+			const std::size_t rhs_sz = rhs.size();
+
+			const def::uword_t this_sign_bits = def::full_sign_word(back());
+			const def::uword_t rhs_sign_bits = def::full_sign_word(rhs.back());
+
+			def::uword_t carry = 0;
+			if(rhs_sz <= this_oldsz){
+				realloc(this_oldsz + 1);
+				for(std::size_t i = 0; i < rhs_sz; i++){
+					auto [s, borrow] = sub_kernel(this -> data[i], rhs[i], carry);
+					this -> data[i] = s;
 					carry = borrow;
+				}
+				for(std::size_t i = rhs_sz; i < this_oldsz; i++){
+					auto[s, borrow] = sub_kernel(this -> data[i], rhs_sign_bits, carry);
+					this -> data[i] = s;
+					carry = borrow;
+				}
+			}else{
+				realloc(rhs_sz + 1);
+				first_free = data + rhs_sz;
+				for(std::size_t i = 0; i < this_oldsz; i++){
+					auto [s, borrow] = sub_kernel(this -> data[i], rhs[i], carry);
+					this -> data[i] = s;
+					carry = borrow;
+				}
+				for(std::size_t i = this_oldsz; i < rhs_sz; i++){
+					auto [s, borrow] = sub_kernel(this_sign_bits, rhs[i], carry);
+					this -> data[i] = s;
+					carry = borrow;
+				}
+			}
 
-					for(std::size_t i = 0; i < this_oldsz && (carry != 0); i++){
-						auto [s, borrow] = sub_kernel(this -> data[i], scalar_sign_bits, carry);
-						this -> data[i] = s;
-						carry = borrow;
-					}
+			def::uword_t next_word = this_sign_bits - rhs_sign_bits - carry;
+			def::uword_t next_sign_word = def::full_sign_word(next_word);
+			if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
+				/* same as the += operator */
+				*first_free++ = next_word;
+			}
 
-					def::uword_t next_word = this_sign_bits - scalar_sign_bits - carry;
-					def::uword_t next_sign_word = def::full_sign_word(next_word);
+			return *this;
+		}
 
-					if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
-						realloc(this_oldsz + 1);
-						*first_free++ = next_word;
-					}
+		/* only for unsigned factors */
+		big_int& operator*= (def::uword_t factor) noexcept{
+			realloc(size() + 1);
+			def::uword_t from_lower = 0;
+			for(std::size_t i = 0; i < size(); i++){
+				auto [p, next_lower] = mul_kernel(this -> data[i], factor, from_lower, 0);
+				this -> data[i] = p;
+				from_lower = next_lower;
+			}
+			if(from_lower || back() & def::sign_bit){
+				*first_free++ = from_lower;
+			}
 
-					return *this;
+			return *this;
+		}
+
+		big_int &operator*= (const big_int &rhs){
+			*this = *this * rhs;
+			return *this;
+		}
+
+		[[nodiscard]] big_int operator-()const noexcept{
+			big_int tmp = *this;
+			for(std::size_t i = 0; i < size(); i++){
+				tmp.data[i] = ~tmp.data[i];
+			}
+			tmp += 1;
+			return tmp;
+		}
+
+		/* friend functions */
+
+		[[nodiscard]] friend big_int operator+ (const big_int &src, def::uword_t scalar) noexcept{
+			big_int tmp = src;
+			tmp += scalar;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator+ (def::uword_t scalar, const big_int &src) noexcept{
+			big_int tmp = src;
+			tmp += scalar;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator+ (const big_int &lhs, const big_int &rhs) noexcept{
+			big_int tmp = lhs;
+			tmp += rhs;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator- (const big_int &src, def::uword_t scalar)noexcept{
+			big_int tmp = src;
+			tmp -= scalar;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator- (def::udword_t scalar, const big_int &src)noexcept{
+			big_int tmp = src;
+			tmp -= scalar;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator- (const big_int &lhs, const big_int &rhs)noexcept{
+			big_int tmp = lhs;
+			tmp -= rhs;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator* (const big_int &src, def::uword_t factor) noexcept{
+			big_int tmp = src;
+			tmp *= factor;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator* (def::uword_t factor, const big_int &src)noexcept{
+			big_int tmp = src;
+			tmp *= factor;
+			return tmp;
+		}
+
+		[[nodiscard]] friend big_int operator* (const big_int &src, const big_int &factor) noexcept{
+
+			const std::size_t src_size = src.size();
+			const std::size_t factor_size = factor.size();
+			const std::size_t result_size = src_size + factor_size;
+
+			big_int result;
+			result.realloc(result_size);
+			result.first_free = result.data + result_size;
+
+			const def::uword_t src_sign_bits = def::full_sign_word(src.back());
+			const def::uword_t factor_sign_bits = def::full_sign_word(factor.back());
+
+			for(std::size_t j = 0; j < factor_size; j++){
+				const std::size_t lim_i = result_size - j;
+				const std::size_t lim_i2 = std::min(lim_i, src_size);
+				const def::uword_t factor_j = factor[j];
+
+				def::uword_t from_lower = 0;
+
+				for(std::size_t i = 0; i < lim_i2; i++){
+					auto [p, next_lower] = mul_kernel(src[i], factor_j, from_lower, result[i+j]);
+					result[i + j] = p;
+					from_lower = next_lower;
 				}
 
-				big_int &operator--() noexcept{
-					*this -= 1;
-					return *this;
-				}
-
-				big_int operator--(int) noexcept{
-					big_int tmp = *this;
-					*this -= 1;
-					return tmp;
-				}
-
-				big_int &operator-= (const big_int &rhs) noexcept{
-
-					const std::size_t this_oldsz = size();
-					const std::size_t rhs_sz = rhs.size();
-
-					const def::uword_t this_sign_bits = def::full_sign_word(back());
-					const def::uword_t rhs_sign_bits = def::full_sign_word(rhs.back());
-
-					def::uword_t carry = 0;
-					if(rhs_sz <= this_oldsz){
-						realloc(this_oldsz + 1);
-						for(std::size_t i = 0; i < rhs_sz; i++){
-							auto [s, borrow] = sub_kernel(this -> data[i], rhs[i], carry);
-							this -> data[i] = s;
-							carry = borrow;
-						}
-						for(std::size_t i = rhs_sz; i < this_oldsz; i++){
-							auto[s, borrow] = sub_kernel(this -> data[i], rhs_sign_bits, carry);
-							this -> data[i] = s;
-							carry = borrow;
-						}
-					}else{
-						realloc(rhs_sz + 1);
-						first_free = data + rhs_sz;
-						for(std::size_t i = 0; i < this_oldsz; i++){
-							auto [s, borrow] = sub_kernel(this -> data[i], rhs[i], carry);
-							this -> data[i] = s;
-							carry = borrow;
-						}
-						for(std::size_t i = this_oldsz; i < rhs_sz; i++){
-							auto [s, borrow] = sub_kernel(this_sign_bits, rhs[i], carry);
-							this -> data[i] = s;
-							carry = borrow;
-						}
-					}
-
-					def::uword_t next_word = this_sign_bits - rhs_sign_bits - carry;
-					def::uword_t next_sign_word = def::full_sign_word(next_word);
-					if(next_word != next_sign_word || ((next_word ^ back()) & def::sign_bit)){
-						/* same as the += operator */
-						*first_free++ = next_word;
-					}
-
-					return *this;
-				}
-
-				/* only for unsigned factors */
-				big_int& operator*= (def::uword_t factor) noexcept{
-					realloc(size() + 1);
-					def::uword_t from_lower = 0;
-					for(std::size_t i = 0; i < size(); i++){
-						auto [p, next_lower] = mul_kernel(this -> data[i], factor, from_lower, 0);
-						this -> data[i] = p;
+				if(src_sign_bits){
+					for(std::size_t i = lim_i2; i < lim_i; i++){
+						auto [p, next_lower] = mul_kernel(src_sign_bits, factor_j, from_lower, result[i + j]);
+						result[i + j] = p;
 						from_lower = next_lower;
 					}
-					if(from_lower || back() & def::sign_bit){
-						*first_free++ = from_lower;
+				}else{
+					for(std::size_t i = lim_i2; from_lower && i < lim_i; i++){
+						auto [p, next_lower] = mul_kernel(0, factor_j, from_lower, result[i + j]);
+						result[i + j] = p;
+						from_lower = next_lower;
+					}
+				}
+			}
+
+			if (factor_sign_bits) {
+				for(std::size_t j = factor_size; j < result_size; j++){
+					const std::size_t lim_i = result_size - j;
+					const std::size_t lim_i2 = std::min(lim_i, src_size);
+
+					def::uword_t from_lower = 0;
+
+					for(std::size_t i = 0; i < lim_i2; i++){
+						auto [p, next_lower] = mul_kernel(src[i], factor_sign_bits, from_lower, result[i + j]);
+						result[i + j] = p;
+						from_lower = next_lower;
 					}
 
-					return *this;
-				}
-
-				big_int &operator*= (const big_int &rhs){
-					*this = *this * rhs;
-					return *this;
-				}
-
-				[[nodiscard]] big_int operator-()const noexcept{
-					big_int tmp = *this;
-					for(std::size_t i = 0; i < size(); i++){
-						tmp.data[i] = ~tmp.data[i];
-					}
-					tmp += 1;
-					return tmp;
-				}
-
-				/* friend functions */
-
-				[[nodiscard]] friend big_int operator+ (const big_int &src, def::uword_t scalar) noexcept{
-					big_int tmp = src;
-					tmp += scalar;
-					return tmp;
-				}
-
-				[[nodiscard]] friend big_int operator+ (def::uword_t scalar, const big_int &src) noexcept{
-					big_int tmp = src;
-					tmp += scalar;
-					return tmp;
-				}
-
-				[[nodiscard]] friend big_int operator+ (const big_int &lhs, const big_int &rhs) noexcept{
-					big_int tmp = lhs;
-					tmp += rhs;
-					return tmp;
-				}
-
-				[[nodiscard]] friend big_int operator- (const big_int &src, def::uword_t scalar)noexcept{
-					big_int tmp = src;
-					tmp -= scalar;
-					return tmp;
-				}
-
-				[[nodiscard]] friend big_int operator- (def::udword_t scalar, const big_int &src)noexcept{
-					big_int tmp = src;
-					tmp -= scalar;
-					return tmp;
-				}
-
-				[[nodiscard]] friend big_int operator- (const big_int &lhs, const big_int &rhs)noexcept{
-					big_int tmp = lhs;
-					tmp -= rhs;
-					return tmp;
-				}
-
-				[[nodiscard]] friend big_int operator* (const big_int &src, def::uword_t factor) noexcept{
-					big_int tmp = src;
-					tmp *= factor;
-					return tmp;
-				}
-
-				[[nodiscard]] friend big_int operator* (def::uword_t factor, const big_int &src)noexcept{
-					big_int tmp = src;
-					tmp *= factor;
-					return tmp;
-				}
-
-				[[nodiscard]] friend big_int operator* (const big_int &src, const big_int &factor) noexcept{
-
-					const std::size_t src_size = src.size();
-					const std::size_t factor_size = factor.size();
-					const std::size_t result_size = src_size + factor_size;
-
-					big_int result;
-					result.realloc(result_size);
-					result.first_free = result.data + result_size;
-
-					const def::uword_t src_sign_bits = def::full_sign_word(src.back());
-					const def::uword_t factor_sign_bits = def::full_sign_word(factor.back());
-
-					for(std::size_t j = 0; j < factor_size; j++){
-						const std::size_t lim_i = result_size - j;
-						const std::size_t lim_i2 = std::min(lim_i, src_size);
-						const def::uword_t factor_j = factor[j];
-
-						def::uword_t from_lower = 0;
-
-						for(std::size_t i = 0; i < lim_i2; i++){
-							auto [p, next_lower] = mul_kernel(src[i], factor_j, from_lower, result[i+j]);
+					if(src_sign_bits){
+						for(std::size_t i = lim_i2; i < lim_i; i++){
+							auto [p, next_lower] = mul_kernel(src_sign_bits, factor_sign_bits, from_lower, result[i + j]);
 							result[i + j] = p;
 							from_lower = next_lower;
 						}
-
-						if(src_sign_bits){
-							for(std::size_t i = lim_i2; i < lim_i; i++){
-								auto [p, next_lower] = mul_kernel(src_sign_bits, factor_j, from_lower, result[i + j]);
-								result[i + j] = p;
-								from_lower = next_lower;
-							}
-						}else{
-							for(std::size_t i = lim_i2; from_lower && i < lim_i; i++){
-								auto [p, next_lower] = mul_kernel(0, factor_j, from_lower, result[i + j]);
-								result[i + j] = p;
-								from_lower = next_lower;
-							}
+					}else{
+						for(std::size_t i = lim_i2; from_lower && i < lim_i; i++){
+							auto [p, next_lower] = mul_kernel(0, factor_sign_bits, from_lower, result[i + j]);
+							result[i + j] = p;
+							from_lower = next_lower;
 						}
 					}
-
-					if (factor_sign_bits) {
-						for(std::size_t j = factor_size; j < result_size; j++){
-							const std::size_t lim_i = result_size - j;
-							const std::size_t lim_i2 = std::min(lim_i, src_size);
-
-							def::uword_t from_lower = 0;
-
-							for(std::size_t i = 0; i < lim_i2; i++){
-								auto [p, next_lower] = mul_kernel(src[i], factor_sign_bits, from_lower, result[i + j]);
-								result[i + j] = p;
-								from_lower = next_lower;
-							}
-
-							if(src_sign_bits){
-								for(std::size_t i = lim_i2; i < lim_i; i++){
-									auto [p, next_lower] = mul_kernel(src_sign_bits, factor_sign_bits, from_lower, result[i + j]);
-									result[i + j] = p;
-									from_lower = next_lower;
-								}
-							}else{
-								for(std::size_t i = lim_i2; from_lower && i < lim_i; i++){
-									auto [p, next_lower] = mul_kernel(0, factor_sign_bits, from_lower, result[i + j]);
-									result[i + j] = p;
-									from_lower = next_lower;
-								}
-							}
-						}
-					}
-					def::uword_t *old_first_free = result.first_free;
-
-					while(result.size() > 1 && result.back() == def::full_sign_word(result[result.size() - 2])){
-						result.first_free--;
-					}
-
-					std::memset(result.first_free, 0, (old_first_free - result.first_free) * sizeof(def::uword_t));
-					return result;
 				}
-			};
+			}
+			def::uword_t *old_first_free = result.first_free;
 
-			template <class Allocator>
-			inline Allocator big_int<Allocator>::allocator;
- 
+			while(result.size() > 1 && result.back() == def::full_sign_word(result[result.size() - 2])){
+				result.first_free--;
+			}
+
+			std::memset(result.first_free, 0, (old_first_free - result.first_free) * sizeof(def::uword_t));
+			return result;
 		}
-	}
+	};
+
+	template <class Allocator>
+	inline Allocator big_int<Allocator>::allocator;
+
 }
 
 

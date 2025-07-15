@@ -4,7 +4,7 @@
 #include "big_int.hpp"
 
 TEST(test_mwi, test_mwi_full_sign_word) {
-	using namespace wigcpp::internal::mwi::def;
+	using namespace wigcpp::internal::def;
 
 #if MULTI_WORD_INT_SIZEOF_ITEM == 8
 	// Test with signed integers
@@ -29,7 +29,7 @@ TEST(test_mwi, test_mwi_full_sign_word) {
 
 TEST(test_mwi, big_int_test){
 	using namespace wigcpp::internal::mwi;
-	using namespace wigcpp::internal::mwi::def;
+	using namespace wigcpp::internal::def;
 
 	big_int a; // default constructor
 	EXPECT_EQ(a.size(), 1);
@@ -84,14 +84,14 @@ TEST(test_mwi, big_int_test){
 
 TEST(test_mwi, test_operator_add){
 	using namespace wigcpp::internal::mwi;
-	using namespace wigcpp::internal::mwi::def;
+	using namespace wigcpp::internal::def;
 	big_int a(10);
 	big_int b(20);
 
 	a += b; // operator +=(const big_int &rhs)
 	EXPECT_EQ(a[0], 30);
 
-	def::uword_t scalar = 5;
+	uword_t scalar = 5;
 	a += scalar; // operator +=(def::uword_t scalar)
 	EXPECT_EQ(a[0], 35);
 
@@ -139,7 +139,7 @@ TEST(test_mwi, test_operator_add){
 
 TEST(test_mwi, test_operator_minus){
 	using namespace wigcpp::internal::mwi;
-	using namespace wigcpp::internal::mwi::def;
+	using namespace wigcpp::internal::def;
 	big_int a(10);
 	big_int b = -a;
 	EXPECT_EQ(b[0], -10);
@@ -155,7 +155,7 @@ TEST(test_mwi, test_operator_minus){
 
 TEST(test_mwi, test_to_hex_str){
 	using namespace wigcpp::internal::mwi;
-	using namespace wigcpp::internal::mwi::def;
+	using namespace wigcpp::internal::def;
 
 	big_int result(1);
 
@@ -179,7 +179,7 @@ TEST(test_mwi, test_to_hex_str){
 
 TEST(test_mwi, test_operator_multiply){ 
 	using namespace wigcpp::internal::mwi;
-	using namespace wigcpp::internal::mwi::def;
+	using namespace wigcpp::internal::def;
 
 	big_int a(1);
 
