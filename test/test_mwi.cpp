@@ -177,7 +177,7 @@ TEST(test_mwi, test_to_hex_str){
 
 }
 
-TEST(test_mwi, test_operator_multiply){
+TEST(test_mwi, test_operator_multiply){ 
 	using namespace wigcpp::internal::mwi;
 	using namespace wigcpp::internal::mwi::def;
 

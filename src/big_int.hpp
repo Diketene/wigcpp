@@ -743,7 +743,7 @@ namespace wigcpp{
 
 			template <class Allocator>
 			inline Allocator big_int<Allocator>::allocator;
-
+ 
 		}
 	}
 }
