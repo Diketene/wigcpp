@@ -17,7 +17,6 @@
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <sys/stat.h>
 #include <type_traits>
 #include <utility>
 
@@ -27,45 +26,55 @@ namespace wigcpp{
 			/* multi word int namespace */
 			namespace def /* multi word int definitions */
 			{
-				#if MULTI_WORD_INT_SIZEOF_ITEM == 8
-					typedef __int128 int128_t;
-					typedef __uint128_t uint128_t;
+				template <unsigned size>
+				struct multi_word_traits{
+					static_assert(size == 4 || size == 8, "Invalid MULTI_WORD_INT_SIZEOF_ITEM value, must be 4 or 8");
+				};
 
-					typedef uint64_t uword_t;   	/* unsigned word type */
-					typedef uint128_t udword_t; 	/* unsigned double word type */
+				template <>
+				struct multi_word_traits<8>{
+					using int128_t =  __int128;
+					using uint128_t = __uint128_t;
 
-					typedef int64_t word_t;     	/* signed word type */
-					typedef int128_t dword_t;   	/* signed double word type */
+					using uword_t = std::uint64_t;   	/* unsigned word type */
+					using udword_t = uint128_t; 	/* unsigned double word type */
 
-					typedef uint64_t u_mul_word_t; /* unsigned word type for multiplication */
+					using word_t = std::int64_t;     	/* signed word type */
+					using dword_t = int128_t;   	/* signed double word type */
 
-					#define MWI_MULW_LARGER 0
-					#define PRIxMWI PRIx64
-					#define PRI0xMWI "016" PRIx64
+					using u_mul_word_t = std::uint64_t; /* unsigned word type for multiplication */
 
-				#elif MULTI_WORD_INT_SIZEOF_ITEM == 4
+					inline static constexpr bool MWI_MULW_LARGER = false;
 
-					typedef uint32_t uword_t;   /* unsigned word type */
-					typedef uint64_t udword_t; 	/* unsigned double word type */
+				};
 
-					typedef int32_t word_t;     /* signed word type */
-					typedef int64_t dword_t;   	/* signed double word type */
+				template <>
+				struct multi_word_traits<4>{
+					using uword_t = std::uint32_t;   /* unsigned word type */
+					using udword_t = std::uint64_t; 	/* unsigned double word type */
+
+					using word_t = std::int32_t;     /* signed word type */
+					using dword_t = std::int64_t;   	/* signed double word type */
+
 					#if MULTI_WORD_INT_SIZEOF_MULW == 8
-						typedef uint64_t u_mul_word_t;
-						#define MWI_MULW_LARGER 1 /* u_mul_word_t larger than uword_t*/
-					#elif MULTI_WORD_INT_SIZEOF_MULW == 4
-						typedef uint32_t u_mul_word_t;
-						#define MWI_MULW_LARGER 0 /* u_mul_word_t same size as uword_t*/
-					#else
-						#error "Invalid MULTI_WORD_INT_SIZEOF_MULW value, must be 4 or 8"
-					#endif
+      		  using u_mul_word_t = std::uint64_t;
+      		  inline static constexpr bool MWI_MULW_LARGER = true;
+    			#elif MULTI_WORD_INT_SIZEOF_MULW == 4
+      		  using u_mul_word_t = std::uint32_t;
+      		  inline static constexpr bool MWI_MULW_LARGER = false;
+    			#else
+      			#error "Invalid MULTI_WORD_INT_SIZEOF_MULW value, must be 4 or 8"
+    			#endif
+				};
 
-					#define PRIxMWI PRIx32
-					#define PRI0xMWI "08" PRIx32
+				using Traits = multi_word_traits<MULTI_WORD_INT_SIZEOF_ITEM>;
 
-				#else
-					#error "Invalid MULTI_WORD_INT_SIZEOF_ITEM value, must be 4 or 8"
-				#endif
+				using uword_t = Traits::uword_t;
+				using udword_t = Traits::udword_t;
+				using word_t = Traits::word_t;
+				using dword_t = Traits::dword_t;
+				using u_mul_word_t = Traits::u_mul_word_t;
+				constexpr inline static bool MWI_MULW_LARGER = Traits::MWI_MULW_LARGER;
 
 				inline constexpr uword_t shift_bits = sizeof(uword_t) << 3;
 
@@ -115,8 +124,8 @@ namespace wigcpp{
 				void realloc(std::size_t min_capacity) noexcept{
 
 					/* big_int::realloc() should only be used when it needs to grow the memory capacity
-					** of the bit_int object, it shouldn't be used when it needs to allocate a block 
-					** of memory, which is done by the big_int::alloc() method.
+					** of the bit_int object, it shouldn't be used to allocate a block of memory, which
+					** is done by the big_int::alloc() method.
 					*/
 
 					const std::size_t thiscap = capacity();
