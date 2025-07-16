@@ -8,6 +8,7 @@
 #include "nothrow_allocator.hpp"
 #include "error.hpp"
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -310,6 +311,33 @@ namespace wigcpp::internal::mwi{
 
 			return std::string(it, length);
 
+		}
+
+		std::pair<def::double_type, int> to_floating_point() const noexcept{
+			std::size_t high = size() - 1;
+
+			/* protective check: avoid existing extra sign bits */
+			while(high > 0 && 
+			data[high] == def::full_sign_word(data[high]) && 
+			!((data[high] ^ data[high - 1]) & def::sign_bit)){
+				high--;
+			}
+
+			def::double_type ds = 0;
+
+			for(std::size_t i = 2; i >= 1; i--){
+				def::uword_t wi = (high >= i) ? data[high - i] : 0;
+				def::double_type di = static_cast<def::double_type>(wi);
+				di = std::ldexp(di, -(static_cast<int>(i) * static_cast<int>(def::shift_bits)));
+				ds += di;
+			}
+
+			def::uword_t wi = data[high];
+			def::double_type di = static_cast<def::double_type>(static_cast<def::word_t>(wi));
+			ds += di;
+
+			int exp = static_cast<int>(high * def::shift_bits);
+			return {ds, exp};
 		}
 
 		/* operator overloading */
