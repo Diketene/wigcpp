@@ -22,7 +22,7 @@
 /* multi word int namespace */
 namespace wigcpp::internal::mwi{
 
-	template <class Allocator = nothrow_allocator<def::uword_t>>
+	template <class Allocator = allocator::nothrow_allocator<def::uword_t>>
 	class big_int{
 
 	private:
@@ -70,7 +70,8 @@ namespace wigcpp::internal::mwi{
 				new_capacity *= 2;
 			}
 
-			def::uword_t *new_data = allocator.reallocate(this -> data, new_capacity);
+			def::uword_t *new_data = static_cast<def::uword_t*>(std::realloc(data, sizeof(def::uword_t) * new_capacity));
+
 			if(!new_data){
 				std::cout << "Error in big_int::realloc: reallocation failed. \n";
 				error::error_process(error::ErrorCode::Bad_Alloc);
