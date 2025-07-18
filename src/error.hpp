@@ -1,9 +1,9 @@
 #ifndef __WIGCPP_ERROR_H__
 #define __WIGCPP_ERROR_H__
 
+#include <cstdio>
 #include <cstdlib>
-#include <iostream>
-namespace wigcpp::internal::mwi::error {
+namespace wigcpp::internal::error {
   enum class ErrorCode{
     Bad_Alloc,
     Bad_Shrink
@@ -19,13 +19,13 @@ namespace wigcpp::internal::mwi::error {
     void handle(ErrorCode code)const noexcept override  {
       switch (code) {
         case ErrorCode::Bad_Alloc:
-          std::cerr << "Memory allocation failed.\n wigcpp: aborted.\n";
+          std::fprintf(stderr, "Memory allocation failed.\n wigcpp: aborted.\n");
           std::abort();
         case ErrorCode::Bad_Shrink:
-          std::cerr << "Can't shrink a multi word integer to a single word integer.\n";
+          std::fprintf(stderr, "Can't shrink a multi word integer to a single word integer.\n Wigcpp: aborted.\n");
           std::abort();
         default:
-          std::cerr << "Unknown error occurred.\n wigcpp: aborted.\n";
+          std:fprintf(stderr, "Unknown error occurred.\n wigcpp: aborted.\n");
       }
     }
   };

@@ -11,10 +11,10 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <array>
-#include <iostream>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -43,7 +43,7 @@ namespace wigcpp::internal::mwi{
 		[[nodiscard]] def::uword_t* alloc(std::size_t capacity)noexcept{
 			def::uword_t* new_data = allocator.allocate(capacity);
 			if(!new_data){
-				std::cerr << "Error in big_int::alloc: allocation failed. \n";
+				std::fprintf(stderr, "Error in big_int::alloc: allocation failed. \n");
 				error::error_process(error::ErrorCode::Bad_Alloc);
 			}
 			std::memset(new_data, 0, capacity * sizeof(def::uword_t));
@@ -73,7 +73,7 @@ namespace wigcpp::internal::mwi{
 			def::uword_t *new_data = static_cast<def::uword_t*>(std::realloc(data, sizeof(def::uword_t) * new_capacity));
 
 			if(!new_data){
-				std::cout << "Error in big_int::realloc: reallocation failed. \n";
+				std::fprintf(stderr, "Error in big_int::realloc: reallocation failed. \n");
 				error::error_process(error::ErrorCode::Bad_Alloc);
 				return;
 			}
@@ -85,13 +85,13 @@ namespace wigcpp::internal::mwi{
 			std::memset(new_data + thiscap, 0, (new_capacity - thiscap) * sizeof(def::uword_t));
 		}
 
-		def::uword_t back() const{
+		def::uword_t back() const noexcept{
 				return *(first_free - 1);
 		}
 
 		/* calculate kernels */
 
-		static inline auto add_kernel(def::uword_t src1, def::uword_t src2, def::uword_t carry){
+		static inline auto add_kernel(def::uword_t src1, def::uword_t src2, def::uword_t carry)noexcept{
 			def::udword_t s = static_cast<def::udword_t>(src1),
 										t = static_cast<def::udword_t>(src2);
 			s = s + t + carry;
@@ -99,7 +99,7 @@ namespace wigcpp::internal::mwi{
 			return std::pair<def::uword_t, def::uword_t>(s, carry);
 		}
 
-		static inline auto sub_kernel(def::uword_t src1, def:: uword_t src2, def::uword_t carry){
+		static inline auto sub_kernel(def::uword_t src1, def:: uword_t src2, def::uword_t carry)noexcept{
 			def::udword_t s = static_cast<def::udword_t>(src1),
 										t = static_cast<def::udword_t>(src2);
 			s = s - t - carry;
@@ -107,7 +107,7 @@ namespace wigcpp::internal::mwi{
 			return std::pair<def::uword_t, def::uword_t>(s, carry);
 		}
 
-		static inline auto mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower, def::uword_t add_src){
+		static inline auto mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower, def::uword_t add_src)noexcept{
 			def::udword_t s = static_cast<def::udword_t>(src),
 										f = static_cast<def::udword_t>(factor);
 			def::udword_t p = s * f;
@@ -353,7 +353,7 @@ namespace wigcpp::internal::mwi{
 
 		big_int &operator=(def::uword_t v){
 			if(size() > 1){
-				std::cerr << "Error in big_int::operator=(def::uword_t):\n";
+				std::fprintf(stderr, "Error in big_int::operator=(def::uword_t):\n");
 				error::error_process(error::ErrorCode::Bad_Shrink);
 			}
 			*data = v;
