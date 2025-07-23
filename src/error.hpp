@@ -25,7 +25,7 @@ namespace wigcpp::internal::error {
           std::fprintf(stderr, "Can't shrink a multi word integer to a single word integer.\n Wigcpp: aborted.\n");
           std::abort();
         default:
-          std:fprintf(stderr, "Unknown error occurred.\n wigcpp: aborted.\n");
+          std::fprintf(stderr, "Unknown error occurred.\n wigcpp: aborted.\n");
       }
     }
   };
