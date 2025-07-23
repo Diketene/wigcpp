@@ -158,10 +158,7 @@ namespace wigcpp::internal::mwi{
 			return *this;
 		}
 
-		big_int(big_int &&src)noexcept{
-			data = src.data;
-			first_free = src.first_free;
-			cap = src.cap;
+		big_int(big_int &&src)noexcept: data(src.data), first_free(src.first_free), cap(src.cap){
 			src.data = nullptr;
 			src.first_free = nullptr;
 			src.cap = nullptr;
