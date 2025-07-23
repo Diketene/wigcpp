@@ -15,12 +15,15 @@ message("GTest libraries: ${GTest_LIBRARIES}")
 
 enable_testing()
 
-add_executable(test_mwi_full_sign_word test_mwi.cpp)
-target_include_directories(test_mwi_full_sign_word PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../src)
-target_include_directories(test_mwi_full_sign_word PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../config)
-target_include_directories(test_mwi_full_sign_word PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../build)
+function(add_wigcpp_test test_name source_file)
+  add_executable(${test_name} ${source_file})
+  target_include_directories(${test_name} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../config
+    ${CMAKE_CURRENT_SOURCE_DIR}/../build)
+  target_link_libraries(${test_name} GTest::gtest GTest::gtest_main)
+  gtest_discover_tests(${test_name})
+endfunction()
 
-target_link_libraries(test_mwi_full_sign_word GTest::gtest GTest::gtest_main)
-
+add_wigcpp_test(test_big_int test_big_int.cpp)
 include(GoogleTest)
-gtest_discover_tests(test_mwi_full_sign_word)
