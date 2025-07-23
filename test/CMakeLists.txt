@@ -26,4 +26,5 @@ function(add_wigcpp_test test_name source_file)
 endfunction()
 
 add_wigcpp_test(test_big_int test_big_int.cpp)
+add_wigcpp_test(test_vector test_vector.cpp)
 include(GoogleTest)
