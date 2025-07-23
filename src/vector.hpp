@@ -25,7 +25,7 @@ namespace wigcpp::internal::container{
     value_type* cap;
     
     [[nodiscard]] value_type *alloc(size_type capacity) noexcept {
-      value_type p = alloc_traits::allocate(allocator, capacity);
+      value_type *p = alloc_traits::allocate(allocator, capacity);
       if(!p){
         std::fprintf(stderr, "error in wigcpp::internal::container::vector::allocate: allocation failed.\n");
         error::error_process(error::ErrorCode::Bad_Alloc);
@@ -38,14 +38,14 @@ namespace wigcpp::internal::container{
       alloc_traits::construct(allocator, dest, std::forward<Args>(args)...);
     }
 
-    void destory_at(value_type *dest) noexcept {
-      alloc_traits::destory(allocator, dest);
+    void destroy_at(value_type *dest) noexcept {
+      alloc_traits::destroy(allocator, dest);
     }
 
-    void destory_elements() noexcept {
+    void destroy_elements() noexcept {
       for(value_type* it = first_free ; it != data; ){
         --it;
-        destory_at(it);
+        destroy_at(it);
       }
     }
 
@@ -55,7 +55,7 @@ namespace wigcpp::internal::container{
 
     void free() noexcept{
       if constexpr(!std::is_trivially_destructible_v<value_type>){
-        destory_elements();
+        destroy_elements();
       }
         release_memory();
     }
@@ -65,7 +65,7 @@ namespace wigcpp::internal::container{
 
     vector(const vector &src) noexcept {
       static_assert(std::is_nothrow_copy_constructible_v<value_type>, "value_type T must have nothrow copy constructor.");
-      value_type *new_data = allocate(src.capacity());
+      value_type *new_data = alloc(src.capacity());
       data = new_data;
       first_free = new_data + src.size();
       cap = new_data + src.capacity();
@@ -139,7 +139,7 @@ namespace wigcpp::internal::container{
         }
       }else{
         if constexpr(sizeof...(Args) == 0){
-          std::memset(data, size * sizeof(value_type), 0);
+          std::memset(data, 0, sizeof(value_type) * size);
         }else if constexpr(sizeof...(Args) == 1){
           const auto val = std::get<0>(std::make_tuple(args...));
           for(value_type *it = data; it != first_free; ++it){
@@ -163,6 +163,17 @@ namespace wigcpp::internal::container{
     size_type capacity() const noexcept {
       return cap - data;
     }
+
+    value_type &operator[](size_type index){
+      return *(data + index);
+    }
+
+    const value_type &operator[](size_type index) const{
+      return *(data + index);
+    }
   };
+
+  template <typename T, class Allocator>
+  inline Allocator vector<T, Allocator>::allocator;
 }
 #endif
