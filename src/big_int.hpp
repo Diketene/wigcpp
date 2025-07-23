@@ -45,8 +45,9 @@ namespace wigcpp::internal::mwi{
 			if(!new_data){
 				std::fprintf(stderr, "Error in big_int::alloc: allocation failed. \n");
 				error::error_process(error::ErrorCode::Bad_Alloc);
+			}else{
+				std::memset(new_data, 0, capacity * sizeof(def::uword_t));
 			}
-			std::memset(new_data, 0, capacity * sizeof(def::uword_t));
 			return new_data;
 		}
 
@@ -207,7 +208,6 @@ namespace wigcpp::internal::mwi{
 
 		void resize(std::size_t new_size) noexcept{
 			if(new_size > capacity()){
-				std::size_t old_size = size();
 				realloc(new_size);
 				first_free = data + new_size;
 			}else{
@@ -365,9 +365,11 @@ namespace wigcpp::internal::mwi{
 
 			def::uword_t carry = 0;
 
-			auto [s, overflow] = add_kernel(this -> data[0], scalar, carry);
-			this -> data[0] = s;
-			carry = overflow;
+			{
+				auto [s, overflow] = add_kernel(this -> data[0], scalar, carry);
+				this -> data[0] = s;
+				carry = overflow;
+			}
 
 			for(std::size_t i = 1; i < this_oldsz; i++){
 				auto [s, overflow] = add_kernel(this -> data[i], scalar_sign_bits, carry);
@@ -457,9 +459,11 @@ namespace wigcpp::internal::mwi{
 
 			def::uword_t carry = 0;
 
-			auto [s, borrow] = sub_kernel(this -> data[0], scalar, carry);
-			this -> data[0] = s;
-			carry = borrow;
+			{
+				auto [s, borrow] = sub_kernel(this -> data[0], scalar, carry);
+				this -> data[0] = s;
+				carry = borrow;
+			}
 
 			for(std::size_t i = 0; i < this_oldsz && (carry != 0); i++){
 				auto [s, borrow] = sub_kernel(this -> data[i], scalar_sign_bits, carry);
