@@ -25,6 +25,18 @@ TEST(test_vector, test_pod){
 TEST(test_vector, test_non_trivial){
   using wigcpp::internal::container::vector;
   using wigcpp::internal::mwi::big_int;
-  vector<big_int<>> a(4, 1);
+  using Bigint = big_int<>;
+  vector<Bigint> a(4, 1);
   EXPECT_EQ(a.size(), 4);
+  vector<Bigint> b = a;
+  EXPECT_EQ(b.size(), 4);
+  vector<Bigint> c;
+  c = std::move(b);
+  EXPECT_EQ(c.size(), 4);
+  vector<Bigint> d(std::move(c));
+  EXPECT_EQ(d.size(), 4);
+  vector<Bigint> e(5);
+  EXPECT_EQ(e.size(), 5);
+  e = d;
+  EXPECT_EQ(e.size(), 4);
 }
