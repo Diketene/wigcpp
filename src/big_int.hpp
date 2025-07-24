@@ -2,8 +2,8 @@
  * 
  *
  */
-#ifndef __WIGCPP_BIG_INT_HPP__
-#define __WIGCPP_BIG_INT_HPP__
+#ifndef __WIGCPP_BIG_INT__
+#define __WIGCPP_BIG_INT__
 #include "definitions.hpp"
 #include "nothrow_allocator.hpp"
 #include "error.hpp"
@@ -705,4 +705,4 @@ namespace wigcpp::internal::mwi{
 }
 
 
-#endif /* __WIGCPP_BIG_INT_HPP__ */
+#endif /* __WIGCPP_BIG_INT__ */

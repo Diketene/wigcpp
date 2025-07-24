@@ -1,5 +1,5 @@
-#ifndef __WIGCPP_ERROR_H__
-#define __WIGCPP_ERROR_H__
+#ifndef __WIGCPP_ERROR__
+#define __WIGCPP_ERROR__
 
 #include <cstdio>
 #include <cstdlib>
@@ -45,4 +45,4 @@ namespace wigcpp::internal::error {
 
   
 }
-#endif
+#endif /* __WIGCPP_ERROR__ */
