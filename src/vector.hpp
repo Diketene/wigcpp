@@ -196,8 +196,87 @@ namespace wigcpp::internal::container{
       cap = new_data + new_capacity;
     }
 
+    void resize(size_type size)noexcept{
+      static_assert(std::is_nothrow_default_constructible_v<value_type>, "value_type T must have nothrow default constructor");
+      const size_type sz = this -> size();
+      const size_type capof = this -> capacity();
+      if(size == sz){
+        return;
+      }
+      if(size == 0){
+        free();
+        data = first_free = cap = nullptr;
+        return;
+      }
+      if(size > capof){
+        reserve(size);
+      }
+      if constexpr(!std::is_trivially_default_constructible_v<value_type>){
+        if(size > sz){
+          for(value_type *it = first_free; it != data + size; ++it){
+            construct_at(it);
+          }
+        }else{
+          for(value_type *it = first_free; it != data + size; ){
+            --it;
+            destroy_at(it);
+          }
+        }
+      }else{
+        if(size > sz){
+          std::memset(first_free, 0, (size - sz) * sizeof(value_type));
+        }else{
+          std::memset(data + size, 0, (sz - size) * sizeof(value_type));
+        }
+      }
+      first_free = data + size;
+    }
+
+    void resize(size_type size, const value_type &src)noexcept{
+      static_assert(std::is_nothrow_copy_constructible_v<value_type>, "value_type T must have nothrow copy constructor");
+      const size_type sz = this -> size();
+      const size_type capof = this -> capacity();
+      if(size == sz){
+        return;
+      }
+      if(size == 0){
+        free();
+        data = first_free = cap = nullptr;
+        return;
+      }
+      if(size > capof){
+        reserve(size);
+      }
+      if constexpr(!std::is_trivially_copy_constructible_v<value_type>){
+        if(size > sz){
+          for(value_type *it = first_free; it != data + size; ++it){
+            construct_at(it,src); 
+          }
+        }else{
+          for(value_type *it = first_free; it != data + size; ){
+            --it;
+            destroy_at(it);
+          }
+        }
+      }else{
+        if(size > sz){
+          for(value_type *it = first_free; it != data + size; ++it){
+            *it = src;
+          }
+        }else{
+          std::memset(data + size, 0, (sz - size) * sizeof(value_type));
+        }
+      }
+      first_free = data + size;
+    }
+
     template <typename ...Args>
-    void emplace_back(Args &&...args){
+    void emplace_back(Args &&...args)noexcept{
+      if constexpr(sizeof...(Args) == 0){
+        static_assert(std::is_nothrow_default_constructible_v<value_type>, "value_type T must have nothrow default constructor");
+      }else{
+        static_assert(std::is_nothrow_constructible_v<value_type, Args...>, "value_type T must have nothrow constructor under given parameters");
+      }
       const size_type szof = size();
       const size_type capof = capacity();
       if(szof == capof){
@@ -217,7 +296,7 @@ namespace wigcpp::internal::container{
     }
 
     template <typename Arg, std::enable_if<std::is_same_v<std::decay_t<Arg>, value_type>>>
-    void push_back(Arg &&arg){
+    void push_back(Arg &&arg)noexcept{
       emplace_back(std::forward<Arg>(arg));
     }
   };
