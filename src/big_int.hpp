@@ -131,7 +131,7 @@ namespace wigcpp::internal::mwi{
 			cap = data + 8;
 		}
 
-		explicit big_int(def::uword_t init_value)noexcept{
+		big_int(def::uword_t init_value)noexcept{
 			data = alloc(8);
 			first_free = data + 1;
 			cap = data + 8;
