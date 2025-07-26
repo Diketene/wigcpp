@@ -62,24 +62,28 @@ namespace wigcpp::internal::container{
     }
 
   public:
+
+  static_assert(std::is_nothrow_default_constructible_v<value_type>, "value_type T must have nothrow default constructor");
+  static_assert(std::is_nothrow_copy_constructible_v<value_type>, "value_type T must have nothrow copy constructor.");
+  static_assert(std::is_nothrow_destructible_v<value_type>, "value_type T must have nothrow destructor");
+
     vector() noexcept: data(nullptr), first_free(nullptr), cap(nullptr){}
 
     vector(const vector &src) noexcept {
-      static_assert(std::is_nothrow_copy_constructible_v<value_type>, "value_type T must have nothrow copy constructor.");
       value_type *new_data = alloc(src.capacity());
+
+
+      if constexpr(!std::is_trivially_copyable_v<value_type>){
+        for(value_type *it = new_data, *src_elem = src.data; src_elem != src.first_free; ++it, ++src_elem){
+          construct_at(it, *src_elem);
+        }
+      }else{
+        std::memcpy(new_data, src.data, src.size() * sizeof(value_type));
+      }
+
       data = new_data;
       first_free = new_data + src.size();
       cap = new_data + src.capacity();
-
-      if constexpr(!std::is_trivially_copyable_v<value_type>){
-        value_type *src_element = src.data;
-        for(value_type *it = data; it != first_free; ++it){
-          construct_at(it, *src_element);
-          ++src_element; 
-        }
-      }else{
-        std::memcpy(data, src.data, src.size() * sizeof(value_type));
-      }
     }
 
     vector(vector &&src) noexcept :data(src.data), first_free(src.first_free), cap(src.cap){
@@ -90,23 +94,29 @@ namespace wigcpp::internal::container{
       if(this == &src){
         return *this;
       }
-      value_type *new_data = alloc(src.capacity());
+
+      const size_type src_size = src.size();
+      const size_type src_capacity = src.capacity();
+
+      if(src_capacity == 0){
+        free();
+      }
+
+      value_type *new_data = alloc(src_capacity);
+
+      if constexpr(!std::is_trivially_copyable_v<value_type>){
+        for(value_type *it = new_data, *src_elem = src.data; src_elem != src.first_free; ++it, ++src_elem){
+          construct_at(it, *src_elem);
+        }
+      }else{
+        std::memcpy(new_data, src.data, src_size * sizeof(value_type));
+      }
+
       free();
 
       data = new_data;
-      first_free = new_data + src.size();
-      cap = new_data + src.capacity();
-
-      if constexpr(!std::is_trivially_copyable_v<value_type>){
-        value_type *src_elem = src.data;
-        for(value_type *it = data; it != first_free; ++it){
-          construct_at(it, *src_elem);
-          ++src_elem;
-        }
-      }else{
-        std::memcpy(data, src.data, src.size() * sizeof(value_type));
-      }
-
+      first_free = new_data + src_size;
+      cap = new_data + src_capacity;
       return *this;
     }
 
@@ -153,7 +163,6 @@ namespace wigcpp::internal::container{
     }
     
     ~vector()noexcept{
-      static_assert(std::is_nothrow_destructible_v<value_type>, "value_type T must have nothrow destructor");
       free();
     }
 
@@ -205,7 +214,6 @@ namespace wigcpp::internal::container{
     }
 
     void resize(size_type size)noexcept{
-      static_assert(std::is_nothrow_default_constructible_v<value_type>, "value_type T must have nothrow default constructor");
       const size_type sz = this -> size();
       const size_type capof = this -> capacity();
       if(size == sz){
@@ -239,7 +247,6 @@ namespace wigcpp::internal::container{
     }
 
     void resize(size_type size, const value_type &src)noexcept{
-      static_assert(std::is_nothrow_copy_constructible_v<value_type>, "value_type T must have nothrow copy constructor");
       const size_type sz = this -> size();
       const size_type capof = this -> capacity();
       if(size == sz){
