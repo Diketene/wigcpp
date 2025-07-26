@@ -173,24 +173,31 @@ namespace wigcpp::internal::container{
       return *(data + index);
     }
 
-    void reserve(size_type min_capacity) noexcept{
+    void reserve(size_type min_capacity) noexcept {
       const size_type oldsize = size();
       const size_type oldcap = capacity();
-      if(min_capacity <= oldcap){
-        return;
+      if (min_capacity <= oldcap) {
+        return; 
       }
-      const size_type double_cap = capacity() * 2;
-      const size_type new_capacity = min_capacity > double_cap ? min_capacity : double_cap;
+
+      const double growth_factor = oldcap < 1024 ? 4 : 3;
+      const size_type factor_cap = static_cast<size_type>(oldcap * growth_factor / 2);
+      const size_type new_capacity = min_capacity > factor_cap ? min_capacity : factor_cap;
+
       value_type *new_data = alloc(new_capacity);
-      if constexpr(!std::is_trivially_copyable_v<value_type>){
-        value_type *new_elem = new_data;
-        for(value_type *it = data; it != first_free; ++it){
-          construct_at(new_elem, *it);
-          ++new_elem;
+
+      if constexpr (std::is_nothrow_move_constructible_v<value_type>) {
+        for (value_type *src = data, *dest = new_data; src != first_free; ++src, ++dest) {
+          construct_at(dest, std::move(*src));
         }
-      }else{
+      } else if constexpr (!std::is_trivially_copyable_v<value_type>) {
+        for (value_type *src = data, *dest = new_data; src != first_free; ++src, ++dest) {
+          construct_at(dest, *src);
+        }
+      } else {
         std::memcpy(new_data, data, oldsize * sizeof(value_type));
       }
+
       free();
       data = new_data;
       first_free = new_data + oldsize;
