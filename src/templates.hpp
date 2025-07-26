@@ -1,6 +1,7 @@
 #ifndef __WIGCPP_TEMPLATES__
 #define __WIGCPP_TEMPLATES__
 
+#include <utility>
 namespace wigcpp::internal::templates {
   template <typename ...Args>
   struct first_type;
@@ -17,6 +18,11 @@ namespace wigcpp::internal::templates {
 
   template <typename ...Args>
   using first_type_t = typename first_type<Args...>::type;
+
+  template <typename First, typename ...Rest>
+  constexpr decltype(auto)first_value(First &&f, Rest &&...r){
+    return std::forward<First>(f);
+  }
 
 }
 #endif
