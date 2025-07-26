@@ -6,14 +6,12 @@
 #include "definitions.hpp"
 #include "nothrow_allocator.hpp"
 #include "error.hpp"
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <array>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -244,11 +242,11 @@ namespace wigcpp::internal::mwi{
 
 			auto word_to_hex = [&parser](def::uword_t word, char *buffer_current){
 				std::uint8_t mask = 0x0F;
-				std::array<char, hex_digits_per_word> hex_digits;
+				char hex_digits[hex_digits_per_word];
 				for(std::size_t i = 0; i < hex_digits_per_word; i++){
 					hex_digits[i] = parser((word >> (hex_digits_per_word - 1 - i) * 4) & mask);
 				}
-				std::copy(hex_digits.begin(), hex_digits.end(), buffer_current);
+				std::memcpy(buffer_current, hex_digits, hex_digits_per_word);
 			};
 
 			auto remove_leading_zeros = [](const std::string_view str){
@@ -633,7 +631,7 @@ namespace wigcpp::internal::mwi{
 
 			for(std::size_t j = 0; j < factor_size; j++){
 				const std::size_t lim_i = result_size - j;
-				const std::size_t lim_i2 = std::min(lim_i, src_size);
+				const std::size_t lim_i2 = lim_i <src_size ? lim_i : src_size;
 				const def::uword_t factor_j = factor[j];
 
 				def::uword_t from_lower = 0;
@@ -662,7 +660,7 @@ namespace wigcpp::internal::mwi{
 			if (factor_sign_bits) {
 				for(std::size_t j = factor_size; j < result_size; j++){
 					const std::size_t lim_i = result_size - j;
-					const std::size_t lim_i2 = std::min(lim_i, src_size);
+					const std::size_t lim_i2 = lim_i < src_size ? lim_i : src_size;
 
 					def::uword_t from_lower = 0;
 
