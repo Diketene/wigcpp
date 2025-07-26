@@ -295,7 +295,7 @@ namespace wigcpp::internal::container{
       ++first_free;
     }
 
-    template <typename Arg, std::enable_if<std::is_same_v<std::decay_t<Arg>, value_type>>>
+    template <typename Arg, typename = std::enable_if_t<std::is_convertible_v<std::decay_t<Arg>, value_type>>>
     void push_back(Arg &&arg)noexcept{
       emplace_back(std::forward<Arg>(arg));
     }
