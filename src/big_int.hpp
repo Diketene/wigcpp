@@ -1,5 +1,6 @@
 /*
  * 
+ *
  */
 #ifndef __WIGCPP_BIG_INT__
 #define __WIGCPP_BIG_INT__
