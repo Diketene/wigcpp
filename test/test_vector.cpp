@@ -20,6 +20,14 @@ TEST(test_vector, test_pod){
   EXPECT_EQ(d.size(), 4);
   vector<int> e(std::move(d));
   EXPECT_EQ(e.size(), 4);
+  e.reserve(8);
+  EXPECT_EQ(e.capacity(), 8);
+  e.resize(5);
+  EXPECT_EQ(e.size(), 5);
+  e.resize(10);
+  EXPECT_EQ(e.size(), 10);
+  e.push_back(1);
+  EXPECT_EQ(e.size(), 11);
 }
 
 TEST(test_vector, test_non_trivial){
@@ -39,4 +47,19 @@ TEST(test_vector, test_non_trivial){
   EXPECT_EQ(e.size(), 5);
   e = d;
   EXPECT_EQ(e.size(), 4);
+  e.reserve(8);
+  EXPECT_EQ(e.capacity(), 8);
+  e.resize(5);
+  EXPECT_EQ(e.size(), 5);
+  e.resize(10);
+  EXPECT_EQ(e.size(), 10);
+  e.emplace_back(big_int<>());
+  EXPECT_EQ(e.size(), 11);
+  big_int f(10);
+  e.push_back(f);
+  EXPECT_EQ(e.size(), 12);
+  e.emplace_back(1);
+  EXPECT_EQ(e.size(),13);
+  e.push_back(1);
+  EXPECT_EQ(e.size(), 14);
 }
