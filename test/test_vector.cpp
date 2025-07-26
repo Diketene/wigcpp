@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "big_int.hpp"
+#include <cstddef>
 #include <utility>
 #include "vector.hpp"
 
@@ -28,6 +29,12 @@ TEST(test_vector, test_pod){
   EXPECT_EQ(e.size(), 10);
   e.push_back(1);
   EXPECT_EQ(e.size(), 11);
+  vector<double> f;
+  f.resize(5);
+  EXPECT_EQ(f.size(), 5);
+  for(std::size_t i = 0; i < f.size(); ++i){
+    EXPECT_EQ(f[i], 0.0);
+  }
 }
 
 TEST(test_vector, test_non_trivial){
