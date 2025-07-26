@@ -57,7 +57,8 @@ namespace wigcpp::internal::container{
       if constexpr(!std::is_trivially_destructible_v<value_type>){
         destroy_elements();
       }
-        release_memory();
+      release_memory();
+      data = first_free = cap = nullptr;
     }
 
   public:
@@ -122,7 +123,7 @@ namespace wigcpp::internal::container{
     }
 
     template <typename ...Args>
-    vector(size_type size, Args &&... args) noexcept {
+    vector(size_type size, const Args &... args) noexcept {
       static_assert(sizeof...(Args) == 0 ? 
                     std::is_nothrow_default_constructible_v<value_type>: 
                     std::is_nothrow_constructible_v<value_type, Args...>, "value_type T must have nothrow constructor under given parameters");
@@ -135,13 +136,13 @@ namespace wigcpp::internal::container{
 
       if constexpr(!std::is_trivially_constructible_v<value_type>){
         for(value_type *it = data; it != first_free; ++it){
-          construct_at(it, std::forward<Args>(args)...);
+          construct_at(it, args...);
         }
       }else{
         if constexpr(sizeof...(Args) == 0){
-          std::memset(data, 0, sizeof(value_type) * size);
+          std::uninitialized_value_construct_n(data, size);
         }else if constexpr(sizeof...(Args) == 1){
-          const auto&& val = (std::forward<Args>(args), ...);
+          const value_type &val = templates::first_value(args...);
           for(value_type *it = data; it != first_free; ++it){
             *it = val; 
           }
@@ -214,7 +215,7 @@ namespace wigcpp::internal::container{
       if constexpr(!std::is_trivially_default_constructible_v<value_type>){
         if(size > sz){
           for(value_type *it = first_free; it != data + size; ++it){
-            construct_at(it);
+            construct_at(it, value_type{});
           }
         }else{
           for(value_type *it = first_free; it != data + size; ){
@@ -224,9 +225,7 @@ namespace wigcpp::internal::container{
         }
       }else{
         if(size > sz){
-          std::memset(first_free, 0, (size - sz) * sizeof(value_type));
-        }else{
-          std::memset(data + size, 0, (sz - size) * sizeof(value_type));
+          std::uninitialized_value_construct_n(first_free, size - sz);
         }
       }
       first_free = data + size;
@@ -260,11 +259,7 @@ namespace wigcpp::internal::container{
         }
       }else{
         if(size > sz){
-          for(value_type *it = first_free; it != data + size; ++it){
-            *it = src;
-          }
-        }else{
-          std::memset(data + size, 0, (sz - size) * sizeof(value_type));
+          std::uninitialized_fill_n(first_free, size - sz, src);
         }
       }
       first_free = data + size;
