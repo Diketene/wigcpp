@@ -8,7 +8,7 @@ namespace wigcpp::internal::templates {
 
   template <>
   struct first_type<>{
-    static_assert("prameters bag shoudn't be empty.");
+    static_assert("prameters pack shoudn't be empty.");
   };
 
   template <typename First, typename ...Rest>
