@@ -182,6 +182,22 @@ namespace wigcpp::internal::container{
       return *(data + index);
     }
 
+    value_type *begin() noexcept{
+      return data;
+    }
+
+    value_type *end() noexcept{
+      return first_free;
+    }
+
+    const value_type *cbegin() const noexcept{
+      return data;
+    }
+
+    const value_type *cend() const noexcept{
+      return first_free;
+    }
+
     void reserve(size_type min_capacity) noexcept {
       const size_type oldsize = size();
       const size_type oldcap = capacity();
