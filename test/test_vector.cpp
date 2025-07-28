@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 #include "big_int.hpp"
+#include "nothrow_allocator.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <utility>
 #include "vector.hpp"
 
@@ -69,4 +71,16 @@ TEST(test_vector, test_non_trivial){
   EXPECT_EQ(e.size(),13);
   e.push_back(1);
   EXPECT_EQ(e.size(), 14);
+}
+
+TEST(test_vector, test_no_throw_alignment){
+  using wigcpp::internal::container::vector;
+  using AlignedVec = vector<int, wigcpp::internal::allocator::nothrow_allocator<int, 64>>;
+  AlignedVec a;
+  a.reserve(10);
+  EXPECT_EQ(reinterpret_cast<uintptr_t>(a.begin()) % 64, 0);
+  for(int i = 0; i < 1000; ++i){
+    a.push_back(i);
+    EXPECT_EQ(reinterpret_cast<uintptr_t>(a.begin()) % 64, 0);
+  }
 }
