@@ -78,9 +78,9 @@ TEST(test_vector, test_no_throw_alignment){
   using AlignedVec = vector<int, wigcpp::internal::allocator::nothrow_allocator<int, 64>>;
   AlignedVec a;
   a.reserve(10);
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(a.begin()) % 64, 0);
+  EXPECT_EQ(reinterpret_cast<uintptr_t>(a.raw_pointer()) % 64, 0);
   for(int i = 0; i < 1000; ++i){
     a.push_back(i);
-    EXPECT_EQ(reinterpret_cast<uintptr_t>(a.begin()) % 64, 0);
+    EXPECT_EQ(reinterpret_cast<uintptr_t>(a.raw_pointer()) % 64, 0);
   }
 }
