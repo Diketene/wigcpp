@@ -4,9 +4,11 @@
 #include "definitions.hpp"
 #include "nothrow_allocator.hpp"
 #include "vector.hpp"
+#include "error.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 
 #ifdef DEBUG_PRINT
 #include <iostream>
@@ -172,12 +174,16 @@ namespace wigcpp::internal::global {
     GlobalFactorialPool &operator= (const GlobalFactorialPool &) = delete;
     GlobalFactorialPool &operator= (GlobalFactorialPool &&) = delete;
 
-    const prime_exponents &get_factorial(std::size_t n) const noexcept {
+    const prime_exponents &factorial_prime_factors(std::size_t n) const noexcept {
       return factorial_pool[n];
     }
 
-    const prime_exponents &get_num(std::size_t n) const noexcept {
+    const prime_exponents &number_prime_factors(std::size_t n) const noexcept {
       return num_pool[n];
+    }
+
+    const int factorial_capacity() const noexcept {
+      return max_factorial;
     }
 
     #ifdef DEBUG_PRINT
@@ -199,7 +205,15 @@ namespace wigcpp::internal::global {
     #endif
   };
 
-  inline const GlobalFactorialPool &get_global_factorial_pool(int max_factorial) noexcept {
+  inline const GlobalFactorialPool &factorial_pool_init(int max_factorial) noexcept {
+    constexpr std::uint32_t max_allowed = static_cast<std::uint32_t>(1 << ((sizeof(exp_t) << 3 )- 1));
+    if(static_cast<std::uint32_t>(max_factorial) * 50 > max_allowed){
+      std::fprintf(stderr, "Error: Factorial pool size exceeds maximum allowed size.\n");
+      error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
+    }
+    if(max_factorial < 2){
+      max_factorial = 2;
+    }
     static const GlobalFactorialPool pool(max_factorial);
     return pool;
   }
