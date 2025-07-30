@@ -81,23 +81,25 @@ namespace wigcpp::internal::def{
 /* definitions for prime factors */
   namespace prime{
     template<unsigned N>
-      struct prime_exp_traits{};
+    struct prime_exp_traits{};
 
-      template<>
-      struct prime_exp_traits<4>{
-        using prime_exp_t = std::int32_t;
-        using uprime_exp_t = std::uint32_t;
-      };
+    template<>
+    struct prime_exp_traits<4>{
+      using prime_exp_t = std::int32_t;
+      using uprime_exp_t = std::uint32_t;
+    };
 
-      template<>
-      struct prime_exp_traits<2>{
-        using prime_exp_t = std::int16_t;
-        using uprime_exp_t = std::uint16_t;
-      };
+    template<>
+    struct prime_exp_traits<2>{
+      using prime_exp_t = std::int16_t;
+      using uprime_exp_t = std::uint16_t;
+    };
 
-      using prime_Traits = prime_exp_traits<sizeof_prime_list_item>;
-      using exp_t = prime_Traits::prime_exp_t;
-      using uexp_t = prime_Traits::uprime_exp_t;
+    using prime_Traits = prime_exp_traits<sizeof_prime_list_item>;
+    using exp_t = prime_Traits::prime_exp_t;
+    using uexp_t = prime_Traits::uprime_exp_t;
+  
+    constexpr exp_t max_exp = static_cast<exp_t>(static_cast<uexp_t>(-1) >> 2);
   }
   
 };
