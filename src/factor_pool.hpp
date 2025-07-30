@@ -45,7 +45,7 @@ namespace wigcpp::internal::global {
     PrimeTable() = delete;
   };
 
-  struct prime_exponents{
+  struct prime_exponents_view{
     int block_used;
 
     exp_t *data() noexcept{
@@ -79,16 +79,16 @@ namespace wigcpp::internal::global {
       aligned_block_bytes = aligned_bytes;
       buffer.resize((max_factorial + 1) * aligned_bytes, std::byte{0});
       for(std::size_t i = 0; i <= max_factorial; ++i){
-        new (buffer.raw_pointer() + i * aligned_bytes) prime_exponents();
+        new (buffer.raw_pointer() + i * aligned_bytes) prime_exponents_view();
       }
     }
 
-    prime_exponents &operator[](std::size_t n) noexcept{
-      return *reinterpret_cast<prime_exponents*>(buffer.raw_pointer() + n * aligned_block_bytes);
+    prime_exponents_view &operator[](std::size_t n) noexcept{
+      return *reinterpret_cast<prime_exponents_view*>(buffer.raw_pointer() + n * aligned_block_bytes);
     }
 
-    const prime_exponents &operator[](std::size_t n) const noexcept {
-      return *reinterpret_cast<const prime_exponents *>(buffer.raw_pointer() + n * aligned_block_bytes);
+    const prime_exponents_view &operator[](std::size_t n) const noexcept {
+      return *reinterpret_cast<const prime_exponents_view *>(buffer.raw_pointer() + n * aligned_block_bytes);
     }
 
     std::size_t block_size() const noexcept {
@@ -174,11 +174,11 @@ namespace wigcpp::internal::global {
     GlobalFactorialPool &operator= (const GlobalFactorialPool &) = delete;
     GlobalFactorialPool &operator= (GlobalFactorialPool &&) = delete;
 
-    const prime_exponents &factorial_prime_factors(std::size_t n) const noexcept {
+    const prime_exponents_view &factorial_prime_factors(std::size_t n) const noexcept {
       return factorial_pool[n];
     }
 
-    const prime_exponents &number_prime_factors(std::size_t n) const noexcept {
+    const prime_exponents_view &number_prime_factors(std::size_t n) const noexcept {
       return num_pool[n];
     }
 
