@@ -1,129 +1,121 @@
 #ifndef __WIGCPP_PRIME_FACTOR__
 #define __WIGCPP_PRIME_FACTOR__
 
+#include "big_int.hpp"
 #include "definitions.hpp"
 #include "factor_pool.hpp"
-#include "vector.hpp"
-#include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 
-namespace wigcpp::internal::prime_factor{
-  using namespace global;
-  class prime_exponents{
-    template <typename T> using vector = container::vector<T>;
-    using exp_t = def::prime::exp_t;
+namespace wigcpp::internal::prime_calc {
+  using exp_t = wigcpp::internal::def::prime::exp_t;
+  class pexpo_eval_temp{
+    std::array<mwi::big_int<>, 2> prod_pos;
+    std::array<mwi::big_int<>, 2> prod_neg;
+    std::array<mwi::big_int<>, 2> factor;
+    std::array<mwi::big_int<>, 2> big_up;
 
-    vector<exp_t> expo;
+    int compute_prime_factor(std::int64_t prime, exp_t fpf) noexcept {
+      def::u_mul_word_t fact = 1;
+      def::u_mul_word_t up = static_cast<def::u_mul_word_t>(prime);
+      bool hit_sign_bit = false;
+      while(fpf){
 
+        def::u_mul_word_t mult = (fpf & 1) ? up : 1;
+        fact *= mult;
+        fpf >>= 1;
+
+        if(!fpf) break;
+
+        up *= up;
+
+        constexpr def::u_mul_word_t half_mask = static_cast<def::u_mul_word_t>(-1) << (def::shift_bits / 2 - 1);
+
+        if(up & half_mask){
+          hit_sign_bit = true;
+          break;
+        }
+      }
+
+      if(!hit_sign_bit){
+        factor[0] = fact;
+        return 0;
+      }
+
+      int up_active = 0;
+      int fact_active = 0;
+
+      big_up[up_active] = up;
+      factor[fact_active] = fact;
+
+      while(fpf){
+        if(fpf & 1){
+          factor[!fact_active] = factor[fact_active] * big_up[up_active];
+          fact_active = !fact_active;
+        }
+        fpf >>= 1;
+
+        if(!fpf) break;
+        big_up[!up_active] = big_up[up_active] * big_up[up_active];
+        up_active = !up_active;
+      }
+      return fact_active;
+    }
+
+    int merge_factor(int factor_active, int active, std::array<mwi::big_int<>, 2> &prod) noexcept {
+      if(factor[factor_active].is_single_word()){
+        prod[active] *= factor[factor_active][0];
+        return active;
+      }
+      prod[!active] = prod[active] * factor[factor_active];
+      return !active;
+    }
+  
   public:
-    prime_exponents(): expo(){};
-    prime_exponents(std::size_t size, exp_t val): expo(size, val) {}
-    prime_exponents(const prime_exponents_view &view): expo(view.block_used, 0){
-      std::copy(view.data(), view.data() + view.block_used, expo.raw_pointer());
-    } 
 
-    void reserve(std::size_t cap) noexcept{
-      expo.reserve(cap);
-    }
+    mwi::big_int<> evaluate(const global::prime_exponents_view &in_fpf, const global::PrimeTable &prime_table) noexcept {
+      int active = 0;
+      prod_pos[active] = 1;
 
-    void resize(std::size_t size) noexcept {
-      if(size < this -> size()){
-        return;
+      for(int i = 0; i < in_fpf.block_used; ++i){
+        const exp_t fpf = in_fpf[i];
+        
+        if(!fpf){
+          continue;
+        }
+
+        std::int64_t prime = prime_table.prime_list[i];
+
+        int factor_active = compute_prime_factor(prime, fpf);
+
+        active = merge_factor(factor_active, active, prod_pos);
       }
-      expo.resize(size);
+      return this -> prod_pos[active];
     }
 
-    void resize(std::size_t size, exp_t val) noexcept {
-      if(size < this -> size()){
-        return;
+    auto evaluate2(const global::prime_exponents_view &in_fpf, const global::PrimeTable &prime_table){
+      int active_pos = 0, active_neg = 0;
+      for(int i = 0; i < in_fpf.block_used; ++i){
+        const exp_t fpf = in_fpf[i];
+
+        if(!fpf){
+          continue;
+        }
+
+        int64_t prime = prime_table.prime_list[i];
+        if(fpf > 0){
+          int factor_active = compute_prime_factor(prime, fpf);
+          active_pos = merge_factor(factor_active, active_pos, prod_pos);
+        }else{
+          int factor_active = compute_prime_factor(prime, -fpf);
+          active_neg = merge_factor(factor_active, active_neg, prod_neg);
+        }
       }
-      expo.resize(size, val);
+
+      return std::pair{prod_pos[active_pos], prod_neg[active_neg]};
     }
-
-    std::size_t size() const noexcept{
-      return expo.size();
-    }
-
-    exp_t *begin() noexcept {
-      return expo.begin();
-    }
-
-    exp_t *end() noexcept {
-      return expo.end();
-    }
-
-    exp_t *raw_pointer() noexcept {
-      return expo.raw_pointer();
-    }
-
-    void set_max() noexcept {
-      std::fill(expo.begin(), expo.end(), def::prime::max_exp);
-    }
-
-    exp_t &operator[](std::size_t n) noexcept {
-      return expo[n];
-    }
-
-    const exp_t &operator[](std::size_t n) const noexcept {
-      return expo[n];
-    }
-
-    prime_exponents &keep_min(const prime_exponents &src){
-      assert(size() == src.size());
-      for(std::size_t i = 0; i < src.size(); ++i){
-        expo[i] = std::min(expo[i], src.expo[i]);
-      }
-      return *this;
-    }
-
-    prime_exponents keep_min_return_diff(const prime_exponents &src) noexcept {
-      assert(size() == src.size());
-      const std::size_t n = size();
-      prime_exponents result(n, 0);
-      for(std::size_t i = 0; i < src.size(); ++i){
-        exp_t tmp = src.expo[i] - expo[i];
-        expo[i] = std::min(expo[i], src.expo[i]);
-        result[i] = tmp;
-      }
-      return result;
-    }
-
-    prime_exponents &expand_add (const prime_exponents &src) noexcept {
-      const std::size_t src_size = src.size();
-      resize(src_size, 0);
-      for(std::size_t i = 0; i < src_size; ++i){
-        expo[i] += src.expo[i];
-      }
-      return *this;
-    }
-
-    prime_exponents &expand_sub(const prime_exponents &src) noexcept {
-      const std::size_t src_size = src.size();
-      resize(src_size, 0);
-      for(std::size_t i = 0; i < src_size; ++i){
-        expo[i] -= src.expo[i];
-      }
-      return *this;
-    }
-
-    prime_exponents &expand_sum3(const prime_exponents &src1, const prime_exponents &src2, const prime_exponents &src3) noexcept{
-      const std::size_t max_size = std::max({src1.size(), src2.size(), src3.size()});
-      resize(max_size, 0);
-      for(int i = 0; i < src1.size(); ++i){
-        expo[i] += src1.expo[i];
-      }
-      for(int i = 0; i < src2.size(); ++i){
-        expo[i] += src2.expo[i];
-      }
-      for(int i = 0; i < src3.size(); ++i){
-        expo[i] += src3.expo[i];
-      }
-      return *this;
-    }
-
-
-
   };
 }
 #endif
