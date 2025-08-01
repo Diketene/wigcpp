@@ -223,6 +223,13 @@ namespace wigcpp::internal::mwi{
 			return back() & def::sign_bit;
 		}
 
+		bool is_single_word() const noexcept {
+			if(size() == 1){
+				return true;
+			}
+			return false;
+		}
+
 		std::string to_hex_str() const {
 
 			/*if(size() == 1){
@@ -347,11 +354,14 @@ namespace wigcpp::internal::mwi{
 		}
 
 		big_int &operator=(def::uword_t v){
-			if(size() > 1){
-				std::fprintf(stderr, "Error in big_int::operator=(def::uword_t):\n");
-				error::error_process(error::ErrorCode::Bad_Shrink);
+			const std::size_t this_oldsz = size();
+			if(this_oldsz == 1){
+				*data = v;
+			}else{
+				*data = v;
+				std::memset(data + 1, 0, (this_oldsz - 1) * sizeof(def::uword_t));
+				first_free = data + 1;
 			}
-			*data = v;
 			return *this;
 		}
 
