@@ -7,11 +7,13 @@
 #include "vector.hpp"
 #include "error.hpp"
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <memory>
 
 #ifdef DEBUG_PRINT
 #include <iostream>
@@ -189,23 +191,8 @@ namespace wigcpp::internal::global {
       }
     }
 
-    [[nodiscard]] mwi::big_int<> split_sqrt_add(prime_exponents_view &add, const PrimeTable &prime_table){
-      mwi::big_int big_sqrt{1};
-      int num_blocks = std::max(block_used, add.block_used);
-      expand_blocks(num_blocks);
-      add.expand_blocks(num_blocks);
-
-      for(int i = 0; i < num_blocks; ++i){
-        exp_t sqrt_fpf = data()[i] & 1;
-        data()[i] += sqrt_fpf;
-        data()[i] /= 2;
-        data()[i] += add.data()[i];
-        if(sqrt_fpf){
-          big_sqrt *= prime_table.prime_list[i];
-        }
-      }
-      return big_sqrt;
-    }
+    [[nodiscard]] mwi::big_int<> split_sqrt_add(prime_exponents_view &add);
+    
   };
 
   class FactorPool{
@@ -346,18 +333,62 @@ namespace wigcpp::internal::global {
     #endif
   };
 
-  inline const GlobalFactorialPool &factorial_pool_init(int max_factorial) noexcept {
-    constexpr std::uint32_t max_allowed = static_cast<std::uint32_t>(1 << ((sizeof(exp_t) << 3 )- 1));
-    if(static_cast<std::uint32_t>(max_factorial) * 50 > max_allowed){
-      std::fprintf(stderr, "Error: Factorial pool size exceeds maximum allowed size.\n");
-      error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
+
+
+  class PoolManager{
+    inline static std::unique_ptr<GlobalFactorialPool> ptr;
+    inline static std::atomic<bool> is_initialized;
+
+    PoolManager() = delete;
+    ~PoolManager() = delete;
+  public:
+    static void init(int max_factorial) noexcept{
+      if(max_factorial < 2){
+        max_factorial = 2;
+      }
+
+      if(static_cast<std::uint32_t>(max_factorial) * 50 > max_exp){
+        std::fprintf(stderr, "Error: Factorial pool size exceeds maximum allowed size.\n");
+        error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
+        return;
+      }
+
+      if(is_initialized.load(std::memory_order_acquire)){
+        return;
+      }
+
+      ptr = std::make_unique<GlobalFactorialPool>(max_factorial);
+      is_initialized.store(true, std::memory_order_release);
     }
-    if(max_factorial < 2){
-      max_factorial = 2;
+
+    static const GlobalFactorialPool &get(){
+      if(!is_initialized.load(std::memory_order_acquire)){
+        std::fprintf(stderr, "Error: can't operate any function calls before initialization.\n");
+        error::error_process(error::ErrorCode::NOT_INITIALIZED);
+      }
+      return *ptr;
     }
-    static const GlobalFactorialPool pool(max_factorial);
-    return pool;
-  }
+  };
+
+  [[nodiscard]] inline mwi::big_int<> prime_exponents_view::split_sqrt_add(prime_exponents_view &add){
+    const auto &prime_table = PoolManager::get().prime_table;
+    mwi::big_int big_sqrt{1};
+      int num_blocks = std::max(block_used, add.block_used);
+      expand_blocks(num_blocks);
+      add.expand_blocks(num_blocks);
+
+      for(int i = 0; i < num_blocks; ++i){
+        exp_t sqrt_fpf = data()[i] & 1;
+        data()[i] += sqrt_fpf;
+        data()[i] /= 2;
+        data()[i] += add.data()[i];
+        if(sqrt_fpf){
+          big_sqrt *= prime_table.prime_list[i];
+        }
+      }
+      return big_sqrt;
+    }
 
 }
+
 #endif
