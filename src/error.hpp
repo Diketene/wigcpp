@@ -6,8 +6,8 @@
 namespace wigcpp::internal::error {
   enum class ErrorCode{
     Bad_Alloc,
-    Bad_Shrink,
-    TOO_LARGE_FACTORIAL
+    TOO_LARGE_FACTORIAL,
+    NOT_INITIALIZED
   };
 
   class ErrorHandler{
@@ -22,11 +22,11 @@ namespace wigcpp::internal::error {
         case ErrorCode::Bad_Alloc:
           std::fprintf(stderr, "Memory allocation failed.\n wigcpp: aborted.\n");
           std::abort();
-        case ErrorCode::Bad_Shrink:
-          std::fprintf(stderr, "Can't shrink a multi word integer to a single word integer.\n wigcpp: aborted.\n");
-          std::abort();
         case ErrorCode::TOO_LARGE_FACTORIAL:
           std::fprintf(stderr, "max_factorial is too large.\n wigcpp: aborted.\n");
+          std::abort();
+        case ErrorCode::NOT_INITIALIZED:
+          std::fprintf(stderr, "Must initialize the factor pool before using it.\n wigcpp: aborted.\n");
           std::abort();
         default:
           std::fprintf(stderr, "Unknown error occurred.\n wigcpp: aborted.\n");
