@@ -75,7 +75,8 @@ namespace wigcpp::internal::prime_calc {
   
   public:
 
-    mwi::big_int<> evaluate(const global::prime_exponents_view &in_fpf, const global::PrimeTable &prime_table) noexcept {
+    mwi::big_int<> evaluate(const global::prime_exponents_view &in_fpf) noexcept {
+      const auto &prime_table = global::PoolManager::get().prime_table;
       int active = 0;
       prod_pos[active] = 1;
 
@@ -95,7 +96,8 @@ namespace wigcpp::internal::prime_calc {
       return this -> prod_pos[active];
     }
 
-    auto evaluate2(const global::prime_exponents_view &in_fpf, const global::PrimeTable &prime_table){
+    auto evaluate2(const global::prime_exponents_view &in_fpf){
+      const auto &prime_table = global::PoolManager::get().prime_table;
       int active_pos = 0, active_neg = 0;
       for(int i = 0; i < in_fpf.block_used; ++i){
         const exp_t fpf = in_fpf[i];
