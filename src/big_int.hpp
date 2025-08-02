@@ -27,7 +27,7 @@ namespace wigcpp::internal::mwi{
 		def::uword_t *data;
 		def::uword_t *first_free;
 		def::uword_t *cap;
-		static Allocator allocator;
+		inline static Allocator allocator;
 
 		void free(){
 			if(data){
@@ -707,8 +707,6 @@ namespace wigcpp::internal::mwi{
 		}
 	};
 
-	template <class Allocator>
-	inline Allocator big_int<Allocator>::allocator;
 
 }
 
