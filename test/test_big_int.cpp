@@ -1,7 +1,9 @@
 #include "gtest/gtest.h"
+#include <cmath>
 #include <cstddef>
 #include <gtest/gtest.h>
 #include "big_int.hpp"
+#include "definitions.hpp"
 
 TEST(test_mwi, test_mwi_full_sign_word) {
 	using namespace wigcpp::internal::def;
@@ -233,4 +235,12 @@ b99f2da7b13763a9b852062d02fc4a623e731ca342f3e28bacf11487553833e09fbfb4\
 0000000000000000000000000000000000000000000000000000000000000000000000\
 0000000000000000000000000000000000000000000000000000000000000000");
 
+}
+
+TEST(test_mwi, to_floating_point){
+	using wigcpp::internal::mwi::big_int;
+	big_int a(10000);
+	const auto [v, e] = a.to_floating_point();
+	wigcpp::internal::def::double_type res = std::ldexp(v, e);
+	EXPECT_EQ(res, 10000.0);
 }
