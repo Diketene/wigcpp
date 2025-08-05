@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(GTest REQUIRED)
+find_package(Threads REQUIRED)
+
 message("Found GTest: ${GTest_INCLUDE_DIRS}")
 message("GTest libraries: ${GTest_LIBRARIES}")
 
@@ -28,5 +30,6 @@ endfunction()
 add_wigcpp_test(test_big_int test_big_int.cpp)
 add_wigcpp_test(test_vector test_vector.cpp)
 add_wigcpp_test(test_prime_factor test_prime_factor.cpp)
+add_wigcpp_test(test_xj_symbol test_xj_symbol.cpp)
 
 include(GoogleTest)
