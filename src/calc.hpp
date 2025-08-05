@@ -7,20 +7,75 @@
 #include "tmp_pool.hpp"
 #include <algorithm>
 #include <big_int.hpp>
+#include <climits>
 #include <cmath>
 #include <cstddef>
+
 namespace wigcpp::internal::calc{
   using namespace wigcpp::internal::global;
   using namespace wigcpp::internal::tmp;
+
+  class TrivialZero{
+    static inline void negative(int two_j1, int two_j2, int two_j3, int &sign) noexcept;
+    static inline void triangle(int two_j1, int two_j2, int two_j3, int &sign, int &odd) noexcept;
+    static inline void abs_m_with_j(int two_m, int two_j, int &sign, int &odd) noexcept;
+
+  public:
+    static inline bool is_zero_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept;
+  };
+
+  void TrivialZero::negative(int two_j1, int two_j2, int two_j3, int &sign) noexcept {
+    sign |= two_j1 | two_j2 | two_j3;
+  }
+
+  void TrivialZero::triangle(int two_j1, int two_j2, int two_j3, int &sign, int &odd) noexcept {
+    odd |= two_j1 + two_j2 + two_j3;
+    sign |= two_j2 + two_j3 - two_j1;
+    sign |= two_j3 + two_j1 - two_j2;
+    sign |= two_j1 + two_j2 - two_j3; 
+  }
+
+  void TrivialZero::abs_m_with_j(int two_m, int two_j, int &sign, int &odd) noexcept {
+    odd |= two_m + two_j;
+    sign |= two_j - two_m;
+    sign |= two_j + two_m;
+  }
+
+  bool TrivialZero::is_zero_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
+    int sign = 0, odd = 0;
+
+    negative(two_j1, two_j2, two_j3, sign);
+    triangle(two_j1, two_j2, two_j3, sign, odd);
+
+    abs_m_with_j(two_m1, two_j1, sign, odd);
+    abs_m_with_j(two_m2, two_j2, sign, odd);
+    abs_m_with_j(two_m3, two_j3, sign, odd);
+
+    constexpr int shift_bits = sizeof(int) * CHAR_BIT - 1;
+
+    return (two_m1 + two_m2 + two_m3) | ((sign >> shift_bits) & 1) | (odd & 1);
+  }
+
   class Calculator{
     static inline void split_sqrt_add(prime_exponents_view &src_dest_fpf, mwi::big_int<> &big_sqrt, prime_exponents_view &add_fpf) noexcept;
-    static inline void delta_coeff(int two_a, int two_b, int two_c, global::prime_exponents_view &prefact_fpf) noexcept;
+    static inline void delta_coeff(int two_a, int two_b, int two_c, prime_exponents_view &prefact_fpf) noexcept;
     static inline void calcsum_3j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept;
     static inline def::double_type eval_calcsum_info(TempStorage &csi) noexcept;
   public:
     static inline def::double_type calc_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept;
 
   };
+
+  def::double_type Calculator::calc_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
+    if(TrivialZero::is_zero_3j(two_j1, two_j2, two_j3, two_m1, two_m2, two_m3)){
+      return 0;
+    }
+    const auto &pool = PoolManager::get();
+    auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
+    calcsum_3j(tmp, two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
+    auto result = eval_calcsum_info(tmp);
+    return result;
+  }
 
   void Calculator::split_sqrt_add(prime_exponents_view &src_dest_fpf, mwi::big_int<> &big_sqrt, prime_exponents_view &add_fpf) noexcept {
     const auto &prime_list = PoolManager::get().prime_table.prime_list;
@@ -163,12 +218,6 @@ namespace wigcpp::internal::calc{
     return std::ldexp(r, res_exponent);
   }
 
-  def::double_type Calculator::calc_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
-    const auto &pool = PoolManager::get();
-    auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
-    calcsum_3j(tmp, two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
-    auto result = eval_calcsum_info(tmp);
-    return result;
-  }
+  
 }
 #endif
