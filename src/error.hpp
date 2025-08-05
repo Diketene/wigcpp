@@ -20,16 +20,16 @@ namespace wigcpp::internal::error {
     void handle(ErrorCode code)const noexcept override  {
       switch (code) {
         case ErrorCode::Bad_Alloc:
-          std::fprintf(stderr, "Memory allocation failed.\n wigcpp: aborted.\n");
+          std::fprintf(stderr, "Memory allocation failed.\nwigcpp: aborted.\n");
           std::abort();
         case ErrorCode::TOO_LARGE_FACTORIAL:
-          std::fprintf(stderr, "max_factorial is too large.\n wigcpp: aborted.\n");
+          std::fprintf(stderr, "max_factorial is too large.\nwigcpp: aborted.\n");
           std::abort();
         case ErrorCode::NOT_INITIALIZED:
-          std::fprintf(stderr, "Must initialize the factor pool before using it.\n wigcpp: aborted.\n");
+          std::fprintf(stderr, "Must initialize the factor pool before using it.\nwigcpp: aborted.\n");
           std::abort();
         default:
-          std::fprintf(stderr, "Unknown error occurred.\n wigcpp: aborted.\n");
+          std::fprintf(stderr, "Unknown error occurred.\nwigcpp: aborted.\n");
       }
     }
   };
