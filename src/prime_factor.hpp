@@ -3,7 +3,7 @@
 
 #include "big_int.hpp"
 #include "definitions.hpp"
-#include "factor_pool.hpp"
+#include "global_pool.hpp"
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -17,51 +17,55 @@ namespace wigcpp::internal::prime_calc {
     std::array<mwi::big_int<>, 2> factor;
     std::array<mwi::big_int<>, 2> big_up;
 
-    int compute_prime_factor(std::int64_t prime, exp_t fpf) noexcept {
+    int compute_prime_factor(std::array<mwi::big_int<>, 2> &factor, std::int64_t prime, exp_t fpf) noexcept {
       def::u_mul_word_t fact = 1;
       def::u_mul_word_t up = static_cast<def::u_mul_word_t>(prime);
-      bool hit_sign_bit = false;
-      while(fpf){
+      for(; ;){
 
         def::u_mul_word_t mult = (fpf & 1) ? up : 1;
+
         fact *= mult;
+
+        up *= up;
+
         fpf >>= 1;
 
         if(!fpf) break;
-
-        up *= up;
 
         constexpr def::u_mul_word_t half_mask = static_cast<def::u_mul_word_t>(-1) << (def::shift_bits / 2 - 1);
 
         if(up & half_mask){
-          hit_sign_bit = true;
-          break;
+          goto full_mult;
         }
+
       }
 
-      if(!hit_sign_bit){
-        factor[0] = fact;
-        return 0;
-      }
+      factor[0] = fact;
+      return 0;
 
-      int up_active = 0;
-      int fact_active = 0;
+      full_mult:{
+        int up_active = 0;
+        int fact_active = 0;
 
-      big_up[up_active] = up;
-      factor[fact_active] = fact;
+        big_up[up_active] = up;
+        factor[fact_active] = fact;
 
-      while(fpf){
-        if(fpf & 1){
-          factor[!fact_active] = factor[fact_active] * big_up[up_active];
-          fact_active = !fact_active;
+        for(; ;){
+          if(fpf & 1){
+            factor[!fact_active] = factor[fact_active] * big_up[up_active];
+            fact_active = !fact_active;
+          }
+
+          fpf >>= 1;
+
+          if(!fpf) break;
+
+          big_up[!up_active] = big_up[up_active] * big_up[up_active];
+          up_active = !up_active;
         }
-        fpf >>= 1;
-
-        if(!fpf) break;
-        big_up[!up_active] = big_up[up_active] * big_up[up_active];
-        up_active = !up_active;
+        return fact_active;
       }
-      return fact_active;
+
     }
 
     int merge_factor(int factor_active, int active, std::array<mwi::big_int<>, 2> &prod) noexcept {
@@ -89,16 +93,18 @@ namespace wigcpp::internal::prime_calc {
 
         std::int64_t prime = prime_table.prime_list[i];
 
-        int factor_active = compute_prime_factor(prime, fpf);
+        int factor_active = compute_prime_factor(this -> factor, prime, fpf);
 
         active = merge_factor(factor_active, active, prod_pos);
       }
       return this -> prod_pos[active];
     }
 
-    auto evaluate2(const global::prime_exponents_view &in_fpf){
+    void evaluate2(mwi::big_int<> &big_prod_pos, mwi::big_int<> &big_prod_neg, const global::prime_exponents_view &in_fpf){
       const auto &prime_table = global::PoolManager::get().prime_table;
       int active_pos = 0, active_neg = 0;
+      prod_pos[active_pos] = 1;
+      prod_neg[active_neg] = 1;
       for(int i = 0; i < in_fpf.block_used; ++i){
         const exp_t fpf = in_fpf[i];
 
@@ -108,15 +114,15 @@ namespace wigcpp::internal::prime_calc {
 
         int64_t prime = prime_table.prime_list[i];
         if(fpf > 0){
-          int factor_active = compute_prime_factor(prime, fpf);
+          int factor_active = compute_prime_factor(this -> factor, prime, fpf);
           active_pos = merge_factor(factor_active, active_pos, prod_pos);
         }else{
-          int factor_active = compute_prime_factor(prime, -fpf);
+          int factor_active = compute_prime_factor(this -> factor, prime, -fpf);
           active_neg = merge_factor(factor_active, active_neg, prod_neg);
         }
       }
-
-      return std::pair{prod_pos[active_pos], prod_neg[active_neg]};
+      big_prod_pos = this -> prod_pos[active_pos];
+      big_prod_neg = this -> prod_neg[active_neg];
     }
   };
 }
