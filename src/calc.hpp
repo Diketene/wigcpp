@@ -10,6 +10,7 @@
 #include <climits>
 #include <cmath>
 #include <cstddef>
+#include <cstdio>
 
 namespace wigcpp::internal::calc{
   using namespace wigcpp::internal::global;
@@ -17,11 +18,16 @@ namespace wigcpp::internal::calc{
 
   class TrivialZero{
     static inline void negative(int two_j1, int two_j2, int two_j3, int &sign) noexcept;
+
     static inline void triangle(int two_j1, int two_j2, int two_j3, int &sign, int &odd) noexcept;
+
     static inline void abs_m_with_j(int two_m, int two_j, int &sign, int &odd) noexcept;
 
   public:
     static inline bool is_zero_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept;
+
+    static inline bool is_zero_6j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept;
+
   };
 
   void TrivialZero::negative(int two_j1, int two_j2, int two_j3, int &sign) noexcept {
@@ -56,14 +62,41 @@ namespace wigcpp::internal::calc{
     return (two_m1 + two_m2 + two_m3) | ((sign >> shift_bits) & 1) | (odd & 1);
   }
 
+  bool TrivialZero::is_zero_6j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept{
+    int sign = 0, odd = 0;
+
+    negative(two_j1, two_j2, two_j3, sign);
+    negative(two_j4, two_j5, two_j6, sign);
+
+    triangle(two_j1, two_j2, two_j3, sign, odd);
+    triangle(two_j1, two_j5, two_j6, sign, odd);
+    triangle(two_j4, two_j2, two_j6, sign, odd);
+    triangle(two_j4, two_j5, two_j3, sign, odd);
+
+    constexpr int shift_bits = sizeof(int) * CHAR_BIT - 1;
+
+    return ((sign >> shift_bits) & 1) | (odd & 1);
+  }
+
   class Calculator{
+
     static inline void split_sqrt_add(prime_exponents_view &src_dest_fpf, mwi::big_int<> &big_sqrt, prime_exponents_view &add_fpf) noexcept;
+
     static inline void delta_coeff(int two_a, int two_b, int two_c, prime_exponents_view &prefact_fpf) noexcept;
+
     static inline void calcsum_3j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept;
+
+    static inline void factor_6j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6,
+                                 prime_exponents_view &min_nume_fpf, mwi::big_int<> &sum_prod) noexcept;
+    
+    static inline void calcsum_6j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept;
+
     static inline def::double_type eval_calcsum_info(TempStorage &csi) noexcept;
+
   public:
     static inline def::double_type calc_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept;
 
+    static inline def::double_type calc_6j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept;
   };
 
   def::double_type Calculator::calc_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
@@ -77,7 +110,20 @@ namespace wigcpp::internal::calc{
     return result;
   }
 
-  void Calculator::split_sqrt_add(prime_exponents_view &src_dest_fpf, mwi::big_int<> &big_sqrt, prime_exponents_view &add_fpf) noexcept {
+  def::double_type Calculator::calc_6j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept {
+    if(TrivialZero::is_zero_6j(two_j1, two_j2, two_j3, two_j4, two_j5, two_j6)){
+      return 0;
+    }
+    const auto &pool = PoolManager::get();
+    auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
+    calcsum_6j(tmp, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6);
+    auto result = eval_calcsum_info(tmp);
+    return result;
+  }
+
+  void Calculator::split_sqrt_add(prime_exponents_view &src_dest_fpf, 
+                                  mwi::big_int<> &big_sqrt, 
+                                  prime_exponents_view &add_fpf) noexcept {
     const auto &prime_list = PoolManager::get().prime_table.prime_list;
     big_sqrt = 1;
     const int num_blocks = std::max(src_dest_fpf.block_used, add_fpf.block_used);
@@ -97,7 +143,8 @@ namespace wigcpp::internal::calc{
     }  
   }
 
-  void Calculator::delta_coeff(int two_a, int two_b, int two_c, global::prime_exponents_view &prefact_fpf) noexcept{
+  void Calculator::delta_coeff(int two_a, int two_b, int two_c, 
+                               global::prime_exponents_view &prefact_fpf) noexcept{
     const auto &pool = PoolManager::get();
     const int max_factorial = (two_a + two_b + two_c) / 2;
     if(max_factorial > pool.prime_table.max_factorial){
@@ -111,7 +158,9 @@ namespace wigcpp::internal::calc{
 
     const auto &p_d1 = pool[(two_a + two_b + two_c) / 2 + 1];
 
-    prefact_fpf.expand_blocks(p_d1.block_used);
+    prefact_fpf.expand_blocks(p_d1.block_used); 
+    /* expand_blocks method contains the behavior of setting the calculation buffer prefact_fpf to zero */
+
     prefact_fpf.add3_sub(p_n1, p_n2 , p_n3, p_d1);
   }
 
@@ -183,7 +232,12 @@ namespace wigcpp::internal::calc{
       }
     }
 
-    csi[index(TempIndex::prefact)].set_zero(max_used);
+    csi[index(TempIndex::prefact)].set_zero(0);
+    /* 
+    ** set_zero(0) just adjust the block_usd to 0, 
+    ** it is lower than any positive value, 
+    ** making sure that it will be changed by expand_blocks() method in delta_coeff() 
+    */
 
     {
       delta_coeff(two_j1, two_j2, two_j3, csi[index(TempIndex::prefact)]);
@@ -201,6 +255,128 @@ namespace wigcpp::internal::calc{
 
   }
 
+  void Calculator::factor_6j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6,
+                                 prime_exponents_view &min_nume_fpf, mwi::big_int<> &sum_prod) noexcept{
+    const auto &pool = PoolManager::get();
+    const int two_a = two_j1, 
+              two_b = two_j2, 
+              two_c = two_j5, 
+              two_d = two_j4, 
+              two_e = two_j3, 
+              two_f = two_j6;
+    
+    const int alpha1 = two_a + two_b + two_e;
+    const int alpha2 = two_c + two_d + two_e;
+    const int alpha3 = two_a + two_c + two_f;
+    const int alpha4 = two_b + two_d + two_f;
+    const int beta1 = two_a + two_b + two_c + two_d;
+    const int beta2 = two_a + two_d + two_e + two_f;
+    const int beta3 = two_b + two_c + two_e + two_f;
+
+    const int k_min = std::max({alpha1, alpha2, alpha3, alpha4}) / 2;
+    const int k_max = std::min({beta1, beta2, beta3}) / 2;
+
+    const int max_factorial = std::max({k_max + 1, beta1 / 2, beta2 / 2, beta3 / 2});
+
+    if(max_factorial > pool.prime_table.max_factorial){
+      std::fprintf(stderr, "error in factor_6j: \n");
+      error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
+    }
+
+    const int max_used = pool[max_factorial].block_used;
+    min_nume_fpf.set_max(max_used);
+
+    const int k_lim = k_max - k_min;
+    if(k_lim + 1 > csi.max_iter){
+      std::fprintf(stderr, "Error: k_lim [%d] exceeds maximum allowed iterations [%d]. \n", k_lim, csi.max_iter);
+      std::abort();
+    }
+
+    const int d1 = k_min - alpha1 / 2;
+    const int d2 = k_min - alpha2 / 2;
+    const int d3 = k_min - alpha3 / 2;
+    const int d4 = k_min - alpha4 / 2;
+
+    const int d5 = beta1 / 2 - k_min;
+    const int d6 = beta2 / 2 - k_min;
+    const int d7 = beta3 / 2 - k_min;
+
+    std::printf("[6j] range: [%d, %d], steps %d\n", k_min, k_max, k_lim + 1);
+
+    for(int k = 0; k <= k_lim; ++k){
+      const auto &p_n1 = pool[k_min + 1 + k];
+
+      const auto &p_d1 = pool[d1 + k];
+      const auto &p_d2 = pool[d2 + k];
+      const auto &p_d3 = pool[d3 + k];
+      const auto &p_d4 = pool[d4 + k];
+
+      const auto &p_d5 = pool[d5 - k];
+      const auto &p_d6 = pool[d6 - k];
+      const auto &p_d7 = pool[d7 - k];
+
+      dump_fpf("p_n1", p_n1);
+      dump_fpf("p_d1", p_d1);
+      dump_fpf("p_d2", p_d2);
+      dump_fpf("p_d3", p_d3);
+      dump_fpf("p_d4", p_d4);
+      dump_fpf("p_d5", p_d5);
+      dump_fpf("p_d6", p_d6);
+      dump_fpf("p_d7", p_d7);
+
+      auto &nume_fpf = csi[index(TempIndex::iter_start) + k];
+
+      nume_fpf.sum_sub7(p_n1, p_d1, p_d2, p_d3, p_d4, p_d5, p_d6, p_d7, max_used);
+      dump_fpf("nume_fpf", nume_fpf);
+
+      min_nume_fpf.keep_min(nume_fpf);
+    }
+
+    dump_fpf("min_nume_fpf", min_nume_fpf);
+
+
+    sum_prod = 0;
+
+
+    for(int k = 0; k <= k_lim; ++k){
+      auto &nume_fpf = csi[index(TempIndex::iter_start) + k];
+
+      nume_fpf.expand_sub(min_nume_fpf);
+
+      dump_fpf("nume_fpf", nume_fpf);
+
+      csi.big_prod = csi.pexpo_tmp.evaluate(nume_fpf);
+
+      if((k ^ k_min) & 1){
+        sum_prod -= csi.big_prod;
+      }else{
+        sum_prod += csi.big_prod;
+      }
+    }
+    std::printf("sum_prod = %s\n", sum_prod.to_hex_str().c_str());
+  };
+
+  void Calculator::calcsum_6j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept{
+    const int two_a = two_j1, 
+              two_b = two_j2, 
+              two_c = two_j5, 
+              two_d = two_j4, 
+              two_e = two_j3, 
+              two_f = two_j6;
+
+    factor_6j(csi, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, csi[index(TempIndex::min_nume)], csi.sum_prod);
+    csi[index(TempIndex::prefact)].set_zero(0);
+    dump_fpf("cum_prefact_fpf", csi[index(TempIndex::prefact)]);
+    delta_coeff(two_a, two_b, two_e, csi[index(TempIndex::prefact)]);
+    dump_fpf("cum_prefact_fpf", csi[index(TempIndex::prefact)]);
+    delta_coeff(two_c, two_d, two_e, csi[index(TempIndex::prefact)]);
+    dump_fpf("cum_prefact_fpf", csi[index(TempIndex::prefact)]);
+    delta_coeff(two_a, two_c, two_f, csi[index(TempIndex::prefact)]);
+    dump_fpf("cum_prefact_fpf", csi[index(TempIndex::prefact)]);
+    delta_coeff(two_b, two_d, two_f, csi[index(TempIndex::prefact)]);
+    dump_fpf("cum_prefact_fpf", csi[index(TempIndex::prefact)]);
+  }
+
   def::double_type Calculator::eval_calcsum_info(TempStorage &csi) noexcept{
 
     split_sqrt_add(csi[index(TempIndex::prefact)], csi.big_sqrt, csi[index(TempIndex::min_nume)]);
@@ -209,12 +385,12 @@ namespace wigcpp::internal::calc{
     csi.pexpo_tmp.evaluate2(csi.big_nume, csi.big_div,csi[index(TempIndex::prefact)]);
     csi.big_nume_prod = csi.big_nume * csi.sum_prod;
 
-    auto [d_nume_prod, exp_nume_prod ]= csi.big_nume_prod.to_floating_point();
-    auto [d_div, exp_div] = csi.big_div.to_floating_point();
-    auto [d_sqrt, exp_sqrt] = csi.big_sqrt.to_floating_point();
+    const auto [d_nume_prod, exp_nume_prod ]= csi.big_nume_prod.to_floating_point();
+    const auto [d_div, exp_div] = csi.big_div.to_floating_point();
+    const auto [d_sqrt, exp_sqrt] = csi.big_sqrt.to_floating_point();
 
-    def::double_type r = (d_nume_prod / d_div) / std::sqrt(d_sqrt);
-    int res_exponent = exp_nume_prod - exp_div - exp_sqrt / 2;
+    const def::double_type r = (d_nume_prod / d_div) / std::sqrt(d_sqrt);
+    const int res_exponent = exp_nume_prod - exp_div - exp_sqrt / 2;
     return std::ldexp(r, res_exponent);
   }
 
