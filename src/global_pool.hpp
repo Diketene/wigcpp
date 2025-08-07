@@ -85,6 +85,7 @@ namespace wigcpp::internal::global {
     void expand_blocks(int num_blocks) noexcept {
       if(block_used >= num_blocks) return;
       block_used = num_blocks;
+      std::memset(data(), 0, sizeof(exp_t) * block_used);
     } 
 
     void set_max(int num_blocks) noexcept {
@@ -179,7 +180,7 @@ namespace wigcpp::internal::global {
                   const prime_exponents_view &h, int num_blocks) noexcept {
       block_used = num_blocks;
       for(int i = 0; i < block_used; ++i){
-        data()[i] = a.data()[i] - b.data()[i] - c.data()[i] - d.data()[i] - e.data()[i] - f.data()[i] - g.data()[i];
+        data()[i] = a.data()[i] - b.data()[i] - c.data()[i] - d.data()[i] - e.data()[i] - f.data()[i] - g.data()[i] - h.data()[i];
       }
     }
 
@@ -314,7 +315,7 @@ namespace wigcpp::internal::global {
         num_pool(prime_table), factorial_pool(prime_table)
         {
           fill_num_pool(prime_table);
-          fill_factorial_pool(max_two_j * wigner_type / 2 + 1, prime_table.num_primes);
+          fill_factorial_pool(prime_table.max_factorial, prime_table.num_primes);
         }
 
     GlobalFactorialPool() = delete;
