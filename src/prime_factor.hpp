@@ -57,7 +57,6 @@ namespace wigcpp::internal::prime_calc {
           }
 
           fpf >>= 1;
-
           if(!fpf) break;
 
           big_up[!up_active] = big_up[up_active] * big_up[up_active];
