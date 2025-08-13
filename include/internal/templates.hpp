@@ -25,4 +25,4 @@ namespace wigcpp::internal::templates {
   }
 
 }
-#endif
+#endif /* __WIGCPP_TEMPLATES__ */

@@ -1,11 +1,11 @@
 #ifndef __WIGCPP_CALC_TMP__
 #define __WIGCPP_CALC_TMP__
 
-#include "big_int.hpp"
-#include "error.hpp"
-#include "global_pool.hpp"
-#include "nothrow_allocator.hpp"
-#include "prime_factor.hpp"
+#include "internal/big_int.hpp"
+#include "internal/error.hpp"
+#include "internal/global_pool.hpp"
+#include "internal/nothrow_allocator.hpp"
+#include "internal/prime_factor.hpp"
 #include "vector.hpp"
 #include <cstddef>
 #include <cstdio>

@@ -35,6 +35,16 @@ TEST(test_xj, test_6j){
   }
 }
 
+TEST(test_xj, test_9j){
+  using namespace wigcpp::internal;
+  {
+    global::PoolManager::init(2*100, 9);
+    auto res = calc::Calculator::calc_9j(2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2);
+    constexpr double near = 1e-10;
+    EXPECT_NEAR(res, 0.01673469387755102, near);
+  }
+}
+
 TEST(test_xj, ThreadTest_SingleFunc){
   using namespace wigcpp::internal;
   using namespace wigcpp::internal::calc;

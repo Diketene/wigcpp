@@ -1,9 +1,9 @@
 #ifndef __WIGCPP_PRIME_FACTOR__
 #define __WIGCPP_PRIME_FACTOR__
 
-#include "big_int.hpp"
-#include "definitions.hpp"
-#include "global_pool.hpp"
+#include "internal/big_int.hpp"
+#include "internal/definitions.hpp"
+#include "internal/global_pool.hpp"
 #include <array>
 #include <cassert>
 #include <cstddef>

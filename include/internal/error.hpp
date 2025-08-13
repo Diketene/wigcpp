@@ -7,7 +7,8 @@ namespace wigcpp::internal::error {
   enum class ErrorCode{
     Bad_Alloc,
     TOO_LARGE_FACTORIAL,
-    NOT_INITIALIZED
+    NOT_INITIALIZED,
+    BAD_WIGNER_TYPE
   };
 
   class ErrorHandler{
@@ -27,6 +28,9 @@ namespace wigcpp::internal::error {
           std::abort();
         case ErrorCode::NOT_INITIALIZED:
           std::fprintf(stderr, "Must initialize the factor pool before using it.\nwigcpp: aborted.\n");
+          std::abort();
+        case ErrorCode::BAD_WIGNER_TYPE:
+          std::fprintf(stderr, "Wigner type must be 3, 6 or 9.\nwigcpp: aborted.\n"); 
           std::abort();
         default:
           std::fprintf(stderr, "Unknown error occurred.\nwigcpp: aborted.\n");

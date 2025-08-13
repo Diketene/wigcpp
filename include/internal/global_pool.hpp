@@ -1,10 +1,10 @@
 #ifndef __WIGCPP_MEMORY_POOL__
 #define __WIGCPP_MEMORY_POOL__
 
-#include "definitions.hpp"
-#include "nothrow_allocator.hpp"
-#include "vector.hpp"
-#include "error.hpp"
+#include "internal/definitions.hpp"
+#include "internal/nothrow_allocator.hpp"
+#include "internal/vector.hpp"
+#include "internal/error.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cassert>

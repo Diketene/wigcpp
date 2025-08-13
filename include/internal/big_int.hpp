@@ -4,9 +4,9 @@
  */
 #ifndef __WIGCPP_BIG_INT__
 #define __WIGCPP_BIG_INT__
-#include "definitions.hpp"
-#include "nothrow_allocator.hpp"
-#include "error.hpp"
+#include "internal/definitions.hpp"
+#include "internal/nothrow_allocator.hpp"
+#include "internal/error.hpp"
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -36,7 +36,7 @@ namespace wigcpp::internal::mwi{
 		}
 	
 		/* memory acquazition and initialization are operated by the alloc() and realloc() private method, 
-		** which satisfies the RAII principle */	
+		** which obeys the RAII principle */	
 
 		[[nodiscard]] def::uword_t* alloc(std::size_t capacity)noexcept{
 			def::uword_t* new_data = allocator.allocate(capacity);

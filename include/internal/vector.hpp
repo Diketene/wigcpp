@@ -1,9 +1,9 @@
 #ifndef __WIGCPP_VECTOR__
 #define __WIGCPP_VECTOR__
 
-#include "nothrow_allocator.hpp"
-#include "error.hpp"
-#include "templates.hpp"
+#include "internal/nothrow_allocator.hpp"
+#include "internal/error.hpp"
+#include "internal/templates.hpp"
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
