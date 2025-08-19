@@ -1,24 +1,49 @@
 cmake_minimum_required(VERSION 3.20)
 project(WigCpp LANGUAGES CXX)
-include(CheckCXXSourceCompiles)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdinc++ -isystem /usr/local/clang/include/c++/v1 -stdlib=libc++")
-add_compile_options(-std=c++17)
 
-option(BUILD_SHARED_LIBS "Build shared libraries " ON)
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 add_library(wigcpp src/c_wrap.cpp src/calc.cpp)
+target_compile_options(wigcpp PRIVATE -O3 -fPIC)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_compile_options(wigcpp PRIVATE -stdlib=libc++)
+  target_link_options(wigcpp PRIVATE -stdlib=libc++)
+
+  get_filename_component(CLANG_ROOT "${CMAKE_CXX_COMPILER}" DIRECTORY)
+  get_filename_component(CLANG_ROOT "${CLANG_ROOT}" DIRECTORY)
+  set(CLANG_INC "${CLANG_ROOT}/include/c++/v1")
+  message(STATUS "CLANG_INC: ${CLANG_INC}")
+
+  if(EXISTS "${CLANG_INC}/__config")
+    target_include_directories(wigcpp PRIVATE "${CLANG_INC}")
+  else()
+    message(FATAL_ERROR "Standard Layout User Level clang is required.")
+  endif()
+endif()
 
 target_compile_features(wigcpp PUBLIC cxx_std_17)
 
+include(CheckCXXSourceCompiles)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(CMAKE_REQUIRED_FLAGS
+    -stdlib=libc++
+    -I${CLANG_INC}
+  )
+  set(CMAKE_REQUIRED_LINK_OPTIONS -stdlib=libc++)
+  set(CMAKE_REQUIRED_INCLUDES ${CLANG_INC})
+endif()
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 check_cxx_source_compiles([[
   #include <iostream>
-  auto main(void) -> int {
+  auto main() -> int {
       std::cout << "Hello, world!" << std::endl;
       return 0;
   }
