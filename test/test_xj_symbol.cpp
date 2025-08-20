@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
 #include <thread>
 #include <vector>
-#include "calc.hpp"
-#include "global_pool.hpp"
+#include "internal/calc.hpp"
+#include "internal/global_pool.hpp"
 
 TEST(test_xj, test_3j){
   using namespace wigcpp::internal;

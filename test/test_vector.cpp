@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
-#include "big_int.hpp"
-#include "nothrow_allocator.hpp"
+#include "internal/big_int.hpp"
+#include "internal/nothrow_allocator.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <utility>
-#include "vector.hpp"
+#include "internal/vector.hpp"
 
 TEST(test_vector, test_pod){
   using wigcpp::internal::container::vector;

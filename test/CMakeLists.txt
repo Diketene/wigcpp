@@ -15,15 +15,33 @@ find_package(Threads REQUIRED)
 message("Found GTest: ${GTest_INCLUDE_DIRS}")
 message("GTest libraries: ${GTest_LIBRARIES}")
 
+
+add_library(
+  wigcpp STATIC 
+  ${CMAKE_SOURCE_DIR}/../src/c_wrap.cpp
+  ${CMAKE_SOURCE_DIR}/../src/calc.cpp
+  ${CMAKE_SOURCE_DIR}/../src/tmp_pool.cpp
+)
+
+target_include_directories(
+  wigcpp PUBLIC
+  ${CMAKE_SOURCE_DIR}/../include
+  ${CMAKE_SOURCE_DIR}/../config
+  "${CMAKE_SOURCE_DIR}/../build"
+)
+
+
 enable_testing()
 
 function(add_wigcpp_test test_name source_file)
   add_executable(${test_name} ${source_file})
-  target_include_directories(${test_name} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../config
-    ${CMAKE_CURRENT_SOURCE_DIR}/../build)
-  target_link_libraries(${test_name} GTest::gtest GTest::gtest_main)
+  target_link_libraries(${test_name} PRIVATE wigcpp GTest::gtest GTest::gtest_main)
+  target_include_directories(
+    ${test_name} PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/config
+    ${CMKAE_SOURCE_DIR}/build
+  )
   gtest_discover_tests(${test_name})
 endfunction()
 

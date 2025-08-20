@@ -1,9 +1,9 @@
 #include "gtest/gtest.h"
 #include <cstddef>
-#include "global_pool.hpp"
-#include "prime_factor.hpp"
-#include "big_int.hpp"
-#include "tmp_pool.hpp"
+#include "internal/global_pool.hpp"
+#include "internal/prime_factor.hpp"
+#include "internal/big_int.hpp"
+#include "internal/tmp_pool.hpp"
 TEST(test_prime_factor, test_prime_table) {
   using namespace wigcpp::internal::global;
   using namespace wigcpp::internal::prime_calc;
@@ -29,8 +29,7 @@ TEST(test_prime_factor, test_aligned){
     EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(ptr) % 64, 0);
     ptr = &pool[1];
     EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(ptr) % 64, 0);
-    TempManager::init(1000, pool.aligned_bytes());
-    auto &tmp = TempManager::get();
+    auto &tmp = TempManager::get(1000, pool.aligned_bytes());
     ptr = &tmp[0];
     EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(ptr) % 64, 0);
     ptr = &tmp[index(TempIndex::prefact)];

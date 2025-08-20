@@ -2,8 +2,8 @@
 #include <cmath>
 #include <cstddef>
 #include <gtest/gtest.h>
-#include "big_int.hpp"
-#include "definitions.hpp"
+#include "internal/big_int.hpp"
+#include "internal/definitions.hpp"
 
 TEST(test_mwi, test_mwi_full_sign_word) {
 	using namespace wigcpp::internal::def;
