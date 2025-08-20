@@ -5,22 +5,46 @@ message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERS
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
-add_library(wigcpp src/c_wrap.cpp src/calc.cpp)
+add_library(
+  wigcpp  src/c_wrap.cpp 
+          src/calc.cpp
+          src/tmp_pool.cpp
+)
+
 target_compile_options(wigcpp PRIVATE -O3 -fPIC)
 
+if(NOT WIN32)
+  target_compile_options(wigcpp PRIVATE -fvisibility=hidden)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  target_compile_options(wigcpp PRIVATE -stdlib=libc++)
-  target_link_options(wigcpp PRIVATE -stdlib=libc++)
+  target_compile_options(wigcpp PRIVATE -nostdinc++ -nostdlib++)
 
-  get_filename_component(CLANG_ROOT "${CMAKE_CXX_COMPILER}" DIRECTORY)
-  get_filename_component(CLANG_ROOT "${CLANG_ROOT}" DIRECTORY)
-  set(CLANG_INC "${CLANG_ROOT}/include/c++/v1")
-  message(STATUS "CLANG_INC: ${CLANG_INC}")
+  get_filename_component(CLANG_ROOT_PATH "${CMAKE_CXX_COMPILER}" DIRECTORY)
+  get_filename_component(CLANG_ROOT_PATH "${CLANG_ROOT_PATH}" DIRECTORY)
+  set(LIBCXX_INC_PATH "${CLANG_ROOT_PATH}/include/c++/v1")
+  set(LIBCXX_LIB_PATH "${CLANG_ROOT_PATH}/lib")
+  message(STATUS "LIBCXX_INC_PATH: ${LIBCXX_INC_PATH}")
+  message(STATUS "LIBCXX_LIB_PATH: ${LIBCXX_LIB_PATH}")
 
-  if(EXISTS "${CLANG_INC}/__config")
-    target_include_directories(wigcpp PRIVATE "${CLANG_INC}")
-  else()
-    message(FATAL_ERROR "Standard Layout User Level clang is required.")
+  execute_process(
+    COMMAND ${CMAKE_CXX_COMPILER} -print-target-triple
+    OUTPUT_VARIABLE CLANG_TARGET_TRIPLE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
+  if(BUILD_SHARED_LIBS)
+    if(EXISTS "${LIBCXX_INC_PATH}/__config" AND EXISTS "${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}/libc++.so")
+      target_include_directories(wigcpp SYSTEM PRIVATE "${LIBCXX_INC_PATH}")
+      target_link_options(
+        wigcpp PRIVATE 
+        "-L${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
+        "-lc++"
+        "LINKER:-rpath,${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
+      )
+    else()
+      message(FATAL_ERROR "Standard Layout User Level clang is Required.")
+    endif()
   endif()
 endif()
 
@@ -30,11 +54,12 @@ include(CheckCXXSourceCompiles)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_REQUIRED_FLAGS
-    -stdlib=libc++
-    -I${CLANG_INC}
+    "-nostdinc++"
+    "-nostdlib++"
+    "-L${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
   )
-  set(CMAKE_REQUIRED_LINK_OPTIONS -stdlib=libc++)
-  set(CMAKE_REQUIRED_INCLUDES ${CLANG_INC})
+  set(CMAKE_REQUIRED_LINK_OPTIONS -lc++)
+  set(CMAKE_REQUIRED_INCLUDES ${LIBCXX_INC_PATH})
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -140,6 +165,9 @@ endforeach()
 
 set(AUTO_CONFIG_FILE "${CMAKE_CURRENT_BINARY_DIR}/auto_config.h")
 set_source_files_properties(${AUTO_CONFIG_FILE} PROPERTIES GENERATED TRUE)
+
+#set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+#set(CMAKE_VISIBILITY_INLINES_HIDDEN ON) 
 
 target_include_directories(
   wigcpp 
