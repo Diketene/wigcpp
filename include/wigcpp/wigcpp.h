@@ -1,5 +1,6 @@
 #ifndef __WIGCPP_H__
 #define __WIGCPP_H__
+
 #ifdef __cplusplus
 extern "C"{
 #endif
