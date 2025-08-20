@@ -52,17 +52,8 @@ namespace wigcpp::internal::tmp{
     TempStorage &operator= (TempStorage &&) = default;
     
     int max_iter;
-    TempStorage(int max_iter, std::size_t aligned_bytes) noexcept : buffer{}, max_iter(max_iter), aligned_bytes(aligned_bytes){
-      constexpr std::size_t iter_start = static_cast<std::size_t>(TempIndex::iter_start);
-      const std::size_t new_size = (static_cast<std::size_t>(max_iter) + iter_start);
-      const std::size_t total_bytes = new_size * aligned_bytes;
 
-      buffer.resize(total_bytes, std::byte{0});
-
-      for(std::size_t i = 0; i < new_size; ++i){
-        new (buffer.raw_pointer() + i * aligned_bytes) prime_exponents_view();
-      }
-    }
+    TempStorage(int max_iter, std::size_t aligned_bytes) noexcept;
 
     prime_exponents_view &operator[] (std::size_t n) noexcept {
       return *reinterpret_cast<prime_exponents_view*>(buffer.raw_pointer() + n * aligned_bytes);
@@ -81,20 +72,9 @@ namespace wigcpp::internal::tmp{
     static inline thread_local std::unique_ptr<TempStorage> ptr = nullptr;
 
   public:
-    static void init(int max_two_j, std::size_t aligned_bytes) noexcept {
-      ptr = std::make_unique<TempStorage>(max_two_j / 2 + 1, aligned_bytes);
-    }
+    static void init(int max_two_j, std::size_t aligned_bytes) noexcept; 
 
-    static TempStorage &get(int max_two_j = 0, std::size_t aligned_bytes = 0) noexcept {
-      if(!ptr){
-        if(max_two_j <= 0 || aligned_bytes <= 0){
-          std::fprintf(stderr, "Error: TempManager not initialized.\n");
-          error::error_process(error::ErrorCode::NOT_INITIALIZED);
-        }
-        ptr = std::make_unique<TempStorage>(max_two_j / 2 + 1, aligned_bytes);
-      }
-      return *ptr;
-    }
+    static TempStorage &get(int max_two_j, std::size_t aligned_bytes) noexcept;
   };
 
 }
