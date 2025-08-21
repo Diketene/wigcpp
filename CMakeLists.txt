@@ -11,7 +11,11 @@ add_library(
           src/tmp_pool.cpp
 )
 
-target_compile_options(wigcpp PRIVATE -O3 -fPIC)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+target_compile_options(
+  $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-O3>
+  $<$<CXX_COMPILER_ID:MSVC>:/O2>
+)
 
 if(NOT WIN32)
   target_compile_options(wigcpp PRIVATE -fvisibility=hidden)
