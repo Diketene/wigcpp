@@ -26,8 +26,6 @@ add_library(
 target_include_directories(
   wigcpp PUBLIC
   ${CMAKE_SOURCE_DIR}/../include
-  ${CMAKE_SOURCE_DIR}/../config
-  "${CMAKE_SOURCE_DIR}/../build"
 )
 
 
@@ -39,8 +37,6 @@ function(add_wigcpp_test test_name source_file)
   target_include_directories(
     ${test_name} PRIVATE 
     ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/config
-    ${CMKAE_SOURCE_DIR}/build
   )
   gtest_discover_tests(${test_name})
 endfunction()
