@@ -13,6 +13,7 @@ add_library(
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 target_compile_options(
+  wigcpp PRIVATE
   $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-O3>
   $<$<CXX_COMPILER_ID:MSVC>:/O2>
 )
