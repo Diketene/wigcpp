@@ -4,15 +4,41 @@ project(WigCpp LANGUAGES CXX)
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+option(BUILD_FORTRAN_INTERFACE "Build Fortran interface" ON)
 
 add_library(
   wigcpp  src/c_wrap.cpp 
           src/calc.cpp
-          src/tmp_pool.cpp
-          src/prime_factor.cpp
-          src/global_pool.cpp
           src/error.cpp
+          src/global_pool.cpp
+          src/prime_factor.cpp
+          src/tmp_pool.cpp
 )
+
+if(BUILD_FORTRAN_INTERFACE)
+  enable_language(Fortran)
+  if(NOT CMAKE_Fortran_COMPILER)
+    message(STATUS "Fortran compiler not found, disabling Fortran interface.")
+    set(BUILD_FORTRAN_INTERFACE OFF CACHE BOOL "" FORCE)
+  else()
+    message(STATUS "Fortran support enabled(compiler: ${CMAKE_Fortran_COMPILER})")
+
+    add_library(fortran_interface OBJECT src/fortran/interface.f90)
+    set_target_properties(
+      fortran_interface 
+      PROPERTIES 
+      Fortran_MODULE_DIRECTORY 
+      ${CMAKE_BINARY_DIR}/include
+    )
+
+    target_sources(wigcpp PRIVATE $<TARGET_OBJECTS:fortran_interface>)
+
+    install(
+      FILES "${CMAKE_BINARY_DIR}/include/wigcpp.mod"
+      DESTINATION include
+    )
+  endif()
+endif()
 
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
