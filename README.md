@@ -26,10 +26,39 @@ to compile the target, then use
 cmake --install build --prefix <Install_prefix>
 ```
 
-to install the product of the compilation, \<Install\_prefix\> must be substituted as a actual path.
+to install the product of the compilation, \<Install\_prefix\> must be substituted as an actual path.
 
-The CMakeLists.txt of this project provide two options to control the product of building: BUILD\_SHARED\_LIBS and BUILD\_FORTRAN\_INTERFACE, all of these two options are set to "ON" defaultly. If users don't need to build shared library or build a Fortran interface modulefile, they can simply set these parameters to "OFF" using the -D option when generating the compile configurations.
+The CMakeLists.txt of this project provides two options to control the products of building: BUILD\_SHARED\_LIBS and BUILD\_FORTRAN\_INTERFACE, all of these two options are set to `ON` defaultly. If users don't need to build shared library or build a Fortran interface module file, they can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` when generating the compile configurations.
 
+## Usage
+
+Wigcpp provides C, C++ and Fortran interface. For C interface, functions that calculating 3j, 6j and 9j symbols maintain the same name as WIGXJPF: `wig3jj`, `wig6jj` and `wig9jj`. Before calling these functions, a function that maintains a global factorization table must be called firstly, which is `wigcpp_global_init`. Declarations of these functions are as followed:
+
+```C
+void wigcpp_global_init(int max_two_j, int wigner_type);
+
+double wig3jj(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3);
+
+double wig6jj(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
+
+double wig9jj(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9);
+```
+
+All of the angular-momentum quantum numbers and magnetic quantum numbers must be passed to the functions in their **doubled form**, that means if you have a physical value j, you must pass 2 * j to these functions.
+
+For the same reason, the `wigcpp_global_init` function accepts **twice the maximum physical angular momentum value** as its first parameter. And `wigcpp_global_init` accepts the maximum wigner symbol type that will be used in the whole calculation process as its second parameter, which is must be **3, 6 or 9**.
+
+A simple example is as followed:
+
+```C
+#include "wigcpp/wigcpp.h"
+
+int main(void){
+	wigcpp_global_init(2 * 100, 9);
+	double result = wig3jj(2 * 1, 2 * 1, 2 * 2, 0, 0, 0);
+}
+
+```
 
 ## Citation
 
