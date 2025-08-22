@@ -21,6 +21,9 @@ add_library(
   ${CMAKE_SOURCE_DIR}/../src/c_wrap.cpp
   ${CMAKE_SOURCE_DIR}/../src/calc.cpp
   ${CMAKE_SOURCE_DIR}/../src/tmp_pool.cpp
+  ${CMAKE_SOURCE_DIR}/../src/prime_factor.cpp
+  ${CMAKE_SOURCE_DIR}/../src/global_pool.cpp
+  ${CMAKE_SOURCE_DIR}/../src/error.cpp
 )
 
 target_include_directories(

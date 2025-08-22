@@ -2,15 +2,11 @@
 #define __WIGCPP_CALC__
 
 #include "internal/definitions.hpp"
-#include "internal/error.hpp"
 #include "internal/global_pool.hpp"
 #include "internal/tmp_pool.hpp"
 #include "internal/big_int.hpp"
-#include <algorithm>
 #include <climits>
-#include <cmath>
 #include <cstddef>
-#include <cstdio>
 #include <cstdlib>
 
 namespace wigcpp::internal::calc{

@@ -9,6 +9,9 @@ add_library(
   wigcpp  src/c_wrap.cpp 
           src/calc.cpp
           src/tmp_pool.cpp
+          src/prime_factor.cpp
+          src/global_pool.cpp
+          src/error.cpp
 )
 
 set(CMAKE_BUILD_TYPE Release)

@@ -1,4 +1,8 @@
 #include "internal/calc.hpp"
+#include "internal/error.hpp"
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
 
 namespace wigcpp::internal::calc {
   def::double_type Calculator::calc_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
@@ -82,10 +86,6 @@ namespace wigcpp::internal::calc {
 
     const int k_min = std::max({two_j1 + two_m2 - two_j3, two_j2 - two_m1 - two_j3, 0}) / 2;
     const int k_max = std::min({two_j2 + two_m2, two_j1 - two_m1, two_j1 + two_j2 - two_j3}) / 2;
-
-    #ifdef DEBUG_PRINT
-      std::printf("[3j] range: [%d, %d], steps %d\n", k_min, k_max, k_max - k_min + 1);
-    #endif
 
     const int max_factorial = (two_j1 + two_j2 + two_j3) / 2 + 1;
     if(max_factorial > pool.prime_table.max_factorial){
@@ -214,8 +214,6 @@ namespace wigcpp::internal::calc {
     const int d6 = beta2 / 2 - k_min;
     const int d7 = beta3 / 2 - k_min;
 
-    std::printf("[6j] range: [%d, %d], steps %d\n", k_min, k_max, k_lim + 1);
-
     for(int k = 0; k <= k_lim; ++k){
       const auto &p_n1 = pool[k_min + 1 + k];
 
@@ -228,25 +226,12 @@ namespace wigcpp::internal::calc {
       const auto &p_d6 = pool[d6 - k];
       const auto &p_d7 = pool[d7 - k];
 
-      dump_fpf("p_n1", p_n1);
-      dump_fpf("p_d1", p_d1);
-      dump_fpf("p_d2", p_d2);
-      dump_fpf("p_d3", p_d3);
-      dump_fpf("p_d4", p_d4);
-      dump_fpf("p_d5", p_d5);
-      dump_fpf("p_d6", p_d6);
-      dump_fpf("p_d7", p_d7);
-
       auto &nume_fpf = csi[index(TempIndex::iter_start) + k];
 
       nume_fpf.sum_sub7(p_n1, p_d1, p_d2, p_d3, p_d4, p_d5, p_d6, p_d7, max_used);
-      dump_fpf("nume_fpf", nume_fpf);
 
       min_nume_fpf.keep_min(nume_fpf);
     }
-
-    dump_fpf("min_nume_fpf", min_nume_fpf);
-
 
     sum_prod = 0;
 
@@ -256,8 +241,6 @@ namespace wigcpp::internal::calc {
 
       nume_fpf.expand_sub(min_nume_fpf);
 
-      dump_fpf("nume_fpf", nume_fpf);
-
       csi.big_prod = csi.pexpo_tmp.evaluate(nume_fpf);
 
       if((k ^ k_min) & 1){
@@ -266,7 +249,6 @@ namespace wigcpp::internal::calc {
         sum_prod += csi.big_prod;
       }
     }
-    std::printf("sum_prod = %s\n", sum_prod.to_hex_str().c_str());
   };
 
   void Calculator::calcsum_6j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept{
@@ -279,15 +261,10 @@ namespace wigcpp::internal::calc {
 
     factor_6j(csi, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, csi[index(TempIndex::min_nume)], csi.sum_prod);
     csi[index(TempIndex::prefact)].set_zero(0);
-    dump_fpf("cum_prefact_fpf", csi[index(TempIndex::prefact)]);
     delta_coeff(two_a, two_b, two_e, csi[index(TempIndex::prefact)]);
-    dump_fpf("cum_prefact_fpf", csi[index(TempIndex::prefact)]);
     delta_coeff(two_c, two_d, two_e, csi[index(TempIndex::prefact)]);
-    dump_fpf("cum_prefact_fpf", csi[index(TempIndex::prefact)]);
     delta_coeff(two_a, two_c, two_f, csi[index(TempIndex::prefact)]);
-    dump_fpf("cum_prefact_fpf", csi[index(TempIndex::prefact)]);
     delta_coeff(two_b, two_d, two_f, csi[index(TempIndex::prefact)]);
-    dump_fpf("cum_prefact_fpf", csi[index(TempIndex::prefact)]);
   }
 
   void Calculator::calcsum_9j(TempStorage &csi, int two_a, int two_b, int two_c, int two_d, int two_e, int two_f, int two_g, int two_h, int two_i) noexcept{
