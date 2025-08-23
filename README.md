@@ -28,9 +28,9 @@ cmake --install build --prefix <Install_prefix>
 
 to install the product of the compilation, \<Install\_prefix\> must be substituted as an actual path.
 
-The CMakeLists.txt of this project provides two options to control the products of building: BUILD\_SHARED\_LIBS and BUILD\_FORTRAN\_INTERFACE, all of these two options are set to `ON` defaultly. If users don't need to build shared library or build a Fortran interface module file, they can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` when generating the compile configurations.
+The CMakeLists.txt of this project provides two options to control the products of building: BUILD\_SHARED\_LIBS and BUILD\_FORTRAN\_INTERFACE, all of these two options are set to `ON` defaultly. If users don't need to build shared library or build a Fortran interface module file, they can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations.
 
-Build of this project has been tested on Linux with g++ and clang++, when using clang++, libc++ is defaultly set as this project's standerd C++ library.
+Build of this project has been tested on Linux with g++ and clang++, when using clang++, libc++ is defaultly set as this project's C++ library.
 
 ## Usage
 
