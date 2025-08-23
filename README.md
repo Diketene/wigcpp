@@ -87,7 +87,7 @@ gcc -I<Install_prefix>/include \
     test.c -lwigcpp
 ```
 
-Run the executable, you will see "result is 0.36514837167011072" in 8 bytes double type platform.
+Run the executable, you will see `result is 0.36514837167011072` in 8 bytes double type platform.
 
 For C++ interface, we use namespace to encapsulate these functions. Declarations of these functions are:
 
