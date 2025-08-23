@@ -197,6 +197,14 @@ Result in Thread2:-0.29277
 Result in Thread3:-6.07534e-05
 ```
 
+## License
+
+This project is licensed under the GPL-3.0 license, see the LICENSE[./LICENSE] for details.
+
+## Contact
+
+If you have any question, feel free to open an issue, or Email to the maintainer: liuhaotian0406@163.com
+
 ## Citation
 
 This project uses prime factorization and multi word integer arithmetic to calculate wigner-3j, 6j and 9j symbols,
