@@ -1,3 +1,5 @@
+/* Copyright (c) 2025 Diketene. Licensed under GPL-3.0 */
+
 #include "gtest/gtest.h"
 #include <thread>
 #include <vector>

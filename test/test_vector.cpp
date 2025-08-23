@@ -1,3 +1,5 @@
+/* Copyright (c) 2025 Diketene. Licensed under GPL-3.0 */
+
 #include "gtest/gtest.h"
 #include "internal/big_int.hpp"
 #include "internal/nothrow_allocator.hpp"

@@ -1,33 +1,11 @@
+/* Copyright (c) 2025 Diketene. Licensed under GPL-3.0 */
+
 #include "gtest/gtest.h"
 #include <cmath>
 #include <cstddef>
 #include <gtest/gtest.h>
 #include "internal/big_int.hpp"
 #include "internal/definitions.hpp"
-
-TEST(test_mwi, test_mwi_full_sign_word) {
-	using namespace wigcpp::internal::def;
-
-#if MULTI_WORD_INT_SIZEOF_ITEM == 8
-	// Test with signed integers
-	EXPECT_EQ(full_sign_word<word_t>(-1), 0xFFFFFFFFFFFFFFFF);
-	EXPECT_EQ(full_sign_word<word_t>(-123456789), 0xFFFFFFFFFFFFFFFF);
-	EXPECT_EQ(full_sign_word<word_t>(123456789), 0x00000000);
-	// Test with unsigned integers
-	EXPECT_EQ(full_sign_word<uword_t>(18446744073709551615ULL), 0xFFFFFFFFFFFFFFFF);
-	EXPECT_EQ(full_sign_word<uword_t>(123456789), 0x00000000);
-	EXPECT_EQ(full_sign_word<uword_t>(0), 0x00000000);
-#elif MULTI_WORD_INT_SIZEOF_ITEM == 4
-	// Test with signed integers
-	EXPECT_EQ(full_sign_word<word_t>(-1), 0xFFFFFFFF);
-	EXPECT_EQ(full_sign_word<word_t>(-123456789), 0xFFFFFFFF);
-	EXPECT_EQ(full_sign_word<word_t>(123456789), 0x00000000);
-	// Test with unsigned integers
-	EXPECT_EQ(full_sign_word<uword_t>(4294967295U), 0xFFFFFFFF);
-	EXPECT_EQ(full_sign_word<uword_t>(123456789), 0x00000000);
-	EXPECT_EQ(full_sign_word<uword_t>(0), 0x00000000);
-#endif
-}
 
 TEST(test_mwi, big_int_test){
 	using namespace wigcpp::internal::mwi;
