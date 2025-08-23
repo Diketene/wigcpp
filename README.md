@@ -28,7 +28,18 @@ cmake --install build --prefix <Install_prefix>
 
 to install the product of the compilation, \<Install\_prefix\> must be substituted as an actual path.
 
-The CMakeLists.txt of this project provides two options to control the products of building: BUILD\_SHARED\_LIBS and BUILD\_FORTRAN\_INTERFACE, all of these two options are set to `ON` defaultly. If users don't need to build shared library or build a Fortran interface module file, they can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations.
+The CMakeLists.txt of this project provides three options to control the products of building: `BUILD_SHARED_LIBS`, `BUILD_FORTRAN_INTERFACE` and `BUILD_TESTING`. 
+
+These three options was set defaultly as:
+
+|options|status|
+|:-:|:-:|
+|`BUILD_SHARED_LIBS`|`ON`|
+|`BUILD_FORTRAN_INTERFACE`|`ON`|
+|`BUILD_TESTING`|`OFF`|
+
+
+If you don't need to build shared library or build a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TESTING=ON` while generating compile configurations.
 
 Build of this project has been tested on Linux with g++ and clang++, when using clang++, libc++ is defaultly set as this project's C++ library.
 
@@ -196,6 +207,14 @@ Result in Thread1:0.194625
 Result in Thread2:-0.29277
 Result in Thread3:-6.07534e-05
 ```
+
+## ToDo
+
+This project is in progress. In further, benchmarks will be implemented, and performance optimization will be conducted through techniques such as:
+
+1. Refactoring mathematical kernels using SIMD intrisics
+2. LTO/PGO builds for critical paths
+
 
 ## License
 
