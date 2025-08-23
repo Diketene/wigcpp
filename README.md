@@ -158,7 +158,7 @@ gfortran -I<Install_prefix>/include \
 
 The use of `thread_local` in C++11 eliminates the need for users to explicitly initialize thread-local resources at thread startup. So when calling these functions in multi-thread, you can proceed just as you would in a single-threaded environment. 
 
-An example in C++ using is as followed:
+An example in C++ is as followed:
 
 ```C++
 #include "wigcpp/wigcpp.hpp"
