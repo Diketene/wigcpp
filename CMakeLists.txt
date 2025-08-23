@@ -1,10 +1,29 @@
+# Copyright (c) 2025 Diketene <liuhaotian0406@163.com>
+
+#	This file is part of wigcpp.
+#
+#	Wigcpp is licensed under the GPL-3.0 license.
+#	You should have received a copy of the GPL-3.0 license,
+#	if not, see <http://www.gnu.org/licenses/>.
+#
+
 cmake_minimum_required(VERSION 3.20)
 project(WigCpp LANGUAGES CXX)
+
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(BUILD_FORTRAN_INTERFACE "Build Fortran interface" ON)
+option(BUILD_TESTING "Build the testing tree" OFF)
+
+if(BUILD_TESTING)
+  enable_testing()
+  add_subdirectory(test)
+else()
+  message(STATUS "Testing is disabled.") 
+endif()
 
 add_library(
   wigcpp  src/c_wrap.cpp 
@@ -51,60 +70,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 target_compile_options(wigcpp PRIVATE -fvisibility=hidden)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  target_compile_options(wigcpp PRIVATE -nostdinc++ -nostdlib++)
-
-  get_filename_component(CLANG_ROOT_PATH "${CMAKE_CXX_COMPILER}" DIRECTORY)
-  get_filename_component(CLANG_ROOT_PATH "${CLANG_ROOT_PATH}" DIRECTORY)
-  set(LIBCXX_INC_PATH "${CLANG_ROOT_PATH}/include/c++/v1")
-  set(LIBCXX_LIB_PATH "${CLANG_ROOT_PATH}/lib")
-
-  execute_process(
-    COMMAND ${CMAKE_CXX_COMPILER} -print-target-triple
-    OUTPUT_VARIABLE CLANG_TARGET_TRIPLE
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-
-  if(EXISTS "${LIBCXX_INC_PATH}/__config") 
-    message(STATUS "Found libc++ header at: ${LIBCXX_INC_PATH}")
-    target_include_directories(wigcpp SYSTEM PRIVATE "${LIBCXX_INC_PATH}")
-    if(BUILD_SHARED_LIBS)
-      if(EXISTS "${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}/libc++.so")
-        message(STATUS "Found libc++ shared library at: ${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}/libc++.so")
-        target_link_options(
-          wigcpp PRIVATE 
-          "-L${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
-          "-lc++"
-          "LINKER:-rpath,${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
-        )
-      else()
-        message(FATAL_ERROR "could not find libc++.so in ${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}")
-      endif()
-    elseif(EXISTS "${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}/libc++.a")
-      message(STATUS "Found libc++ static library at: ${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}/libc++.a")
-      target_link_options(
-        wigcpp PRIVATE 
-        "-L${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
-        "-lc++"
-      )
-    else()
-      message(FATAL_ERROR "could not find libc++.a in ${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}")
-    endif()
-  endif()
+  include(ConfigureLibCXX)
+  configure_libcxx_for_clang(wigcpp)
+  configure_test_for_libcxx(LIBCXX_INC_PATH LIBCXX_LIB_PATH CLANG_TARGET_TRIPLE)
 endif()
 
 target_compile_features(wigcpp PUBLIC cxx_std_17)
 
 include(CheckCXXSourceCompiles)
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  set(CMAKE_REQUIRED_FLAGS
-    "-nostdinc++"
-    "-nostdlib++"
-    "-L${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
-  )
-  set(CMAKE_REQUIRED_LINK_OPTIONS -lc++)
-  set(CMAKE_REQUIRED_INCLUDES ${LIBCXX_INC_PATH})
-endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -113,8 +86,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 check_cxx_source_compiles([[
   #include <iostream>
   auto main() -> int {
-      std::cout << "Hello, world!" << std::endl;
-      return 0;
+    std::cout << "Hello, world!" << std::endl;
+    thread_local int a = 0;
+    return 0;
   }
 ]] CPP_SOURCE_COMPILATION_SUCCESS)
 
@@ -124,9 +98,6 @@ else()
   message(FATAL_ERROR "C++ feature required but not supported.")
 endif()
 
-
-#set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-#set(CMAKE_VISIBILITY_INLINES_HIDDEN ON) 
 
 target_include_directories(
   wigcpp 
