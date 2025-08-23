@@ -1,7 +1,12 @@
-/*
- * 
+/* Copyright (c) 2025 Diketene <liuhaotian0406@163.com> */
+
+/*	This file is part of wigcpp.
  *
+ *	Wigcpp is licensed under the GPL-3.0 license.
+ *	You should have received a copy of the GPL-3.0 license,
+ *	if not, see <http://www.gnu.org/licenses/>.
  */
+
 #ifndef __WIGCPP_BIG_INT__
 #define __WIGCPP_BIG_INT__
 #include "internal/definitions.hpp"
