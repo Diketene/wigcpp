@@ -147,6 +147,11 @@ The use of `thread_local` in C++11 eliminates the need for users to explicitly i
 An example in C++ using is as followed:
 
 ```C++
+#include "wigcpp/wigcpp.hpp"
+#include <iostream>
+#include <thread>
+#include <vector>
+
 struct ThreadData{
 	int two_j1, two_j2, two_j3, two_m1, two_m2, two_m3;
 	double result;
@@ -167,7 +172,7 @@ auto main(void) -> int{
 
 	for(int i = 0; i < kThreads; ++i){
 		threads.emplace_back([&thread_data, i]{
-			thread_data[i].result = wigcpp::internal::calc::Calculator::calc_3j(
+			thread_data[i].result = wigcpp::three_j(
 				thread_data[i].two_j1, thread_data[i].two_j2, thread_data[i].two_j3, 
 				thread_data[i].two_m1, thread_data[i].two_m2, thread_data[i].two_m3);
 		});
@@ -177,9 +182,20 @@ auto main(void) -> int{
 		t.join();
 	}
 
+  for(int i = 0; i < kThreads; ++i){
+    std::cout << "Result in Thread" << i << ':' << thread_data[i].result << std::endl;
+  }
 }
 ```
-You can alse see this example in test/.
+
+Output in stdout will be:
+
+```
+Result in Thread0:0.00840976
+Result in Thread1:0.194625
+Result in Thread2:-0.29277
+Result in Thread3:-6.07534e-05
+```
 
 ## Citation
 
