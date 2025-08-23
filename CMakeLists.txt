@@ -40,7 +40,12 @@ if(BUILD_FORTRAN_INTERFACE)
   endif()
 endif()
 
-set(CMAKE_BUILD_TYPE Release)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "No build types specified, defaulting to Release.")
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 target_compile_options(wigcpp PRIVATE -fvisibility=hidden)
@@ -52,8 +57,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   get_filename_component(CLANG_ROOT_PATH "${CLANG_ROOT_PATH}" DIRECTORY)
   set(LIBCXX_INC_PATH "${CLANG_ROOT_PATH}/include/c++/v1")
   set(LIBCXX_LIB_PATH "${CLANG_ROOT_PATH}/lib")
-  message(STATUS "LIBCXX_INC_PATH: ${LIBCXX_INC_PATH}")
-  message(STATUS "LIBCXX_LIB_PATH: ${LIBCXX_LIB_PATH}")
 
   execute_process(
     COMMAND ${CMAKE_CXX_COMPILER} -print-target-triple
@@ -61,17 +64,30 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
 
-  if(BUILD_SHARED_LIBS)
-    if(EXISTS "${LIBCXX_INC_PATH}/__config" AND EXISTS "${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}/libc++.so")
-      target_include_directories(wigcpp SYSTEM PRIVATE "${LIBCXX_INC_PATH}")
+  if(EXISTS "${LIBCXX_INC_PATH}/__config") 
+    message(STATUS "Found libc++ header at: ${LIBCXX_INC_PATH}")
+    target_include_directories(wigcpp SYSTEM PRIVATE "${LIBCXX_INC_PATH}")
+    if(BUILD_SHARED_LIBS)
+      if(EXISTS "${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}/libc++.so")
+        message(STATUS "Found libc++ shared library at: ${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}/libc++.so")
+        target_link_options(
+          wigcpp PRIVATE 
+          "-L${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
+          "-lc++"
+          "LINKER:-rpath,${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
+        )
+      else()
+        message(FATAL_ERROR "could not find libc++.so in ${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}")
+      endif()
+    elseif(EXISTS "${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}/libc++.a")
+      message(STATUS "Found libc++ static library at: ${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}/libc++.a")
       target_link_options(
         wigcpp PRIVATE 
         "-L${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
         "-lc++"
-        "LINKER:-rpath,${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
       )
     else()
-      message(FATAL_ERROR "Standard Layout User Level clang is Required.")
+      message(FATAL_ERROR "could not find libc++.a in ${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}")
     endif()
   endif()
 endif()
