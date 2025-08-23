@@ -1,4 +1,4 @@
-# Wigcpp: A Wigner-3j 6j and 9j Symbol Calculator Written in C++ 17
+# Wigcpp: A Wigner-3j 6j and 9j Symbol Calculation Library Written in C++ 17
 
 ## Brief
 
