@@ -32,12 +32,15 @@ The CMakeLists.txt of this project provides three options to control the product
 
 These three options was set defaultly as:
 
+<div align="center">
+
 |options|status|
 |:-:|:-:|
 |`BUILD_SHARED_LIBS`|`ON`|
 |`BUILD_FORTRAN_INTERFACE`|`ON`|
 |`BUILD_TESTING`|`OFF`|
 
+</div>
 
 If you don't need to build shared library or build a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TESTING=ON` while generating compile configurations.
 
