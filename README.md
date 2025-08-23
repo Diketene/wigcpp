@@ -71,9 +71,9 @@ For gcc/clang, the compilation command will be:
 
 ```bash
 gcc -I<Install_prefix>/include \
-		-L<Install_prefix>/lib\
-		-Wl,-rpath=<Install_prefix>/lib \
-		test.c -lwigcpp
+    -L<Install_prefix>/lib\
+    -Wl,-rpath=<Install_prefix>/lib \
+    test.c -lwigcpp
 ```
 
 Run the executable, you will see "result is 0.36514837167011072" in 8 bytes double type platform.
@@ -96,6 +96,7 @@ A simple example is as followed:
 
 ```C++
 /* test.cpp */
+
 #include "wigcpp/wigcpp.hpp"
 #include <cstdio>
 #include <cfloat>
@@ -111,15 +112,16 @@ Compile command is similar to the C interface:
 
 ```bash
 g++ -I<Install_prefix>/include \
-		-L<Install_prefix>/lib \
-		-Wl,-rpath=<Install_prefix>/lib \
-		test.cpp -lwigcpp
+    -L<Install_prefix>/lib \
+    -Wl,-rpath=<Install_prefix>/lib \
+    test.cpp -lwigcpp
 ```
 
 For Fortran interface, it maintains the same name as C interface:
 
 ```Fortran
-/* test.f90 */
+!test.f90
+
 program main
 	use wigcpp
 	implicit none
@@ -134,9 +136,9 @@ Compile command will be:
 
 ```bash
 gfortran -I<Install_prefix>/include \
-				 -L<Install_prefix>/lib \
-				 -Wl,-rpath=<Install_prefix>/lib \
-				 test.f90 -lwigcpp
+         -L<Install_prefix>/lib \
+         -Wl,-rpath=<Install_prefix>/lib \
+         test.f90 -lwigcpp
 ```
 
 
