@@ -45,7 +45,7 @@ Build of this project has been tested on Linux with g++ and clang++, when using 
 
 ## Usage
 
-Wigcpp provides C, C++ and Fortran interface. For C interface, functions that calculating 3j, 6j and 9j symbols maintain the same name as WIGXJPF: `wig3jj`, `wig6jj` and `wig9jj`. Before calling these functions, a function that maintains a global factorization table must be called firstly, which is `wigcpp_global_init`. Declarations of these functions are as followed:
+Wigcpp provides C, C++ and Fortran interface. For C interface, functions that calculates 3j, 6j and 9j symbols maintain the same name as WIGXJPF: `wig3jj`, `wig6jj` and `wig9jj`. Before calling these functions, a function that maintains a global factorization table must be called firstly, which is `wigcpp_global_init`. Declarations of these functions are as followed:
 
 ```C
 void wigcpp_global_init(int max_two_j, int wigner_type);
