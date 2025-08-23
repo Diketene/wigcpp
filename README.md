@@ -42,7 +42,7 @@ These three options was set defaultly as:
 
 </div>
 
-If you don't need to build shared library or build a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TESTING=ON` while generating compile configurations.
+If you don't need to build shared library or generate a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TESTING=ON` while generating compile configurations.
 
 Build of this project has been tested on Linux with g++ and clang++, when using clang++, libc++ is defaultly set as this project's C++ library.
 
