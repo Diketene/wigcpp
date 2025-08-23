@@ -8,6 +8,25 @@
 #
 
 cmake_minimum_required(VERSION 3.20)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+  message(STATUS "Configuring for AppleClang on macOS")
+  execute_process(
+    COMMAND xcrun --show-sdk-path
+    OUTPUT_VARIABLE SDK_PATH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE SDK_RESULT
+    ERROR_VARIABLE SDK_ERROR
+  )
+  if(SDK_RESULT EQUAL 0)
+    set(CMAKE_OSX_SYSROOT ${SDK_PATH} CACHE PATH "Path to macOS SDK" FORCE)
+    set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build only for arm64")
+    message(STATUS "Using SDK: ${CMAKE_OSX_SYSROOT}")
+  else()
+    message(FATAL_ERROR "Failed to get SDK path: ${SDK_ERROR}")
+  endif()
+endif()
+
 project(WigCpp LANGUAGES CXX)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -69,7 +88,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 target_compile_options(wigcpp PRIVATE -fvisibility=hidden)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT APPLE)
   include(ConfigureLibCXX)
   configure_libcxx_for_clang(wigcpp)
   configure_test_for_libcxx(LIBCXX_INC_PATH LIBCXX_LIB_PATH CLANG_TARGET_TRIPLE)
