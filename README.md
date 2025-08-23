@@ -2,9 +2,9 @@
 
 ## Brief
 
-Wigcpp is a  C++ library for computing Wigner 3j, 6j and 9j symbols using prime factorization and multi word integer arithmetic based on the precalculated prime factorization table.
+Wigcpp is a high precision and high performance C++ library for computing Wigner 3j, 6j and 9j symbols using prime factorization and multi word integer arithmetic based on the precalculated prime factorization table.
 
-The computational methods implemented in this project are derived from  [WIGXJPF](https://fy.chalmers.se/subatom/wigxjpf/). The usage of modern C++ features makes it easier to use: users don't need to care about the acquisition of temporary thread local resource and the release of temporary/global resources.
+The computational methods implemented in this project are derived from  [WIGXJPF](https://fy.chalmers.se/subatom/wigxjpf/). Usage of modern C++ features in this project makes it easy to use: users don't need to care about the acquisition of temporary thread local resources and the release of temporary/global resources.
 
 ## Build
 
@@ -30,6 +30,8 @@ to install the product of the compilation, \<Install\_prefix\> must be substitut
 
 The CMakeLists.txt of this project provides two options to control the products of building: BUILD\_SHARED\_LIBS and BUILD\_FORTRAN\_INTERFACE, all of these two options are set to `ON` defaultly. If users don't need to build shared library or build a Fortran interface module file, they can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` when generating the compile configurations.
 
+Build of this project has been tested on Linux with g++ and clang++, when using clang++, libc++ is defaultly set as this project's standerd C++ library.
+
 ## Usage
 
 Wigcpp provides C, C++ and Fortran interface. For C interface, functions that calculating 3j, 6j and 9j symbols maintain the same name as WIGXJPF: `wig3jj`, `wig6jj` and `wig9jj`. Before calling these functions, a function that maintains a global factorization table must be called firstly, which is `wigcpp_global_init`. Declarations of these functions are as followed:
@@ -51,14 +53,92 @@ For the same reason, the `wigcpp_global_init` function accepts **twice the maxim
 A simple example is as followed:
 
 ```C
+/* test.c */
+
+#include "stdio.h"
+#include "float.h"
 #include "wigcpp/wigcpp.h"
 
 int main(void){
 	wigcpp_global_init(2 * 100, 9);
 	double result = wig3jj(2 * 1, 2 * 1, 2 * 2, 0, 0, 0);
+	printf("result is %.*g\n", (int)DBL_DECIMAL_DIG, result);
 }
 
 ```
+
+For gcc/clang, the compilation command will be:
+
+```bash
+gcc -I<Install_prefix>/include \
+		-L<Install_prefix>/lib\
+		-Wl,-rpath=<Install_prefix>/lib \
+		test.c -lwigcpp
+```
+
+Run the executable, you will see "result is 0.36514837167011072" in 8 bytes double type platform.
+
+For C++ interface, we use namespace to encapsulate these functions. Declarations of these functions are:
+
+```C++
+
+void wigcpp::global_init(int max_two_j, int wigner_type);
+
+double wigcpp::three_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
+
+double wigcpp::six_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
+
+double wigcpp::nine_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9);
+
+```
+
+A simple example is as followed:
+
+```C++
+/* test.cpp */
+#include "wigcpp/wigcpp.hpp"
+#include <cstdio>
+#include <cfloat>
+
+auto main(void) -> int{
+	wigcpp::global_init(2 * 100, 9);
+	double result = wigcpp::three_j(2 * 1, 2 * 1, 2 * 2, 0, 0, 0);
+	std::printf("result is %.*g\n", (int)DBL_DECIMAL_DIG, result);
+}
+```
+
+Compile command is similar to the C interface:
+
+```bash
+g++ -I<Install_prefix>/include \
+		-L<Install_prefix>/lib \
+		-Wl,-rpath=<Install_prefix>/lib \
+		test.cpp -lwigcpp
+```
+
+For Fortran interface, it maintains the same name as C interface:
+
+```Fortran
+/* test.f90 */
+program main
+	use wigcpp
+	implicit none
+	real :: result
+	call wigcpp_global_init(2 * 100, 9);
+	result = wig3jj(2 * 1, 2 * 1, 2 * 2, 0, 0, 0);
+	print *, "result is ", result
+end program main
+```
+
+Compile command will be:
+
+```bash
+gfortran -I<Install_prefix>/include \
+				 -L<Install_prefix>/lib \
+				 -Wl,-rpath=<Install_prefix>/lib \
+				 test.f90 -lwigcpp
+```
+
 
 ## Citation
 
