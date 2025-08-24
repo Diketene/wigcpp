@@ -6,6 +6,18 @@ Wigcpp is a high precision and high performance C++ library for computing Wigner
 
 The computational methods implemented in this project are derived from  [WIGXJPF](https://fy.chalmers.se/subatom/wigxjpf/). Usage of modern C++ features in this project makes it easy to use: users don't need to care about the acquisition of temporary thread local resources and the release of temporary/global resources.
 
+## Features
+
+### In Numerical analysis
+
+It could be proved that wigner $xj$ symbols can be presented as:
+
+$$
+W_{x} = \frac{n\sqrt{s}}{q}
+$$
+
+where $n$, $s$ and $q$ are integers. Algorithm in wigcpp leverages this principle to mitigate precision loss in floating-point arithmetic: it decomposes the mathematical expression for $xj$ symbol into integer components $n$, $s$ and $q$. These integers are then converted to floating-point numbers and used in only three floating-point operations: multiply, square root and division. In overall, six floating-point operations are used in the whole procedure of calculating $xj$ symbol, which keeps the relative error never exceeded $6\varepsilon$. $\varepsilon$ is the machine epsilon. For 80-bit `long double` of the x87 floating-point unit, $\varepsilon$ is $2^{-64}$. For more deatils, please look through the source code, and [Citation](#Citation).
+
 ## Build
 
 This project uses CMake as its build system. To build this project, users need to change directory into the project root, using
@@ -90,20 +102,23 @@ gcc -I<Install_prefix>/include \
     test.c -lwigcpp
 ```
 
-Run the executable, you will see `result is 0.36514837167011072` in 8 bytes double type platform.
+Run the executable, you will see `result is 0.36514837167011072` on 8 bytes double type platform.
 
 For C++ interface, we use namespace to encapsulate these functions. Declarations of these functions are:
 
 ```C++
 
-void wigcpp::global_init(int max_two_j, int wigner_type);
+namespace wigcpp{
 
-double wigcpp::three_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
+void global_init(int max_two_j, int wigner_type);
 
-double wigcpp::six_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
+double three_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
 
-double wigcpp::nine_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9);
+double six_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
 
+double nine_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9);
+
+}
 ```
 
 A simple example is as followed:
@@ -230,7 +245,7 @@ If you have any question, feel free to open an issue, or Email to the maintainer
 ## Citation
 
 This project uses prime factorization and multi word integer arithmetic to calculate wigner-3j, 6j and 9j symbols,
-	which is derived from the article:
+	which is derived from the [article](https://epubs.siam.org/doi/10.1137/15M1021908):
 
 > H. T. Johansson and C. Forssén, 
 > "Fast and Accurate Evaluation of Wigner 3j, 6j, and 9j Symbols Using Prime Factorization and Multiword Integer Arithmetic" ,
