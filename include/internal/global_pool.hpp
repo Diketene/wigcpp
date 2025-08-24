@@ -27,7 +27,7 @@ namespace wigcpp::internal::global {
     using vector = container::vector<T>;
 
     vector<uint32_t> prime_list;
-    uint32_t num_primes;
+    std::size_t num_primes;
     int max_factorial;
     std::size_t aligned_bytes;
 
