@@ -4,11 +4,11 @@
 
 Wigcpp is a high precision and high performance C++ library for computing Wigner 3j, 6j and 9j symbols using prime factorization and multi word integer arithmetic based on the precalculated prime factorization table.
 
-The computational methods implemented in this project are derived from  [WIGXJPF](https://fy.chalmers.se/subatom/wigxjpf/). Usage of modern C++ features in this project makes it easy to use: users don't need to care about the acquisition of temporary thread local resources and the release of temporary/global resources.
+The computational methods implemented in this project are derived from [WIGXJPF](https://fy.chalmers.se/subatom/wigxjpf/). 
 
 ## Features
 
-### In Numerical analysis
+### In Numerical Analysis
 
 It could be proved that wigner $xj$ symbols can be presented as:
 
@@ -16,7 +16,13 @@ $$
 W_{x} = \frac{n\sqrt{s}}{q}
 $$
 
-where $n$, $s$ and $q$ are integers. Algorithm in wigcpp leverages this principle to mitigate precision loss in floating-point arithmetic: it decomposes the mathematical expression for $xj$ symbol into integer components $n$, $s$ and $q$. These integers are then converted to floating-point numbers and used in only three floating-point operations: multiply, square root and division. In overall, six floating-point operations are used in the whole procedure of calculating $xj$ symbol, which keeps the relative error never exceeded $6\varepsilon$. $\varepsilon$ is the machine epsilon. For 80-bit `long double` of the x87 floating-point unit, $\varepsilon$ is $2^{-64}$. For more deatils, please look through the source code, and [Citation](#Citation).
+where $n$, $s$ and $q$ are integers. Algorithm in wigcpp leverages this principle to mitigate precision loss in floating-point arithmetic: it decomposes the mathematical expression for $xj$ symbol into integer components $n$, $s$ and $q$. These integers are then converted to floating-point numbers and used in only three floating-point operations: multiply, square root and division. In overall, six floating-point operations are used in the whole procedure of calculating $xj$ symbol, which keeps the relative error never exceeded $6\varepsilon$. $\varepsilon$ is the machine epsilon. For 80-bit `long double` of the x87 floating-point unit, $\varepsilon$ is $2^{-64}$. For more deatils, please look through the (source code)[./src/calc.cpp], and [Citation](#Citation).
+
+### In Language
+
+1. RAII in C++ automates the acquisition and release of resources, including thread-local and global ones, so users don't need to manage them manually.
+
+2. Exception-free. This library is compatible with `-fno-exceptions` option.
 
 ## Build
 
