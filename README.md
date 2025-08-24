@@ -140,8 +140,8 @@ program main
 	use wigcpp
 	implicit none
 	real :: result
-	call wigcpp_global_init(2 * 100, 9);
-	result = wig3jj(2 * 1, 2 * 1, 2 * 2, 0, 0, 0);
+	call wigcpp_global_init(2 * 100, 9)
+	result = wig3jj(2 * 1, 2 * 1, 2 * 2, 0, 0, 0)
 	print *, "result is ", result
 end program main
 ```
