@@ -58,7 +58,8 @@ add_library(
 )
 
 if(BUILD_FORTRAN_INTERFACE)
-  enable_language(Fortran)
+  include(CheckLanguage)
+  check_language(Fortran)
   if(NOT CMAKE_Fortran_COMPILER)
     message(STATUS "Fortran compiler not found, disabling Fortran interface.")
     set(BUILD_FORTRAN_INTERFACE OFF CACHE BOOL "" FORCE)
