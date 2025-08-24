@@ -99,7 +99,7 @@ endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-target_compile_options(wigcpp PRIVATE -fvisibility=hidden)
+target_compile_options(wigcpp PRIVATE -fvisibility=hidden -fno-exceptions)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT APPLE)
   include(ConfigureLibCXX)
