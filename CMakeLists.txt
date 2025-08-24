@@ -24,21 +24,27 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
-  message(STATUS "Configuring for AppleClang on macOS")
-  execute_process(
-    COMMAND xcrun --show-sdk-path
-    OUTPUT_VARIABLE SDK_PATH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    RESULT_VARIABLE SDK_RESULT
-    ERROR_VARIABLE SDK_ERROR
-  )
-  if(SDK_RESULT EQUAL 0)
-    set(CMAKE_OSX_SYSROOT ${SDK_PATH} CACHE PATH "Path to macOS SDK" FORCE)
-    set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build only for arm64" FORCE)
-    message(STATUS "Using SDK: ${CMAKE_OSX_SYSROOT}")
+  if(NOT CMAKE_GENERATOR STREQUAL "Xcode")
+    message(STATUS "Configuring for AppleClang on macOS")
+    execute_process(
+      COMMAND xcrun --show-sdk-path
+      OUTPUT_VARIABLE SDK_PATH
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      RESULT_VARIABLE SDK_RESULT
+      ERROR_VARIABLE SDK_ERROR
+    )
+    if(SDK_RESULT EQUAL 0)
+      set(CMAKE_OSX_SYSROOT ${SDK_PATH} CACHE PATH "Path to macOS SDK" FORCE)
+      message(STATUS "Using SDK: ${CMAKE_OSX_SYSROOT}")
+    else()
+      message(FATAL_ERROR "Failed to get SDK path: ${SDK_ERROR}")
+    endif()
   else()
-    message(FATAL_ERROR "Failed to get SDK path: ${SDK_ERROR}")
+    message(STATUS "Xcode generator in use, skipping manual CMAKE_OSX_SYSROOT setting")
   endif()
+
+  set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build only for arm64" FORCE)
+
 endif()
 
 if(BUILD_TESTING)
