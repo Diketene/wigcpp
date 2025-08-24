@@ -1,7 +1,5 @@
 # Wigcpp: A Wigner-3j 6j and 9j Symbol Calculation Library Written in C++ 17
 
-## Brief
-
 Wigcpp is a high precision and high performance C++ library for computing Wigner 3j, 6j and 9j symbols using prime factorization and multi word integer arithmetic based on the precalculated prime factorization table.
 
 The computational methods implemented in this project are derived from [WIGXJPF](https://fy.chalmers.se/subatom/wigxjpf/). 
