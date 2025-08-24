@@ -30,7 +30,7 @@ to install the product of the compilation, \<Install\_prefix\> must be substitut
 
 The CMakeLists.txt of this project provides three options to control the products of building: `BUILD_SHARED_LIBS`, `BUILD_FORTRAN_INTERFACE` and `BUILD_TESTING`. 
 
-These three options was set defaultly as:
+These three options were set defaultly as:
 
 <div align="center">
 
@@ -42,9 +42,9 @@ These three options was set defaultly as:
 
 </div>
 
-If you don't need to build shared library or generate a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TESTING=ON` while generating compile configurations.
+If you don't need to build shared library or generate a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TESTING=ON` as well.
 
-Build of this project has been tested on Linux with g++ and clang++, when using clang++, libc++ is defaultly set as this project's C++ library.
+Build of this project has been tested on Linux with g++, clang++ and on macOS with Xcode AppleClang, while using clang++ on Linux, libc++ is defaultly set as this project's C++ library.
 
 ## Usage
 
