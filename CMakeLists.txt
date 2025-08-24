@@ -13,6 +13,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+project(WigCpp LANGUAGES CXX)
+
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+option(BUILD_FORTRAN_INTERFACE "Build Fortran interface" ON)
+option(BUILD_TESTING "Build the testing tree" OFF)
+
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
   message(STATUS "Configuring for AppleClang on macOS")
   execute_process(
@@ -24,22 +34,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
   )
   if(SDK_RESULT EQUAL 0)
     set(CMAKE_OSX_SYSROOT ${SDK_PATH} CACHE PATH "Path to macOS SDK" FORCE)
-    set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build only for arm64")
+    set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build only for arm64" FORCE)
     message(STATUS "Using SDK: ${CMAKE_OSX_SYSROOT}")
   else()
     message(FATAL_ERROR "Failed to get SDK path: ${SDK_ERROR}")
   endif()
 endif()
-
-project(WigCpp LANGUAGES CXX)
-
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-
-message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
-
-option(BUILD_SHARED_LIBS "Build shared libraries" ON)
-option(BUILD_FORTRAN_INTERFACE "Build Fortran interface" ON)
-option(BUILD_TESTING "Build the testing tree" OFF)
 
 if(BUILD_TESTING)
   enable_testing()
