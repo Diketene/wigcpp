@@ -9,6 +9,10 @@
 
 cmake_minimum_required(VERSION 3.20)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
   message(STATUS "Configuring for AppleClang on macOS")
   execute_process(
@@ -97,10 +101,6 @@ endif()
 target_compile_features(wigcpp PUBLIC cxx_std_17)
 
 include(CheckCXXSourceCompiles)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 check_cxx_source_compiles([[
   #include <iostream>
