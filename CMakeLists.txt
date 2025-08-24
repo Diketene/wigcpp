@@ -64,7 +64,9 @@ if(BUILD_FORTRAN_INTERFACE)
     message(STATUS "Fortran compiler not found, disabling Fortran interface.")
     set(BUILD_FORTRAN_INTERFACE OFF CACHE BOOL "" FORCE)
   else()
+    enable_language(Fortran)
     message(STATUS "Fortran support enabled(compiler: ${CMAKE_Fortran_COMPILER})")
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include)
 
     add_library(fortran_interface OBJECT src/fortran/interface.f90)
     set_target_properties(
