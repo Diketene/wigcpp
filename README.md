@@ -58,6 +58,7 @@ These three options were set defaultly as:
 
 </div>
 
+**STATIC library is built defaultly.**
 If you want to build shared library or don't need to generate a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=ON`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TESTING=ON` as well.
 
 
@@ -101,7 +102,7 @@ For gcc, the compilation command will be:
 ```bash
 gcc -I<Install_prefix>/include \
     -L<Install_prefix>/lib\
-    test.c -lwigcpp
+    test.c -lwigcpp -lstdc++ -lm
 ```
 
 Run the executable, you will see `result is 0.36514837167011072` on 8 bytes double type platform.
@@ -167,7 +168,7 @@ Compile command will be:
 ```bash
 gfortran -I<Install_prefix>/include \
          -L<Install_prefix>/lib \
-         test.f90 -lwigcpp
+         test.f90 -lwigcpp -lstdc++
 ```
 ### Multi-threaded calling of functions
 
