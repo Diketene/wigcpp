@@ -52,15 +52,14 @@ These three options were set defaultly as:
 
 |options|status|
 |:-:|:-:|
-|`BUILD_SHARED_LIBS`|`ON`|
+|`BUILD_SHARED_LIBS`|`OFF`|
 |`BUILD_FORTRAN_INTERFACE`|`ON`|
 |`BUILD_TESTING`|`OFF`|
 
 </div>
 
-If you don't need to build shared library or generate a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=OFF`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TESTING=ON` as well.
+If you want to build shared library or don't need to generate a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=ON`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TESTING=ON` as well.
 
-Build of this project has been tested on Linux with g++, clang++ and on macOS with Xcode AppleClang, while using clang++ on Linux, libc++ is defaultly set as this project's C++ library.
 
 ## Usage
 
@@ -97,12 +96,11 @@ int main(void){
 
 ```
 
-For gcc/clang, the compilation command will be:
+For gcc, the compilation command will be:
 
 ```bash
 gcc -I<Install_prefix>/include \
     -L<Install_prefix>/lib\
-    -Wl,-rpath=<Install_prefix>/lib \
     test.c -lwigcpp
 ```
 
@@ -146,7 +144,6 @@ Compile command is similar to the C interface:
 ```bash
 g++ -I<Install_prefix>/include \
     -L<Install_prefix>/lib \
-    -Wl,-rpath=<Install_prefix>/lib \
     test.cpp -lwigcpp
 ```
 
@@ -170,7 +167,6 @@ Compile command will be:
 ```bash
 gfortran -I<Install_prefix>/include \
          -L<Install_prefix>/lib \
-         -Wl,-rpath=<Install_prefix>/lib \
          test.f90 -lwigcpp
 ```
 ### Multi-threaded calling of functions
@@ -259,5 +255,5 @@ This project uses prime factorization and multi word integer arithmetic to calcu
 
 Algorithm in this project was inspired by the [WIGXJPF](https://fy.chalmers.se/subatom/wigxjpf/) library, 
 developed by the main developer Håkan T. Johansson, for high-precision computation of Wigner symbols. 
-WIGXJPF is licensed under the GNU Lesser General Public License v3.0 (LGPL-3.0), and a copy of the license is provided in [COPYING.LESSER](./licenses/COPYING.LESSER). This project is licensed under GPL-3.0, which is compatible with LGPL-3.0 as permitted by Section 3 of the LGPL-3.0 License. 
+WIGXJPF is licensed under the GNU Lesser General Public License v3.0 (LGPL-3.0), and a copy of the license is provided in [COPYING.LESSER](./licenses/COPYING.LESSER). 
 We thank the authors for their open contribution to computational physics. 
