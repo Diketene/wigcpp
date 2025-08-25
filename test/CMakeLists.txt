@@ -19,12 +19,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)
 
-message("Found GTest: ${GTest_INCLUDE_DIRS}")
-message("GTest libraries: ${GTest_LIBRARIES}")
 
 
 add_library(
-  wigcpp_test STATIC 
+  wigcpp_test STATIC
   ${CMAKE_SOURCE_DIR}/src/c_wrap.cpp
   ${CMAKE_SOURCE_DIR}/src/calc.cpp
   ${CMAKE_SOURCE_DIR}/src/tmp_pool.cpp
@@ -46,10 +44,11 @@ target_include_directories(
 function(add_wigcpp_test test_name source_file)
   add_executable(${test_name} ${source_file})
 
-  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    include(ConfigureLibCXX)
-    configure_libcxx_for_clang(${test_name})
-  endif()
+  #if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  #  include(ConfigureLibCXX)
+  #  configure_libcxx_for_clang(${test_name})
+  #  target_link_libraries(${test_name} PRIVATE c++)
+  #endif()
 
   target_link_libraries(${test_name} PRIVATE wigcpp_test GTest::gtest GTest::gtest_main)
   target_include_directories(

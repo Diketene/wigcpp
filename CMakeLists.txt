@@ -15,7 +15,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(WigCpp LANGUAGES CXX)
 
-option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(BUILD_FORTRAN_INTERFACE "Build Fortran interface" ON)
 option(BUILD_TESTING "Build the testing tree" OFF)
 
@@ -99,13 +99,16 @@ endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-target_compile_options(wigcpp PRIVATE -fvisibility=hidden -fno-exceptions)
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT APPLE)
-  include(ConfigureLibCXX)
-  configure_libcxx_for_clang(wigcpp)
-  configure_test_for_libcxx(LIBCXX_INC_PATH LIBCXX_LIB_PATH CLANG_TARGET_TRIPLE)
+target_compile_options(wigcpp PRIVATE -fno-exceptions)
+if(BUILD_SHARED_LIBS) 
+  target_compile_options(wigcpp PRIVATE -fvisibility=hidden)
 endif()
+
+#if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT APPLE)
+#  include(ConfigureLibCXX)
+#  configure_libcxx_for_clang(wigcpp)
+#  configure_test_for_libcxx(LIBCXX_INC_PATH LIBCXX_LIB_PATH CLANG_TARGET_TRIPLE)
+#endif()
 
 target_compile_features(wigcpp PUBLIC cxx_std_17)
 

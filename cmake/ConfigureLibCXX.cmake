@@ -25,7 +25,7 @@ function(configure_libcxx_for_clang TARGET_NAME)
   if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     return()
   endif()
-  target_compile_options(${TARGET_NAME} PRIVATE -nostdinc++ -nostdlib++)
+  target_compile_options(${TARGET_NAME} PRIVATE -nostdinc++ -nostdlib++ -stdlib=libc++)
 
   get_filename_component(CLANG_ROOT_PATH "${CMAKE_CXX_COMPILER}" DIRECTORY)
   get_filename_component(CLANG_ROOT_PATH "${CLANG_ROOT_PATH}" DIRECTORY)
@@ -46,6 +46,7 @@ function(configure_libcxx_for_clang TARGET_NAME)
       if(EXISTS "${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}/libc++.so")
         target_link_options(
           ${TARGET_NAME} PRIVATE 
+          "-stdlib=libc++"
           "-L${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
           "-lc++"
           "LINKER:-rpath,${LIBCXX_LIB_PATH}/${CLANG_TARGET_TRIPLE}"
