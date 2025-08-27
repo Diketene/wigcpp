@@ -24,7 +24,7 @@ where $n$, $s$ and $q$ are integers. Algorithm in wigcpp leverages this principl
 
 ## Build
 
-This project uses CMake as its build system. To build this project, users need to change directory into the project root, using
+Wigcpp uses CMake as its build system. To build it, users need to change directory into the project root, using
 
 ```bash
 cmake -S. -B build
@@ -44,7 +44,7 @@ cmake --install build --prefix <Install_prefix>
 
 to install the product of the compilation, \<Install\_prefix\> must be substituted as an actual path.
 
-The CMakeLists.txt of this project provides three options to control the products of building: `BUILD_SHARED_LIBS`, `BUILD_FORTRAN_INTERFACE` and `BUILD_TESTING`. 
+The CMakeLists.txt of this project provides three options to control the products of building: `BUILD_SHARED_LIBS`, `BUILD_FORTRAN_INTERFACE` and `BUILD_TEST`. 
 
 These three options were set defaultly as:
 
@@ -54,12 +54,12 @@ These three options were set defaultly as:
 |:-:|:-:|
 |`BUILD_SHARED_LIBS`|`OFF`|
 |`BUILD_FORTRAN_INTERFACE`|`ON`|
-|`BUILD_TESTING`|`OFF`|
+|`BUILD_TEST`|`OFF`|
 
 </div>
 
 **STATIC library is built defaultly.**
-If you want to build shared library or don't need to generate a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=ON`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TESTING=ON` as well.
+If you want to build shared library or don't need to generate a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=ON`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TEST=ON` as well.
 
 
 ## Usage
