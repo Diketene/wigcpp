@@ -10,6 +10,7 @@
 #include "internal/prime_factor.hpp"
 #include "internal/big_int.hpp"
 #include "internal/global_pool.hpp"
+#include <utility>
 
 namespace wigcpp::internal::prime_calc {
   int pexpo_eval_temp::compute_prime_factor(std::array<mwi::big_int<>, 2> &factor, std::int64_t prime, exp_t fpf) noexcept {
@@ -61,8 +62,12 @@ namespace wigcpp::internal::prime_calc {
       prod[active] *= factor[factor_active][0];
       return active;
     }
-    prod[!active] = prod[active] * factor[factor_active];
-    return !active;
+
+    int new_active = !active;
+    std::swap(prod[active], prod[new_active]);
+    prod[new_active] *= factor[factor_active];
+
+    return new_active;
   }
 
   mwi::big_int<> pexpo_eval_temp::evaluate(const global::prime_exponents_view &in_fpf) noexcept {
