@@ -48,7 +48,7 @@ namespace wigcpp::internal::calc {
   }
 
   void Calculator::split_sqrt_add(prime_exponents_view &src_dest_fpf, 
-                                  mwi::big_int<> &big_sqrt, 
+                                  mwi::big_int &big_sqrt, 
                                   prime_exponents_view &add_fpf) noexcept {
     const auto &prime_list = PoolManager::get().prime_table.prime_list;
     big_sqrt = 1;
@@ -178,7 +178,7 @@ namespace wigcpp::internal::calc {
   }
 
   void Calculator::factor_6j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6,
-                                 prime_exponents_view &min_nume_fpf, mwi::big_int<> &sum_prod) noexcept{
+                                 prime_exponents_view &min_nume_fpf, mwi::big_int &sum_prod) noexcept{
     const auto &pool = PoolManager::get();
     const int two_a = two_j1, 
               two_b = two_j2, 

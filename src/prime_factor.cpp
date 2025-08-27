@@ -13,7 +13,7 @@
 #include <utility>
 
 namespace wigcpp::internal::prime_calc {
-  int pexpo_eval_temp::compute_prime_factor(std::array<mwi::big_int<>, 2> &factor, std::int64_t prime, exp_t fpf) noexcept {
+  int pexpo_eval_temp::compute_prime_factor(std::array<mwi::big_int, 2> &factor, std::int64_t prime, exp_t fpf) noexcept {
     def::u_mul_word_t fact = 1;
     def::u_mul_word_t up = static_cast<def::u_mul_word_t>(prime);
     for(; ;){
@@ -57,7 +57,7 @@ namespace wigcpp::internal::prime_calc {
     }
   }
 
-  int pexpo_eval_temp::merge_factor(int factor_active, int active, std::array<mwi::big_int<>, 2> &prod) noexcept  {
+  int pexpo_eval_temp::merge_factor(int factor_active, int active, std::array<mwi::big_int, 2> &prod) noexcept  {
     if(factor[factor_active].is_single_word()){
       prod[active] *= factor[factor_active][0];
       return active;
@@ -70,7 +70,7 @@ namespace wigcpp::internal::prime_calc {
     return new_active;
   }
 
-  mwi::big_int<> pexpo_eval_temp::evaluate(const global::prime_exponents_view &in_fpf) noexcept {
+  mwi::big_int pexpo_eval_temp::evaluate(const global::prime_exponents_view &in_fpf) noexcept {
     const auto &prime_table = global::PoolManager::get().prime_table;
     int active = 0;
     prod_pos[active] = 1;
@@ -91,7 +91,7 @@ namespace wigcpp::internal::prime_calc {
     return this -> prod_pos[active];
   }
 
-  void pexpo_eval_temp::evaluate2(mwi::big_int<> &big_prod_pos, mwi::big_int<> &big_prod_neg, const global::prime_exponents_view &in_fpf) noexcept {
+  void pexpo_eval_temp::evaluate2(mwi::big_int &big_prod_pos, mwi::big_int &big_prod_neg, const global::prime_exponents_view &in_fpf) noexcept {
     const auto &prime_table = global::PoolManager::get().prime_table;
     int active_pos = 0, active_neg = 0;
     prod_pos[active_pos] = 1;
