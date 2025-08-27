@@ -11,8 +11,6 @@
 find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)
 
-
-
 add_library(
   wigcpp_test STATIC
   ${CMAKE_SOURCE_DIR}/src/c_wrap.cpp
