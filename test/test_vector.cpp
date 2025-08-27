@@ -49,7 +49,7 @@ TEST(test_vector, test_pod){
 TEST(test_vector, test_non_trivial){
   using wigcpp::internal::container::vector;
   using wigcpp::internal::mwi::big_int;
-  using Bigint = big_int<>;
+  using Bigint = big_int;
   vector<Bigint> a(4, 1);
   EXPECT_EQ(a.size(), 4);
   vector<Bigint> b = a;
@@ -69,7 +69,7 @@ TEST(test_vector, test_non_trivial){
   EXPECT_EQ(e.size(), 5);
   e.resize(10);
   EXPECT_EQ(e.size(), 10);
-  e.emplace_back(big_int<>());
+  e.emplace_back(big_int());
   EXPECT_EQ(e.size(), 11);
   big_int f(10);
   e.push_back(f);

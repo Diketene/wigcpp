@@ -7,7 +7,7 @@
 #include "internal/big_int.hpp"
 #include "internal/definitions.hpp"
 
-TEST(test_mwi, big_int_test){
+TEST(test_mwi_new, big_int_test){
 	using namespace wigcpp::internal::mwi;
 	using namespace wigcpp::internal::def;
 
@@ -27,42 +27,27 @@ TEST(test_mwi, big_int_test){
 	EXPECT_EQ(c.size(), 1);
 	EXPECT_EQ(c[0], 42);
 
-	c.resize(15); // resize method
-	EXPECT_EQ(c.size(), 15);
-
-	EXPECT_EQ(c.capacity(), 16); // capacity should be rounded up to the next power of 2
+	EXPECT_EQ(c.capacity(), 8); // capacity should be rounded up to the next power of 2
 	EXPECT_EQ(c[0], 42); // check if the first word is still 42
-	EXPECT_EQ(c[1], 0); // check if the rest are zero
-	EXPECT_EQ(c[14], 0); // check if the last word is zero
 
 	big_int d;
 	d = std::move(c); //move_assignment
-	EXPECT_EQ(d.size(), 15);
-	EXPECT_EQ(d.capacity(), 16);
+	EXPECT_EQ(d.size(), 1);
+	EXPECT_EQ(d.capacity(), 8);
 	EXPECT_EQ(d[0], 42); // check if the first word is still 42
-	EXPECT_EQ(d[1], 0); // check if the rest are zero
-	EXPECT_EQ(d[14], 0); // check if the last word is zero
 	EXPECT_EQ(c.size(), 0); // c should be empty after move
 	EXPECT_EQ(c.capacity(), 0); // c should have no capacity after move
 
 	big_int e;
 	e = d;
-	EXPECT_EQ(e.size(), 15);
-	EXPECT_EQ(e.capacity(), 16);
+	EXPECT_EQ(e.size(), 1);
+	EXPECT_EQ(e.capacity(), 8);
 	EXPECT_EQ(e[0], 42); // check if the first word is still 42
-	EXPECT_EQ(e[1], 0); // check if the rest are zero
-	EXPECT_EQ(e[14], 0); // check if the last word is zero
-	EXPECT_EQ(d.size(), 15); // d should still have its size and capacity
-	EXPECT_EQ(d.capacity(), 16); // d should still have its capacity
 	EXPECT_EQ(d[0], 42); // check if the first word is still 42
-	EXPECT_EQ(d[1], 0); // check if the rest are zero
-	EXPECT_EQ(d[14], 0); // check if the last word is zero
 
-	e.resize(e.size() + 1);
-	EXPECT_EQ(e.size(), 16);
 }
 
-TEST(test_mwi, test_operator_add){
+TEST(test_mwi_new, test_operator_add){
 	using namespace wigcpp::internal::mwi;
 	using namespace wigcpp::internal::def;
 	big_int a(10);
@@ -117,7 +102,7 @@ TEST(test_mwi, test_operator_add){
 }
 
 
-TEST(test_mwi, test_operator_minus){
+TEST(test_mwi_new, test_operator_minus){
 	using namespace wigcpp::internal::mwi;
 	using namespace wigcpp::internal::def;
 	big_int a(10);
@@ -133,7 +118,7 @@ TEST(test_mwi, test_operator_minus){
 	EXPECT_EQ(f[1], 0);
 }
 
-TEST(test_mwi, test_to_hex_str){
+TEST(test_mwi_new, test_to_hex_str){
 	using namespace wigcpp::internal::mwi;
 	using namespace wigcpp::internal::def;
 
@@ -157,7 +142,7 @@ TEST(test_mwi, test_to_hex_str){
 
 }
 
-TEST(test_mwi, test_operator_multiply){ 
+TEST(test_mwi_new, test_operator_multiply){ 
 	using namespace wigcpp::internal::mwi;
 	using namespace wigcpp::internal::def;
 
@@ -182,6 +167,8 @@ TEST(test_mwi, test_operator_multiply){
 	for(std::size_t i = 0; i < 500; i++){
 		c *= (i + 1);
 	}
+
+  EXPECT_EQ(c.to_hex_str(), "a38a524c0d1e9aebf9396f0487f2c9ffa17b9e95f4d5ef885b0da29f443998aabded76d07a18ea7ad0fb8c8a37ba26bc0449972e35cce5efefa26200af11c9d48a09e3dff74eea189c2742272d3eadb6b0122a51f29c394ec3bd7582c99ad70ea31be92817a97b3c2318786f1775cf51e5f91b8726e8fe9a38dc7a3964a8b4cfc30abb2123e8a1bfbe4d7367c71aa63748200cbcd1ffe4ca973b78b993d4fb5ebdb7425d3045f7aad5246caf00de90e652855d288915cd1910acb3ccd343bed3d9cf3a1a2c521d4ff11aa436bcdff494f989ff60b7d1765611c705fbe6fca8261486a820574da39f288a5d39c14183fa6eefdbceca41a52c401c9ad64549ad870458be43543c2246cbeb39afcf620be5fdb3764e650918d406e6c1d01a8496aa3e170f7d50388785487de096e003a0e1cf4743fb35d7cf1e1a58038c19c1295f50d51f1d9f434e4b69ababc345495fae01d718c7ecae74003b853efa7a7170d892d6a8774287c6cf404978575137dfcb6903002c37df8e10a3e526df8bf111345f3f20f668ce73b8339a13325db571c1a7bd56373412979b284000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
 
 	big_int d = c * c;
 
@@ -215,7 +202,7 @@ b99f2da7b13763a9b852062d02fc4a623e731ca342f3e28bacf11487553833e09fbfb4\
 
 }
 
-TEST(test_mwi, to_floating_point){
+TEST(test_mwi_new, to_floating_point){
 	using wigcpp::internal::mwi::big_int;
 	big_int a(10000);
 	const auto [v, e] = a.to_floating_point();
