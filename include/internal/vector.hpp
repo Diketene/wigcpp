@@ -143,9 +143,7 @@ namespace wigcpp::internal::container{
 
     template <typename ...Args>
     vector(size_type size, const Args &... args) noexcept {
-      static_assert(sizeof...(Args) == 0 ? 
-                    std::is_nothrow_default_constructible_v<value_type>: 
-                    std::is_nothrow_constructible_v<value_type, Args...>, "value_type T must have nothrow constructor under given parameters");
+      static_assert(std::is_nothrow_constructible_v<value_type, Args...>, "value_type T must have nothrow constructor under given parameters");
 
       value_type *new_data = alloc(size);
 
@@ -158,17 +156,25 @@ namespace wigcpp::internal::container{
           construct_at(it, args...);
         }
       }else{
-        if constexpr(sizeof...(Args) == 0){
-          std::uninitialized_value_construct_n(data, size);
-        }else if constexpr(sizeof...(Args) == 1){
+        if constexpr(sizeof...(Args) == 1){
           const value_type &val = templates::first_value(args...);
           for(value_type *it = data; it != first_free; ++it){
             *it = val; 
           }
         }else{
-          static_assert(sizeof...(Args) <= 1, "constructor for trival types must have less than 2 parameters");
+          static_assert(sizeof...(Args) == 1, "constructor for trival types must have less than 2 parameters");
         }
       }
+    }
+
+    vector(size_type size) noexcept {
+      value_type *new_data = alloc(size);
+
+      data = new_data;
+      first_free = new_data + size;
+      cap = new_data + size;
+
+      std::uninitialized_value_construct_n(data, size);
     }
     
     ~vector()noexcept{
@@ -276,22 +282,17 @@ namespace wigcpp::internal::container{
       if(size > capof){
         reserve(size);
       }
-      if constexpr(!std::is_trivially_default_constructible_v<value_type>){
-        if(size > sz){
-          for(value_type *it = first_free; it != data + size; ++it){
-            construct_at(it, value_type{});
-          }
-        }else{
-          for(value_type *it = first_free; it != data + size; ){
+      if(size > sz){
+        std::uninitialized_value_construct_n(first_free, size - sz);
+      }else{
+        if constexpr(!std::is_trivially_destructible_v<value_type>){
+          for(value_type *it = first_free; it != data + size;){
             --it;
             destroy_at(it);
           }
         }
-      }else{
-        if(size > sz){
-          std::uninitialized_value_construct_n(first_free, size - sz);
-        }
       }
+      
       first_free = data + size;
     }
 
@@ -309,20 +310,20 @@ namespace wigcpp::internal::container{
       if(size > capof){
         reserve(size);
       }
-      if constexpr(!std::is_trivially_copy_constructible_v<value_type>){
-        if(size > sz){
-          for(value_type *it = first_free; it != data + size; ++it){
-            construct_at(it,src); 
-          }
+      if(size > sz){
+        if constexpr(std::is_trivially_copy_constructible_v<value_type>){
+          std::uninitialized_fill_n(first_free, size - sz, src);
         }else{
+          for(value_type *it = first_free; it != data + size; ++it){
+            construct_at(it, src); 
+          }
+        }
+      }else{
+        if constexpr(!std::is_trivially_destructible_v<value_type>){
           for(value_type *it = first_free; it != data + size; ){
             --it;
             destroy_at(it);
           }
-        }
-      }else{
-        if(size > sz){
-          std::uninitialized_fill_n(first_free, size - sz, src);
         }
       }
       first_free = data + size;
