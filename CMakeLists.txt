@@ -17,7 +17,8 @@ project(WigCpp LANGUAGES CXX)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(BUILD_FORTRAN_INTERFACE "Build Fortran interface" ON)
-option(BUILD_TESTING "Build the testing tree" OFF)
+option(BUILD_TEST "Build the testing tree" OFF)
+option(BUILD_BENCHMARK "Build benchmark" OFF)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -47,7 +48,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
 
 endif()
 
-if(BUILD_TESTING)
+if(BUILD_TEST)
   enable_testing()
   add_subdirectory(test)
 else()
@@ -62,6 +63,11 @@ add_library(
           src/prime_factor.cpp
           src/tmp_pool.cpp
 )
+
+if(BUILD_BENCHMARK)
+  add_subdirectory(benchmarks)
+  target_compile_options(wigcpp PRIVATE -g)
+endif()
 
 if(BUILD_FORTRAN_INTERFACE)
   include(CheckLanguage)

@@ -7,14 +7,6 @@
 #	if not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.20)
-project(WigCppTest LANGUAGES CXX)
-
-message(STATUS "CMAKE_SOURCE_DIR is ${CMAKE_SOURCE_DIR}")
-set(CMAKE_BUILD_TYPE Debug)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)
