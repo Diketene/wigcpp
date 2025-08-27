@@ -214,6 +214,22 @@ namespace wigcpp::internal::container{
     const value_type *raw_pointer() const noexcept{
       return this -> data;
     }
+
+    value_type &front() noexcept {
+      return *data;
+    }
+
+    const value_type &front()const noexcept {
+      return *data;
+    }
+
+    value_type &back() noexcept {
+      return *(first_free - 1);
+    }
+
+    const value_type &back() const noexcept {
+      return *(first_free - 1);
+    }
     
     void reserve(size_type min_capacity) noexcept {
       const size_type oldsize = size();
