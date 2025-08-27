@@ -62,6 +62,7 @@ add_library(
           src/global_pool.cpp
           src/prime_factor.cpp
           src/tmp_pool.cpp
+          src/big_int.cpp
 )
 
 if(BUILD_BENCHMARK)

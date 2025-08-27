@@ -19,6 +19,7 @@ add_library(
   ${CMAKE_SOURCE_DIR}/src/prime_factor.cpp
   ${CMAKE_SOURCE_DIR}/src/global_pool.cpp
   ${CMAKE_SOURCE_DIR}/src/error.cpp
+  ${CMAKE_SOURCE_DIR}/src/big_int.cpp
 )
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -48,7 +49,7 @@ function(add_wigcpp_test test_name source_file)
   gtest_discover_tests(${test_name})
 endfunction()
 
-add_wigcpp_test(test_big_int test_big_int.cpp)
+add_wigcpp_test(test_big_int_new test_big_int.cpp)
 add_wigcpp_test(test_vector test_vector.cpp)
 add_wigcpp_test(test_prime_factor test_prime_factor.cpp)
 add_wigcpp_test(test_xj_symbol test_xj_symbol.cpp)
