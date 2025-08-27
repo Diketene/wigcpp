@@ -42,15 +42,15 @@ namespace wigcpp::internal::tmp{
     std::size_t aligned_bytes;
 
   public:
-    mwi::big_int<> sum_prod;
-    mwi::big_int<> big_prod;
-    mwi::big_int<> big_sqrt;
-    mwi::big_int<> big_nume;
-    mwi::big_int<> big_div;
-    mwi::big_int<> big_nume_prod;
-    mwi::big_int<> triprod;
-    mwi::big_int<> triprod_tmp;
-    mwi::big_int<> triprod_factor;
+    mwi::big_int sum_prod;
+    mwi::big_int big_prod;
+    mwi::big_int big_sqrt;
+    mwi::big_int big_nume;
+    mwi::big_int big_div;
+    mwi::big_int big_nume_prod;
+    mwi::big_int triprod;
+    mwi::big_int triprod_tmp;
+    mwi::big_int triprod_factor;
 
     prime_calc::pexpo_eval_temp pexpo_tmp;
 

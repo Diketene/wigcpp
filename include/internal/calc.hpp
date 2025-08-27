@@ -96,14 +96,14 @@ namespace wigcpp::internal::calc{
   
   class Calculator{
 
-    static void split_sqrt_add(prime_exponents_view &src_dest_fpf, mwi::big_int<> &big_sqrt, prime_exponents_view &add_fpf) noexcept;
+    static void split_sqrt_add(prime_exponents_view &src_dest_fpf, mwi::big_int &big_sqrt, prime_exponents_view &add_fpf) noexcept;
 
     static void delta_coeff(int two_a, int two_b, int two_c, prime_exponents_view &prefact_fpf) noexcept;
 
     static void calcsum_3j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept;
 
     static void factor_6j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6,
-                                 prime_exponents_view &min_nume_fpf, mwi::big_int<> &sum_prod) noexcept;
+                                 prime_exponents_view &min_nume_fpf, mwi::big_int &sum_prod) noexcept;
     
     static void calcsum_6j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept;
 
