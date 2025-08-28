@@ -145,7 +145,7 @@ namespace wigcpp::internal::calc {
 
       nume_fpf.expand_sub(csi[index(TempIndex::min_nume)]);
 
-      csi.big_prod = csi.pexpo_tmp.evaluate(nume_fpf);
+      csi.pexpo_tmp.evaluate(pool.prime_table, csi.big_prod, nume_fpf);
 
       if((k ^ sign) & 1){
         csi.sum_prod -= csi.big_prod;
@@ -250,7 +250,7 @@ namespace wigcpp::internal::calc {
 
       nume_fpf.expand_sub(min_nume_fpf);
 
-      csi.big_prod = csi.pexpo_tmp.evaluate(nume_fpf);
+      csi.pexpo_tmp.evaluate(pool.prime_table, csi.big_prod, nume_fpf);
 
       if((k ^ k_min) & 1){
         sum_prod -= csi.big_prod;

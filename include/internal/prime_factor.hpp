@@ -32,7 +32,7 @@ namespace wigcpp::internal::prime_calc {
   
   public:
 
-    mwi::big_int evaluate(const global::prime_exponents_view &in_fpf) noexcept; 
+    void evaluate(const global::PrimeTable &prime_table, mwi::big_int &big_prod, const global::prime_exponents_view &in_fpf) noexcept; 
 
     void evaluate2(mwi::big_int &big_prod_pos, mwi::big_int &big_prod_neg, const global::prime_exponents_view &in_fpf) noexcept; 
   };
