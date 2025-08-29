@@ -207,27 +207,24 @@ namespace wigcpp::internal::global {
     }
   
   void PoolManager::init(int max_two_j, int wigner_type) noexcept {
-    int max_factorial = (wigner_type / 3 + 2) * (max_two_j / 2) + 1;
-    if( max_factorial < 2){
-      max_factorial = 2;
-    }
+    std::call_once(init_flag, [max_two_j, wigner_type]{
+      int max_factorial = (wigner_type / 3 + 2) * (max_two_j / 2) + 1;
+      if( max_factorial < 2){
+        max_factorial = 2;
+      }
+      
+      if(static_cast<std::uint32_t>(max_factorial) * 50 > max_exp){
+        std::fprintf(stderr, "Error: Factorial pool size exceeds maximum allowed size.\n");
+        error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
+        return;
+      }
 
-    if(static_cast<std::uint32_t>(max_factorial) * 50 > max_exp){
-      std::fprintf(stderr, "Error: Factorial pool size exceeds maximum allowed size.\n");
-      error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
-      return;
-    }
-
-    if(is_initialized.load(std::memory_order_acquire)){
-      return;
-    }
-
-    ptr = std::make_unique<GlobalFactorialPool>(max_two_j, wigner_type);
-    is_initialized.store(true, std::memory_order_release);
+      ptr = std::make_unique<GlobalFactorialPool>(max_two_j, wigner_type);
+    });
   }
 
   const GlobalFactorialPool &PoolManager::get() noexcept{
-    if(!is_initialized.load(std::memory_order_acquire)){
+    if(!ptr){
       std::fprintf(stderr, "Error: can't operate any function calls before initialization.\n");
       error::error_process(error::ErrorCode::NOT_INITIALIZED);
     }

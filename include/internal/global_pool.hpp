@@ -13,11 +13,11 @@
 #include "internal/definitions.hpp"
 #include "internal/nothrow_allocator.hpp"
 #include "internal/vector.hpp"
-#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <mutex>
 
 namespace wigcpp::internal::global {
   using namespace wigcpp::internal::def::prime;
@@ -203,7 +203,7 @@ namespace wigcpp::internal::global {
 
   class PoolManager{
     inline static std::unique_ptr<GlobalFactorialPool> ptr;
-    inline static std::atomic<bool> is_initialized;
+    inline static std::once_flag init_flag;
 
     PoolManager() = delete;
     ~PoolManager() = delete;
