@@ -115,13 +115,13 @@ For C++ interface, we use namespace to encapsulate these functions. Declarations
 
 namespace wigcpp{
 
-void global_init(int max_two_j, int wigner_type);
+	void global_init(int max_two_j, int wigner_type);
 
-double three_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
+	double three_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
 
-double six_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
+	double six_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
 
-double nine_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9);
+	double nine_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9);
 
 }
 ```
