@@ -106,7 +106,13 @@ endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-target_compile_options(wigcpp PRIVATE -fno-exceptions)
+target_compile_options(wigcpp PRIVATE -fno-exceptions -fno-rtti)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(wigcpp PRIVATE -flto=auto)
+  target_link_options(wigcpp PRIVATE -flto=auto)
+endif()
+
 if(BUILD_SHARED_LIBS) 
   target_compile_options(wigcpp PRIVATE -fvisibility=hidden)
 endif()
