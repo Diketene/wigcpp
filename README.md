@@ -80,6 +80,8 @@ All of the angular-momentum quantum numbers and magnetic quantum numbers must be
 
 For the same reason, the `wigcpp_global_init` function accepts **twice the maximum physical angular momentum value** as its first parameter. And `wigcpp_global_init` accepts the maximum wigner symbol type that will be used in the whole calculation process as its second parameter, which is must be **3, 6 or 9**.
 
+Calling of `wigcpp_global_init` must be done in the main thread, if you call this function in other thread, behavior of this function is **undefined**.
+
 A simple example is as followed:
 
 ```C
@@ -233,6 +235,7 @@ This project is in progress. In further, benchmarks will be implemented, and per
 
 1. Refactoring mathematical kernels using SIMD intrisics.
 2. LTO/PGO builds (LTO using GNU has added).
+3. Small Size Optmization for multi word int.
 
 
 ## License
