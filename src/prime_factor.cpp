@@ -90,8 +90,7 @@ namespace wigcpp::internal::prime_calc {
     std::swap(this -> prod_pos[active], big_prod);
   }
 
-  void pexpo_eval_temp::evaluate2(mwi::big_int &big_prod_pos, mwi::big_int &big_prod_neg, const global::prime_exponents_view &in_fpf) noexcept {
-    const auto &prime_table = global::PoolManager::get().prime_table;
+  void pexpo_eval_temp::evaluate2(const global::PrimeTable &prime_table, mwi::big_int &big_prod_pos, mwi::big_int &big_prod_neg, const global::prime_exponents_view &in_fpf) noexcept {
     int active_pos = 0, active_neg = 0;
     prod_pos[active_pos] = 1;
     prod_neg[active_neg] = 1;
@@ -111,7 +110,7 @@ namespace wigcpp::internal::prime_calc {
         active_neg = merge_factor(factor_active, active_neg, prod_neg);
       }
     }
-    big_prod_pos = this -> prod_pos[active_pos];
-    big_prod_neg = this -> prod_neg[active_neg];
+    std::swap(this -> prod_pos[active_pos], big_prod_pos);
+    std::swap(this -> prod_neg[active_neg], big_prod_neg);
   }
 }

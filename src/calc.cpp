@@ -21,7 +21,7 @@ namespace wigcpp::internal::calc {
     const auto &pool = PoolManager::get();
     auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
     calcsum_3j(tmp, two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
-    auto result = eval_calcsum_info(tmp);
+    auto result = eval_calcsum_info(pool.prime_table, tmp);
     return result;
   }
 
@@ -32,7 +32,7 @@ namespace wigcpp::internal::calc {
     const auto &pool = PoolManager::get();
     auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
     calcsum_6j(tmp, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6);
-    auto result = eval_calcsum_info(tmp);
+    auto result = eval_calcsum_info(pool.prime_table, tmp);
     return result;
   }
 
@@ -43,7 +43,7 @@ namespace wigcpp::internal::calc {
     const auto &pool = PoolManager::get();
     auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
     calcsum_9j(tmp, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8, two_j9);
-    auto result = eval_calcsum_info(tmp);
+    auto result = eval_calcsum_info(pool.prime_table,tmp);
     return result;
   }
 
@@ -308,7 +308,7 @@ namespace wigcpp::internal::calc {
       }else{
         csi[index(TempIndex::min_nume)].expand_blocks(csi[index(TempIndex::nume_triprod)].block_used);
         csi[index(TempIndex::min_nume)].keep_min_in_as_diff(csi[index(TempIndex::nume_triprod)]);
-        csi.pexpo_tmp.evaluate2(csi.big_div, csi.big_nume, csi[index(TempIndex::nume_triprod)]);
+        csi.pexpo_tmp.evaluate2(pool.prime_table, csi.big_div, csi.big_nume, csi[index(TempIndex::nume_triprod)]);
       }
       
       csi.triprod_tmp = csi.triprod * csi.big_div;
@@ -332,14 +332,18 @@ namespace wigcpp::internal::calc {
     delta_coeff(two_c, two_f, two_i, csi[index(TempIndex::prefact)]);
   }
 
-  def::double_type Calculator::eval_calcsum_info(TempStorage &csi) noexcept{
+  def::double_type Calculator::eval_calcsum_info(const global::PrimeTable &prime_table, TempStorage &csi) noexcept{
 
     split_sqrt_add(csi[index(TempIndex::prefact)], csi.big_sqrt, csi[index(TempIndex::min_nume)]);
 
 
-    csi.pexpo_tmp.evaluate2(csi.big_nume, csi.big_div,csi[index(TempIndex::prefact)]);
-    csi.big_nume_prod = csi.big_nume * csi.sum_prod;
+    csi.pexpo_tmp.evaluate2(prime_table, csi.big_nume, csi.big_div,csi[index(TempIndex::prefact)]);
 
+    //csi.big_nume_prod = csi.big_nume * csi.sum_prod;
+
+    csi.big_nume *= csi.sum_prod;
+    std::swap(csi.big_nume_prod, csi.big_nume);
+    
     const auto [d_nume_prod, exp_nume_prod ]= csi.big_nume_prod.to_floating_point();
     const auto [d_div, exp_div] = csi.big_div.to_floating_point();
     const auto [d_sqrt, exp_sqrt] = csi.big_sqrt.to_floating_point();

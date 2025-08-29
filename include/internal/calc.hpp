@@ -109,7 +109,7 @@ namespace wigcpp::internal::calc{
 
     static void calcsum_9j(TempStorage &csi, int two_a, int two_b, int two_c, int two_d, int two_e, int two_f, int two_g, int two_h, int two_i) noexcept;
 
-    static def::double_type eval_calcsum_info(TempStorage &csi) noexcept;
+    static def::double_type eval_calcsum_info(const global::PrimeTable &prime_table, TempStorage &csi) noexcept;
 
   public:
     static def::double_type calc_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept;
