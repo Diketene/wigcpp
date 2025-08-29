@@ -20,7 +20,7 @@ namespace wigcpp::internal::calc {
     }
     const auto &pool = PoolManager::get();
     auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
-    calcsum_3j(tmp, two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
+    calcsum_3j(pool, tmp, two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
     auto result = eval_calcsum_info(pool.prime_table, tmp);
     return result;
   }
@@ -31,7 +31,7 @@ namespace wigcpp::internal::calc {
     }
     const auto &pool = PoolManager::get();
     auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
-    calcsum_6j(tmp, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6);
+    calcsum_6j(pool,tmp, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6);
     auto result = eval_calcsum_info(pool.prime_table, tmp);
     return result;
   }
@@ -42,15 +42,15 @@ namespace wigcpp::internal::calc {
     }
     const auto &pool = PoolManager::get();
     auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
-    calcsum_9j(tmp, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8, two_j9);
+    calcsum_9j(pool,tmp, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8, two_j9);
     auto result = eval_calcsum_info(pool.prime_table,tmp);
     return result;
   }
 
-  void Calculator::split_sqrt_add(prime_exponents_view &src_dest_fpf, 
+  void Calculator::split_sqrt_add(const global::PrimeTable &prime_table, prime_exponents_view &src_dest_fpf, 
                                   mwi::big_int &big_sqrt, 
                                   prime_exponents_view &add_fpf) noexcept {
-    const auto &prime_list = PoolManager::get().prime_table.prime_list;
+    const auto &prime_list = prime_table.prime_list;
     big_sqrt = 1;
     const int num_blocks = std::max(src_dest_fpf.block_used, add_fpf.block_used);
     src_dest_fpf.expand_blocks(num_blocks);
@@ -69,9 +69,8 @@ namespace wigcpp::internal::calc {
     }  
   }
 
-  void Calculator::delta_coeff(int two_a, int two_b, int two_c, 
+  void Calculator::delta_coeff(const GlobalFactorialPool &pool, int two_a, int two_b, int two_c, 
                                global::prime_exponents_view &prefact_fpf) noexcept{
-    const auto &pool = PoolManager::get();
     const int max_factorial = (two_a + two_b + two_c) / 2;
     if(max_factorial > pool.prime_table.max_factorial){
       std::fprintf(stderr, "error in delta_coeff: \n");
@@ -90,8 +89,7 @@ namespace wigcpp::internal::calc {
     prefact_fpf.add3_sub(p_n1, p_n2 , p_n3, p_d1);
   }
 
-  void Calculator::calcsum_3j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
-    const auto &pool = PoolManager::get();
+  void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
 
     const int k_min = std::max({two_j1 + two_m2 - two_j3, two_j2 - two_m1 - two_j3, 0}) / 2;
     const int k_max = std::min({two_j2 + two_m2, two_j1 - two_m1, two_j1 + two_j2 - two_j3}) / 2;
@@ -162,7 +160,7 @@ namespace wigcpp::internal::calc {
     */
 
     {
-      delta_coeff(two_j1, two_j2, two_j3, csi[index(TempIndex::prefact)]);
+      delta_coeff(pool, two_j1, two_j2, two_j3, csi[index(TempIndex::prefact)]);
 
       const auto &p_n4 = pool[(two_j1 - two_m1) / 2];
       const auto &p_n5 = pool[(two_j1 + two_m1) / 2];
@@ -177,9 +175,8 @@ namespace wigcpp::internal::calc {
 
   }
 
-  void Calculator::factor_6j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6,
+  void Calculator::factor_6j(const GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6,
                                  prime_exponents_view &min_nume_fpf, mwi::big_int &sum_prod) noexcept{
-    const auto &pool = PoolManager::get();
     const int two_a = two_j1, 
               two_b = two_j2, 
               two_c = two_j5, 
@@ -260,7 +257,7 @@ namespace wigcpp::internal::calc {
     }
   };
 
-  void Calculator::calcsum_6j(TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept{
+  void Calculator::calcsum_6j(const GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept{
     const int two_a = two_j1, 
               two_b = two_j2, 
               two_c = two_j5, 
@@ -268,16 +265,15 @@ namespace wigcpp::internal::calc {
               two_e = two_j3, 
               two_f = two_j6;
 
-    factor_6j(csi, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, csi[index(TempIndex::min_nume)], csi.sum_prod);
+    factor_6j(pool, csi, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, csi[index(TempIndex::min_nume)], csi.sum_prod);
     csi[index(TempIndex::prefact)].set_zero(0);
-    delta_coeff(two_a, two_b, two_e, csi[index(TempIndex::prefact)]);
-    delta_coeff(two_c, two_d, two_e, csi[index(TempIndex::prefact)]);
-    delta_coeff(two_a, two_c, two_f, csi[index(TempIndex::prefact)]);
-    delta_coeff(two_b, two_d, two_f, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_a, two_b, two_e, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_c, two_d, two_e, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_a, two_c, two_f, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_b, two_d, two_f, csi[index(TempIndex::prefact)]);
   }
 
-  void Calculator::calcsum_9j(TempStorage &csi, int two_a, int two_b, int two_c, int two_d, int two_e, int two_f, int two_g, int two_h, int two_i) noexcept{
-    const auto &pool = PoolManager::get();
+  void Calculator::calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, int two_a, int two_b, int two_c, int two_d, int two_e, int two_f, int two_g, int two_h, int two_i) noexcept{
     const int two_k_min = std::max({std::abs(two_h - two_d), std::abs(two_b - two_f), std::abs(two_a - two_i)});
     const int two_k_max = std::min({two_h + two_d, two_b + two_f, two_a + two_i});
 
@@ -285,17 +281,17 @@ namespace wigcpp::internal::calc {
     csi.sum_prod = 0;
 
     for(int two_k = two_k_min; two_k <= two_k_max; two_k += 2){
-      factor_6j(csi, two_a, two_b, two_c, two_f,  two_i, two_k, csi[index(TempIndex::triprod_Fx) + 0], csi.triprod);
-      factor_6j(csi, two_f, two_d, two_e, two_h, two_b, two_k, csi[index(TempIndex::triprod_Fx) + 1], csi.triprod_factor);
+      factor_6j(pool, csi, two_a, two_b, two_c, two_f,  two_i, two_k, csi[index(TempIndex::triprod_Fx) + 0], csi.triprod);
+      factor_6j(pool, csi, two_f, two_d, two_e, two_h, two_b, two_k, csi[index(TempIndex::triprod_Fx) + 1], csi.triprod_factor);
       csi.triprod_tmp = csi.triprod * csi.triprod_factor;
-      factor_6j(csi, two_h, two_i, two_g, two_a, two_d, two_k, csi[index(TempIndex::triprod_Fx) + 2], csi.triprod_factor);
+      factor_6j(pool, csi, two_h, two_i, two_g, two_a, two_d, two_k, csi[index(TempIndex::triprod_Fx) + 2], csi.triprod_factor);
       csi.triprod = csi.triprod_tmp * csi.triprod_factor;
 
       csi[index(TempIndex::nume_triprod)].expand_sum3(csi[index(TempIndex::triprod_Fx) + 0], csi[index(TempIndex::triprod_Fx) + 1], csi[index(TempIndex::triprod_Fx) + 2]);
 
-      delta_coeff(two_a, two_i, two_k, csi[index(TempIndex::nume_triprod)]);
-      delta_coeff(two_f, two_b, two_k, csi[index(TempIndex::nume_triprod)]);
-      delta_coeff(two_h, two_d, two_k, csi[index(TempIndex::nume_triprod)]);
+      delta_coeff(pool, two_a, two_i, two_k, csi[index(TempIndex::nume_triprod)]);
+      delta_coeff(pool, two_f, two_b, two_k, csi[index(TempIndex::nume_triprod)]);
+      delta_coeff(pool, two_h, two_d, two_k, csi[index(TempIndex::nume_triprod)]);
 
       const auto &p_f1 = pool.prime_factor(two_k + 1);
 
@@ -324,18 +320,17 @@ namespace wigcpp::internal::calc {
 
     csi[index(TempIndex::prefact)].set_zero(0);
 
-    delta_coeff(two_a, two_b, two_c, csi[index(TempIndex::prefact)]);
-    delta_coeff(two_d, two_e, two_f, csi[index(TempIndex::prefact)]);
-    delta_coeff(two_g, two_h, two_i, csi[index(TempIndex::prefact)]);
-    delta_coeff(two_a, two_d, two_g, csi[index(TempIndex::prefact)]);
-    delta_coeff(two_b, two_e, two_h, csi[index(TempIndex::prefact)]);
-    delta_coeff(two_c, two_f, two_i, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_a, two_b, two_c, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_d, two_e, two_f, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_g, two_h, two_i, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_a, two_d, two_g, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_b, two_e, two_h, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_c, two_f, two_i, csi[index(TempIndex::prefact)]);
   }
 
   def::double_type Calculator::eval_calcsum_info(const global::PrimeTable &prime_table, TempStorage &csi) noexcept{
 
-    split_sqrt_add(csi[index(TempIndex::prefact)], csi.big_sqrt, csi[index(TempIndex::min_nume)]);
-
+    split_sqrt_add(prime_table, csi[index(TempIndex::prefact)], csi.big_sqrt, csi[index(TempIndex::min_nume)]);
 
     csi.pexpo_tmp.evaluate2(prime_table, csi.big_nume, csi.big_div,csi[index(TempIndex::prefact)]);
 
