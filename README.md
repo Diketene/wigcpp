@@ -231,8 +231,8 @@ Result in Thread3:-6.07534e-05
 
 This project is in progress. In further, benchmarks will be implemented, and performance optimization will be conducted through techniques such as:
 
-1. Refactoring mathematical kernels using SIMD intrisics
-2. LTO/PGO builds for critical paths
+1. Refactoring mathematical kernels using SIMD intrisics.
+2. LTO/PGO builds (LTO using GNU has added).
 
 
 ## License
