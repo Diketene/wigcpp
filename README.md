@@ -117,7 +117,7 @@ namespace wigcpp{
 
 	void global_init(int max_two_j, int wigner_type);
 
-	double three_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
+	double three_j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3);
 
 	double six_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
 
