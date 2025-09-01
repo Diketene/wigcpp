@@ -40,7 +40,7 @@ function(add_wigcpp_test test_name source_file)
   #  configure_libcxx_for_clang(${test_name})
   #  target_link_libraries(${test_name} PRIVATE c++)
   #endif()
-
+  
   target_link_libraries(${test_name} PRIVATE wigcpp_test GTest::gtest GTest::gtest_main)
   target_include_directories(
     ${test_name} PRIVATE 
