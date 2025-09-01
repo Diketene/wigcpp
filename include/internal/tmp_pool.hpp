@@ -11,7 +11,6 @@
 #define __WIGCPP_CALC_TMP__
 
 #include "internal/big_int.hpp"
-#include "internal/error.hpp"
 #include "internal/global_pool.hpp"
 #include "internal/nothrow_allocator.hpp"
 #include "internal/prime_factor.hpp"
