@@ -49,6 +49,10 @@ namespace wigcpp::internal::mwi{
       data[0] = init_value;
     }
 
+    big_int(std::size_t size, def::uword_t init_value) noexcept : data(size, init_value) {}
+
+    explicit big_int(container::vector<def::uword_t> &&vec) noexcept : data(std::move(vec)) {}
+
     std::size_t size() const noexcept {
       return data.size();
     }

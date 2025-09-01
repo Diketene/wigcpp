@@ -270,16 +270,14 @@ namespace wigcpp::internal::mwi {
     const std::size_t factor_size = factor.size();
     const std::size_t result_size = src_size + factor_size;
 
-    big_int result;
-    result.data.reserve(result_size);
-    result.data.resize(result_size);
+    container::vector<def::uword_t> result(result_size);
 
     const def::uword_t src_sign_bits = def::full_sign_word(src.data.back());
     const def::uword_t factor_sign_bits = def::full_sign_word(factor.data.back());
 
     for(std::size_t j = 0; j < factor_size; j++){
       const std::size_t lim_i = result_size - j;
-      const std::size_t lim_i2 = lim_i <src_size ? lim_i : src_size;
+      const std::size_t lim_i2 = lim_i < src_size ? lim_i : src_size;
       const def::uword_t factor_j = factor[j];
 
       def::uword_t from_lower = 0;
@@ -334,8 +332,8 @@ namespace wigcpp::internal::mwi {
       }
     }
 
-    def::uword_t *first_free = result.data.end();
-    def::uword_t *begin = result.data.begin();
+    const def::uword_t *first_free = result.cend();
+    const def::uword_t *begin = result.cbegin();
     std::size_t i = result_size;
 
     while(first_free - begin > 1 && *(first_free - 1) == def::full_sign_word(*(first_free - 2))){
@@ -343,10 +341,10 @@ namespace wigcpp::internal::mwi {
       --i;
     }
     if(i != result_size){
-      result.data.resize(i);
+      result.resize(i);
     }
 
-    return result;
+    return big_int(std::move(result));
   }
 
   std::string big_int::to_hex_str() const {
