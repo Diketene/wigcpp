@@ -112,11 +112,11 @@ namespace wigcpp::internal::calc{
     static def::double_type eval_calcsum_info(const global::PrimeTable &prime_table, TempStorage &csi) noexcept;
 
   public:
-    static def::double_type calc_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept;
+    static def::double_type calc_3j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept;
 
-    static def::double_type calc_6j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept;
+    static def::double_type calc_6j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept;
 
-    static def::double_type calc_9j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9)noexcept;
+    static def::double_type calc_9j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9)noexcept;
   };
 }
-#endif
+#endif /* __WIGCPP_CALC__*/

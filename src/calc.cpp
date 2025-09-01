@@ -14,36 +14,30 @@
 #include <cstdio>
 
 namespace wigcpp::internal::calc {
-  def::double_type Calculator::calc_3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
+  def::double_type Calculator::calc_3j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
     if(TrivialZero::is_zero_3j(two_j1, two_j2, two_j3, two_m1, two_m2, two_m3)){
       return 0;
     }
-    const auto &pool = PoolManager::get();
-    auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
-    calcsum_3j(pool, tmp, two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
-    auto result = eval_calcsum_info(pool.prime_table, tmp);
+    calcsum_3j(pool, csi, two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
+    auto result = eval_calcsum_info(pool.prime_table, csi);
     return result;
   }
 
-  def::double_type Calculator::calc_6j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept {
+  def::double_type Calculator::calc_6j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept {
     if(TrivialZero::is_zero_6j(two_j1, two_j2, two_j3, two_j4, two_j5, two_j6)){
       return 0;
     }
-    const auto &pool = PoolManager::get();
-    auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
-    calcsum_6j(pool,tmp, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6);
-    auto result = eval_calcsum_info(pool.prime_table, tmp);
+    calcsum_6j(pool,csi, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6);
+    auto result = eval_calcsum_info(pool.prime_table, csi);
     return result;
   }
 
-  def::double_type Calculator::calc_9j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9) noexcept {
+  def::double_type Calculator::calc_9j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9) noexcept {
     if(TrivialZero::is_zero_9j(two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8, two_j9)){
       return 0;
     }
-    const auto &pool = PoolManager::get();
-    auto &tmp = TempManager::get(pool.max_two_j, pool.aligned_bytes());
-    calcsum_9j(pool,tmp, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8, two_j9);
-    auto result = eval_calcsum_info(pool.prime_table,tmp);
+    calcsum_9j(pool,csi, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8, two_j9);
+    auto result = eval_calcsum_info(pool.prime_table,csi);
     return result;
   }
 
