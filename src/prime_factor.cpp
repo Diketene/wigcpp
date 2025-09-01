@@ -43,14 +43,18 @@ namespace wigcpp::internal::prime_calc {
 
       for(; ;){
         if(fpf & 1){
-          factor[!fact_active] = factor[fact_active] * big_up[up_active];
+          //factor[!fact_active] = factor[fact_active] * big_up[up_active];
+          factor[fact_active] *= big_up[up_active];
+          std::swap(factor[!fact_active], factor[fact_active]);
           fact_active = !fact_active;
         }
 
         fpf >>= 1;
         if(!fpf) break;
 
-        big_up[!up_active] = big_up[up_active] * big_up[up_active];
+        //big_up[!up_active] = big_up[up_active] * big_up[up_active];
+        big_up[up_active] *= big_up[up_active];
+        std::swap(big_up[!up_active], big_up[up_active]);
         up_active = !up_active;
       }
       return fact_active;
