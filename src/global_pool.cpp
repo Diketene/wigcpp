@@ -79,7 +79,7 @@ namespace wigcpp::internal::global {
                     prime_exponents_view &b,
                     prime_exponents_view &c) noexcept {
     const int max_blocks = std::max({a.block_used, b.block_used, c.block_used});
-    expand_blocks(max_blocks);
+    block_used = max_blocks;
     a.expand_blocks(max_blocks);
     b.expand_blocks(max_blocks);
     c.expand_blocks(max_blocks);
@@ -105,6 +105,18 @@ namespace wigcpp::internal::global {
               const prime_exponents_view &f) noexcept {
     for(int i = 0; i < block_used; ++i){
       data()[i] += a.data()[i] + b.data()[i] + c.data()[i] + d.data()[i] + e.data()[i] + f.data()[i];
+    }
+  }
+
+  void prime_exponents_view::add7(const prime_exponents_view &a,
+              const prime_exponents_view &b,
+              const prime_exponents_view &c,
+              const prime_exponents_view &d,
+              const prime_exponents_view &e,
+              const prime_exponents_view &f,
+              const prime_exponents_view &g) noexcept {
+    for(int i = 0; i < block_used; ++i){
+      data()[i] += a.data()[i] + b.data()[i] + c.data()[i] + d.data()[i] + e.data()[i] + f.data()[i] + g.data()[i];
     }
   }
 

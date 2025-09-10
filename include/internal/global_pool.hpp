@@ -40,11 +40,11 @@ namespace wigcpp::internal::global {
     int block_used;
 
     exp_t *data() noexcept{
-      return reinterpret_cast<exp_t*>(this) + 1;
+      return reinterpret_cast<exp_t*>(this + 1);
     }
 
     const exp_t *data() const noexcept {
-      return reinterpret_cast<const exp_t*>(this) + 1;
+      return reinterpret_cast<const exp_t*>(this + 1);
     }
 
     exp_t &operator[](std::size_t i) noexcept {
@@ -66,9 +66,9 @@ namespace wigcpp::internal::global {
 
     void expand_blocks(int num_blocks) noexcept {
       if(block_used >= num_blocks) return;
+      std::memset(data() + block_used, 0, sizeof(exp_t) * (num_blocks - block_used));
       block_used = num_blocks;
-      std::memset(data(), 0, sizeof(exp_t) * block_used);
-    } 
+    }
 
     void set_max(int num_blocks) noexcept; 
 
@@ -98,6 +98,14 @@ namespace wigcpp::internal::global {
               const prime_exponents_view &e,
               const prime_exponents_view &f) noexcept;
 
+    void add7(const prime_exponents_view &a,
+              const prime_exponents_view &b,
+              const prime_exponents_view &c,
+              const prime_exponents_view &d,
+              const prime_exponents_view &e,
+              const prime_exponents_view &f,
+              const prime_exponents_view &g) noexcept;
+
     void add_sub3(const prime_exponents_view &a,
                      const prime_exponents_view &b,
                      const prime_exponents_view &c,
@@ -119,8 +127,15 @@ namespace wigcpp::internal::global {
                   const prime_exponents_view &e,
                   const prime_exponents_view &f,
                   int num_blocks) noexcept;
-
   };
+
+  inline void dump_fpf(const prime_exponents_view &dump_dest) noexcept {
+      std::printf("block_used = %d, data = ", dump_dest.block_used);
+      for(int i = 0; i < dump_dest.block_used; ++i){
+        std::printf("%d ", dump_dest[i]);
+      }
+      std::putchar('\n');
+  }
 
   class FactorPool{
     template <typename T>
