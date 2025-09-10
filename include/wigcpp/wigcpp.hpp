@@ -19,6 +19,10 @@ namespace wigcpp {
     wigcpp_global_init(max_two_j, wigner_type);
   }
 
+  [[nodiscard]] inline double clebsh_gordan(int two_j1, int two_m1, int two_j2, int two_m2, int two_J, int two_M){
+    return ::clebsh_gordan(two_j1, two_m1, two_j2, two_m2, two_J, two_M);
+  }
+
   [[nodiscard]] inline double three_j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3){
     return wig3jj(two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
   }
