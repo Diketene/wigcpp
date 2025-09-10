@@ -22,6 +22,15 @@ API_EXPORT void wigcpp_global_init(int max_two_j, int wigner_type){
   }
 }
 
+API_EXPORT double clebsh_gordan(int two_j1, int two_m1, int two_j2, int two_m2, int two_J, int two_M){
+  const auto &pool = wigcpp::internal::global::PoolManager::get();
+  auto &tmp = wigcpp::internal::tmp::TempManager::get(pool.max_two_j, pool.aligned_bytes());
+
+  auto result = wigcpp::internal::calc::Calculator::calc_cg(pool, tmp, two_j1, two_m1, two_j2, two_m2, two_J, two_M);
+
+  return result;
+}
+
 API_EXPORT double wig3jj(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3){
   const auto &pool = wigcpp::internal::global::PoolManager::get();
   auto &tmp = wigcpp::internal::tmp::TempManager::get(pool.max_two_j, pool.aligned_bytes());
