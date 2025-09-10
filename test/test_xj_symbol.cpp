@@ -20,6 +20,8 @@ TEST(test_xj, test_3j){
     EXPECT_DOUBLE_EQ(res, 0);
     res = wigcpp::three_j(2, 4, 8, 0, 0, 0);
     EXPECT_DOUBLE_EQ(res,0);
+    res = wigcpp::three_j(0, 0, 0, 0, 0, 0);
+    EXPECT_DOUBLE_EQ(res, 1.0);
   }
 }
 
@@ -31,15 +33,27 @@ TEST(test_xj, test_6j){
     EXPECT_NEAR(res, -0.04285714285714286, near);
     res = wigcpp::six_j(2 * 1, 2 * 2, 2 * 3, 2 * 1, 2 * 2, 2 * 3);
     EXPECT_NEAR(res, 0.00952380952380952, near);
+    res = wigcpp::six_j(0, 0, 0, 0, 0, 0);
+    EXPECT_NEAR(res, 1, 1e-10);
+    res = wigcpp::six_j(2 * 20, 2 * 20, 2 * 20, 2 * 20, 2 * 20, 2 * 20);
+    EXPECT_NEAR(res, -0.00502940645686796, near);
+    res = wigcpp::six_j(2 * 20, 2 * 20, 2 * 20, 2 * 20, 2 * 20, 0);
+    EXPECT_NEAR(res, 0.0243902439024390, near);
   }
 }
 
 TEST(test_xj, test_9j){
   {
     wigcpp::global_init(100 * 2, 9);
-    auto res = wigcpp::nine_j(2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2);
     constexpr double near = 1e-10;
+    auto res = wigcpp::nine_j(2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2 * 2, 2* 2);
     EXPECT_NEAR(res, 0.01673469387755102, near);
+    res = wigcpp::nine_j(0, 0, 0, 0, 0, 0, 0, 0, 0);
+    EXPECT_NEAR(res, 1.0, near); 
+    res = wigcpp::nine_j(8, 8, 8, 8, 8, 8, 8, 8, 8);
+    EXPECT_NEAR(res, 0.00342231860713379, near);
+    res = wigcpp::nine_j(2 * 4,  2 * 4, 2 * 4, 2 * 4, 2 * 4, 2 * 4, 2 * 4, 2 * 4, 0);
+    EXPECT_NEAR(res, -0.00287983621316955, near);
   }
 }
 
