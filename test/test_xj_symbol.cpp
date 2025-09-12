@@ -54,6 +54,8 @@ TEST(test_xj, test_9j){
     EXPECT_NEAR(res, 0.00342231860713379, near);
     res = wigcpp::nine_j(2 * 4,  2 * 4, 2 * 4, 2 * 4, 2 * 4, 2 * 4, 2 * 4, 2 * 4, 0);
     EXPECT_NEAR(res, -0.00287983621316955, near);
+    res = wigcpp::nine_j(2 * 20, 2 * 20, 2 * 20, 2 * 20, 2 * 20, 2 * 20, 2 * 20, 2 * 20, 2 * 20);
+    EXPECT_NEAR(res, 5.73250316674436e-05, near);
   }
 }
 
