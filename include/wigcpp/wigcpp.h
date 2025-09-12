@@ -21,4 +21,4 @@ extern "C"{
 #ifdef __cplusplus
 }
 #endif
-#endif
+#endif /* __WIGCPP_H__ */

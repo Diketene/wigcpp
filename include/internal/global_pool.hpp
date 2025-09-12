@@ -7,8 +7,8 @@
  *	if not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __WIGCPP_MEMORY_POOL__
-#define __WIGCPP_MEMORY_POOL__
+#ifndef __WIGCPP_GLOBAL_POOL__
+#define __WIGCPP_GLOBAL_POOL__
 
 #include "internal/definitions.hpp"
 #include "internal/nothrow_allocator.hpp"
@@ -26,9 +26,9 @@ namespace wigcpp::internal::global {
     template <typename T>
     using vector = container::vector<T>;
 
+    const int max_factorial;
     vector<uint32_t> prime_list;
     std::size_t num_primes;
-    int max_factorial;
     std::size_t aligned_bytes;
 
     PrimeTable(int max_factorial) noexcept; 
@@ -173,9 +173,9 @@ namespace wigcpp::internal::global {
 
   class GlobalFactorialPool{
   public:
-    PrimeTable prime_table;
-    int max_two_j;
-    int wigner_type;
+    const PrimeTable prime_table;
+    const int max_two_j;
+    const int wigner_type;
 
   private:
     FactorPool num_pool;
@@ -230,4 +230,4 @@ namespace wigcpp::internal::global {
 
 }
 
-#endif
+#endif /* __WIGCPP_GLOBAL_POOL__ */

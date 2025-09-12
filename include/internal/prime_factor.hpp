@@ -37,4 +37,5 @@ namespace wigcpp::internal::prime_calc {
     void evaluate2(const global::PrimeTable &prime_table, mwi::big_int &big_prod_pos, mwi::big_int &big_prod_neg, const global::prime_exponents_view &in_fpf) noexcept; 
   };
 }
-#endif
+
+#endif /*__WIGCPP_PRIME_FACTOR__ */

@@ -7,8 +7,8 @@
  *	if not, see <http://www.gnu.org/licenses/>.
  */
  
-#ifndef __WIGCPP_CALC_TMP__
-#define __WIGCPP_CALC_TMP__
+#ifndef __WIGCPP_TMP_POOL__
+#define __WIGCPP_TMP_POOL__
 
 #include "internal/big_int.hpp"
 #include "internal/global_pool.hpp"
@@ -38,9 +38,11 @@ namespace wigcpp::internal::tmp{
     using aligned_vector = container::vector<T, allocator::nothrow_allocator<T, 64>>;
 
     aligned_vector<std::byte> buffer;
-    std::size_t aligned_bytes;
+    const std::size_t aligned_bytes;
 
   public:
+    const int max_iter;
+
     mwi::big_int sum_prod;
     mwi::big_int big_prod;
     mwi::big_int big_sqrt;
@@ -57,9 +59,8 @@ namespace wigcpp::internal::tmp{
     TempStorage(const TempStorage &) = delete;
     TempStorage &operator= (const TempStorage &) = delete;
     TempStorage(TempStorage &&) = default;
-    TempStorage &operator= (TempStorage &&) = default;
+    TempStorage &operator= (TempStorage &&) = delete;
     
-    int max_iter;
 
     TempStorage(int max_iter, std::size_t aligned_bytes) noexcept;
 
@@ -71,7 +72,7 @@ namespace wigcpp::internal::tmp{
       return buffer.size();
     }
     
-    std::size_t get_aligned_bytes(){
+    std::size_t get_aligned_bytes() const {
       return aligned_bytes;
     }
   };
@@ -86,4 +87,5 @@ namespace wigcpp::internal::tmp{
   };
 
 }
-#endif
+
+#endif /* __WIGCPP_TMP_POOL__ */
