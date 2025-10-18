@@ -29,7 +29,7 @@ namespace wigcpp::internal::templates {
   using first_type_t = typename first_type<Args...>::type;
 
   template <typename First, typename ...Rest>
-  constexpr decltype(auto)first_value(First &&f, Rest &&...r){
+  constexpr decltype(auto)first_value(First &&f){
     return std::forward<First>(f);
   }
 

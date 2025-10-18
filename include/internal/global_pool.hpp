@@ -26,9 +26,9 @@ namespace wigcpp::internal::global {
     template <typename T>
     using vector = container::vector<T>;
 
-    const int max_factorial;
+    const std::size_t max_factorial;
     vector<uint32_t> prime_list;
-    std::size_t num_primes;
+    std::uint32_t num_primes;
     std::size_t aligned_bytes;
 
     PrimeTable(int max_factorial) noexcept; 
@@ -183,7 +183,7 @@ namespace wigcpp::internal::global {
 
     void fill_num_pool(const PrimeTable &prime_table) noexcept;
 
-    void fill_factorial_pool(int max_factorial, std::uint32_t num_primes) noexcept;
+    void fill_factorial_pool(std::size_t max_factorial, std::uint32_t num_primes) noexcept;
 
   public:
     GlobalFactorialPool(int max_two_j, int wigner_type) noexcept;
@@ -208,7 +208,7 @@ namespace wigcpp::internal::global {
       return num_pool[n];
     }
 
-    const std::size_t aligned_bytes() const noexcept {
+    std::size_t aligned_bytes() const noexcept {
       return factorial_pool.aligned_bytes();
     }
 

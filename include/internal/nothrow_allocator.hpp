@@ -22,9 +22,6 @@ namespace wigcpp::internal::allocator{
     using value_type = T;
     nothrow_allocator() noexcept = default;
 
-    template<typename U>
-    nothrow_allocator(const nothrow_allocator<U> &alloc) noexcept {};
-
     [[nodiscard]]value_type* allocate(std::size_t n) noexcept{
       if(n == 0) return nullptr;
 

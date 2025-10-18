@@ -11,6 +11,7 @@
 #include "internal/error.hpp"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdio>
 
 namespace wigcpp::internal::calc {
@@ -74,7 +75,7 @@ namespace wigcpp::internal::calc {
 
   void Calculator::delta_coeff(const GlobalFactorialPool &pool, int two_a, int two_b, int two_c, 
                                global::prime_exponents_view &prefact_fpf) noexcept{
-    const int max_factorial = (two_a + two_b + two_c) / 2;
+    const std::size_t max_factorial = (two_a + two_b + two_c) / 2;
     if(max_factorial > pool.prime_table.max_factorial){
       std::fprintf(stderr, "error in delta_coeff: \n");
       error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
@@ -96,7 +97,7 @@ namespace wigcpp::internal::calc {
     const int k_min = std::max({0, two_j2 - two_J - two_m1, two_j1 - two_J + two_m2}) / 2;
     const int k_max = std::min({two_j1 + two_j2 - two_J, two_j1 - two_m1, two_j2 + two_m2}) / 2;
 
-    const int max_factorial = (two_j1 + two_j2 + two_J) / 2 + 1;
+    const std::size_t max_factorial = (two_j1 + two_j2 + two_J) / 2 + 1;
 
     if(max_factorial > pool.prime_table.max_factorial){
       std::fprintf(stderr, "error in calcsum_cg: \n");
@@ -173,7 +174,7 @@ namespace wigcpp::internal::calc {
     const int k_min = std::max({two_j1 + two_m2 - two_j3, two_j2 - two_m1 - two_j3, 0}) / 2;
     const int k_max = std::min({two_j2 + two_m2, two_j1 - two_m1, two_j1 + two_j2 - two_j3}) / 2;
 
-    const int max_factorial = (two_j1 + two_j2 + two_j3) / 2 + 1;
+    const std::size_t max_factorial = (two_j1 + two_j2 + two_j3) / 2 + 1;
     if(max_factorial > pool.prime_table.max_factorial){
       std::fprintf(stderr, "error in calcsum_3j: \n");
       error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
@@ -273,7 +274,7 @@ namespace wigcpp::internal::calc {
     const int k_min = std::max({alpha1, alpha2, alpha3, alpha4}) / 2;
     const int k_max = std::min({beta1, beta2, beta3}) / 2;
 
-    const int max_factorial = std::max({k_max + 1, beta1 / 2, beta2 / 2, beta3 / 2});
+    const std::size_t max_factorial = std::max({k_max + 1, beta1 / 2, beta2 / 2, beta3 / 2});
 
     if(max_factorial > pool.prime_table.max_factorial){
       std::fprintf(stderr, "error in factor_6j: \n");

@@ -11,10 +11,11 @@
 #include "internal/error.hpp"
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <cstdio>
 
 namespace wigcpp::internal::global {
-  PrimeTable::PrimeTable(int max_factorial) noexcept : prime_list{}, num_primes{0}, max_factorial(max_factorial), aligned_bytes(0){
+  PrimeTable::PrimeTable(int max_factorial) noexcept : max_factorial(max_factorial), prime_list{}, num_primes{0},  aligned_bytes(0){
     vector<char> is_prime(max_factorial + 1, true);
     for(int i = 2; i * i < max_factorial; ++i){
       if(is_prime[i]){
@@ -167,10 +168,10 @@ namespace wigcpp::internal::global {
     const auto &prime_list = prime_table.prime_list;
     const int block_size = num_pool.block_size();
     uint64_t cur = 1;
-    int max_p = 0;
+    std::size_t max_p = 0;
     bool enum_done = false;
     while(!enum_done){
-      int p = 0;
+      std::size_t p = 0;
       while(true){
         if(cur * prime_list[p] <= static_cast<uint64_t>(prime_table.max_factorial)){
           ++num_pool[0][p];
@@ -197,7 +198,7 @@ namespace wigcpp::internal::global {
     std::fill(num_pool[0].data(), num_pool[0].data() + block_size, 0);
   }
 
-  void GlobalFactorialPool::fill_factorial_pool(int max_factorial, std::uint32_t num_primes) noexcept {
+  void GlobalFactorialPool::fill_factorial_pool(std::size_t max_factorial, std::uint32_t num_primes) noexcept {
     for(std::size_t i = 1; i <= max_factorial; ++i){
       exp_t *add = num_pool[i].data();
       exp_t *src = factorial_pool[i - 1].data();
@@ -210,8 +211,8 @@ namespace wigcpp::internal::global {
     }
   }
 
-  GlobalFactorialPool::GlobalFactorialPool(int max_two_j, int wigner_type) noexcept : max_two_j(max_two_j), wigner_type(wigner_type), 
-    prime_table(((wigner_type / 3 + 2) * (max_two_j / 2)) + 1),
+  GlobalFactorialPool::GlobalFactorialPool(int max_two_j, int wigner_type) noexcept : prime_table(((wigner_type / 3 + 2) * (max_two_j / 2)) + 1), 
+    max_two_j(max_two_j), wigner_type(wigner_type), 
     num_pool(prime_table), factorial_pool(prime_table)
     {
       fill_num_pool(prime_table);

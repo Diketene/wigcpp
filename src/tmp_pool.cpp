@@ -10,7 +10,7 @@
 #include "internal/tmp_pool.hpp"
 
 namespace wigcpp::internal::tmp{
-  TempStorage::TempStorage(int max_iter, std::size_t aligned_bytes) noexcept : buffer{}, max_iter(max_iter), aligned_bytes(aligned_bytes){
+  TempStorage::TempStorage(int max_iter, std::size_t aligned_bytes) noexcept : buffer{}, aligned_bytes(aligned_bytes), max_iter(max_iter){
     constexpr std::size_t iter_start = static_cast<std::size_t>(TempIndex::iter_start);
     const std::size_t new_size = (static_cast<std::size_t>(max_iter) + iter_start);
     const std::size_t total_bytes = new_size * aligned_bytes;
