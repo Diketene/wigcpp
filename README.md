@@ -52,37 +52,39 @@ These three options were set defaultly as:
 
 |options|status|
 |:-:|:-:|
-|`BUILD_SHARED_LIBS`|`OFF`|
 |`BUILD_FORTRAN_INTERFACE`|`ON`|
+|`BUILD_SHARED_LIBS`|`OFF`|
 |`BUILD_TEST`|`OFF`|
 
 </div>
 
-**STATIC library is built defaultly.**
-If you want to build shared library or don't need to generate a Fortran interface module file, you can simply passing `-DBUILD_SHARED_LIBS=ON`or `-DBUILD_FORTRAN_INTERFACE=OFF` while generating the compile configurations. Also, if you want to build test, you can passing `-DBUILD_TEST=ON` as well.
+Which means that **static library is built defaultly.**
 
+## API
 
-## Usage
+Wigcpp provides C, C++ and Fortran interface. 
 
-Wigcpp provides C, C++ and Fortran interface. For C interface, functions that calculates 3j, 6j and 9j symbols maintain the same name as WIGXJPF: `wig3jj`, `wig6jj` and `wig9jj`. Before calling these functions, a function that maintains a global factorization table must be called firstly, which is `wigcpp_global_init`. Declarations of these functions are as followed:
+In C interface, functions that calculates clebsch-gordan coeffcient, winger-3j, wigner-6j and wigner-9j symbols are: `clebsch_gordan`,`wigner3j`, `wigner6j` and `wigner9j`. Before calling these functions, a function that maintains a global factorization table must be called **firstly**, which is `wigcpp_global_init`. Declarations of these functions are:
 
 ```C
 void wigcpp_global_init(int max_two_j, int wigner_type);
 
-double wig3jj(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3);
+double clebsch_gordan(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M);
 
-double wig6jj(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
+double wigner3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3);
 
-double wig9jj(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9);
+double wigner6j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
+
+double wigner9j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9);
 ```
 
-All of the angular-momentum quantum numbers and magnetic quantum numbers must be passed to the functions in their **doubled form**, that means if you have a physical value j, you must pass 2 * j to these functions.
+All of the angular-momentum quantum numbers and magnetic quantum numbers must be passed to the functions in their **doubled form**, that means if you have a physical value $j$, you must pass $2j$ to these functions.
 
 For the same reason, the `wigcpp_global_init` function accepts **twice the maximum physical angular momentum value** as its first parameter. And `wigcpp_global_init` accepts the maximum wigner symbol type that will be used in the whole calculation process as its second parameter, which is must be **3, 6 or 9**.
 
-Calling of `wigcpp_global_init` must be done in the main thread, if you call this function in other threads, behavior of this function is **undefined**.
+Calling of `wigcpp_global_init` must be done in the **Main Thread**, if you call this function in other threads, the behavior of it is **undefined**.
 
-A simple example is as followed:
+A simple example in C is as followed.
 
 ```C
 /* test.c */
@@ -93,7 +95,7 @@ A simple example is as followed:
 
 int main(void){
 	wigcpp_global_init(2 * 100, 9);
-	double result = wig3jj(2 * 1, 2 * 1, 2 * 2, 0, 0, 0);
+	double result = wigner3j(2 * 1, 2 * 1, 2 * 2, 0, 0, 0);
 	printf("result is %.*g\n", (int)DBL_DECIMAL_DIG, result);
 }
 
@@ -109,13 +111,15 @@ gcc -I<Install_prefix>/include \
 
 Run the executable, you will see `result is 0.36514837167011072` on 8 bytes double type platform.
 
-For C++ interface, we use namespace to encapsulate these functions. Declarations of these functions are:
+In C++ interface, we use namespace to encapsulate these functions. Declarations of these functions are:
 
 ```C++
 
 namespace wigcpp{
 
 	void global_init(int max_two_j, int wigner_type);
+
+	double cg(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M);
 
 	double three_j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3);
 
@@ -142,7 +146,7 @@ auto main(void) -> int{
 }
 ```
 
-Compile command is similar to the C interface:
+Compile command is:
 
 ```bash
 g++ -I<Install_prefix>/include \
@@ -153,15 +157,54 @@ g++ -I<Install_prefix>/include \
 For Fortran interface, it maintains the same name as C interface:
 
 ```Fortran
+subroutine wigcpp_global_init(max_two_j, wigner_type)
+	integer :: max_two_j, wigner_type
+end subroutine
+
+function clebsch_gordan(two_j1, two_j2, two_m1, two_m2, two_J, two_M)
+	integer :: two_j1, two_j2, two_m1, two_m2, two_J, two_M
+	real :: clebsch_gordan
+end function
+
+function wigner3j(two_j1, two_j2, two_j3, two_m1, two_m2, two_m3)
+	integer :: two_j1, two_j2, two_j3, two_m1, two_m2, two_m3
+	real :: wigner3j
+end function
+
+function wigner6j(two_j1, two_j2, two_j3, two_j4, two_j5, two_j6)
+	integer :: two_j1, two_j2, two_j3, two_j4, two_j5, two_j6
+	real :: wigner6j
+end function
+
+function wigner9j(two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8, two_j9)
+	integer :: two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8, two_j9
+	real :: wigner9j
+end function
+```
+
+A simple example is:
+```Fortran
 !test.f90
 
 program main
 	use wigcpp
 	implicit none
 	real :: result
+
 	call wigcpp_global_init(2 * 100, 9)
-	result = wig3jj(2 * 1, 2 * 1, 2 * 2, 0, 0, 0)
-	print *, "result is ", result
+
+	result = clebsch_gordan(35, 37, 3, 5, 66, 8)
+	print *, "result of cg is", result
+
+	result = wigner3j(2 * 1, 2 * 1, 2 * 2, 0, 0, 0)
+	print *, "result of 3j is", result
+
+	result = wigner6j(2*2, 2*2, 2*2, 2*2, 2*2, 2*2)
+	print *, "result of 6j is", result
+
+	result = wigner9j(2*20, 2*20, 2*20, 2*20, 2*20, 2*20, 2*20, 2*20, 2*20)
+	print *, "result of 9j is", result
+
 end program main
 ```
 
@@ -172,6 +215,18 @@ gfortran -I<Install_prefix>/include \
          -L<Install_prefix>/lib \
          test.f90 -lwigcpp -lstdc++
 ```
+
+Then run the executable, you will see
+
+```
+ result of cg is  0.109003529
+ result of 3j is  0.365148365
+ result of 6j is  -4.28571440E-02
+ result of 9j is   5.73250327E-05
+```
+
+in the stdout.
+
 ### Multi-threaded calling of functions
 
 The use of `thread_local` in C++11 eliminates the need for users to explicitly initialize thread-local resources at thread startup. So when calling these functions in multi-thread, you can proceed just as you would in a single-threaded environment. 
@@ -215,7 +270,7 @@ auto main(void) -> int{
 	}
 
   for(int i = 0; i < kThreads; ++i){
-    std::cout << "Result in Thread" << i << ':' << thread_data[i].result << std::endl;
+    std::cout << "Result in Thread" << i << ': ' << thread_data[i].result << std::endl;
   }
 }
 ```
@@ -223,19 +278,19 @@ auto main(void) -> int{
 Output in stdout will be:
 
 ```
-Result in Thread0:0.00840976
-Result in Thread1:0.194625
-Result in Thread2:-0.29277
-Result in Thread3:-6.07534e-05
+Result in Thread0: 0.00840976
+Result in Thread1: 0.194625
+Result in Thread2: -0.29277
+Result in Thread3: -6.07534e-05
 ```
 
 ## ToDo
 
-This project is in progress. In further, benchmarks will be implemented, and performance optimization will be conducted through techniques such as:
+This project is in progress. In further, more benchmarks will be implemented, and performance optimization will be conducted through techniques such as:
 
 1. Refactoring mathematical kernels using SIMD intrisics.
 2. LTO/PGO builds (LTO using GNU has added).
-3. Small Size Optmization for multi word int.
+3. More tests for `wigner6j` and `wigner9j`.
 
 
 ## License

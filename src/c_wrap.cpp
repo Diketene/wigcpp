@@ -22,16 +22,16 @@ API_EXPORT void wigcpp_global_init(int max_two_j, int wigner_type){
   }
 }
 
-API_EXPORT double clebsh_gordan(int two_j1, int two_m1, int two_j2, int two_m2, int two_J, int two_M){
+API_EXPORT double clebsch_gordan(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M){
   const auto &pool = wigcpp::internal::global::PoolManager::get();
   auto &tmp = wigcpp::internal::tmp::TempManager::get(pool.max_two_j, pool.aligned_bytes());
 
-  auto result = wigcpp::internal::calc::Calculator::calc_cg(pool, tmp, two_j1, two_m1, two_j2, two_m2, two_J, two_M);
+  auto result = wigcpp::internal::calc::Calculator::calc_cg(pool, tmp, two_j1, two_j2, two_m1, two_m2, two_J, two_M);
 
   return result;
 }
 
-API_EXPORT double wig3jj(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3){
+API_EXPORT double wigner3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3){
   const auto &pool = wigcpp::internal::global::PoolManager::get();
   auto &tmp = wigcpp::internal::tmp::TempManager::get(pool.max_two_j, pool.aligned_bytes());
 
@@ -40,7 +40,7 @@ API_EXPORT double wig3jj(int two_j1, int two_j2, int two_j3, int two_m1, int two
   return result;
 }
 
-API_EXPORT double wig6jj(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6){
+API_EXPORT double wigner6j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6){
   const auto &pool = wigcpp::internal::global::PoolManager::get();
   auto &tmp = wigcpp::internal::tmp::TempManager::get(pool.max_two_j, pool.aligned_bytes());
 
@@ -49,7 +49,7 @@ API_EXPORT double wig6jj(int two_j1, int two_j2, int two_j3, int two_j4, int two
   return result;
 }
 
-API_EXPORT double wig9jj(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9){
+API_EXPORT double wigner9j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9){
   const auto &pool = wigcpp::internal::global::PoolManager::get();
   auto &tmp = wigcpp::internal::tmp::TempManager::get(pool.max_two_j, pool.aligned_bytes());
 

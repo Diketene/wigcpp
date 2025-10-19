@@ -15,7 +15,7 @@
 #include <cstdio>
 
 namespace wigcpp::internal::calc {
-  def::double_type Calculator::calc_cg(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_m1, int two_j2, int two_m2, int two_J, int two_M) noexcept {
+  def::double_type Calculator::calc_cg(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M) noexcept {
     if(TrivialZero::is_zero_3j(two_j1, two_j2, two_J, two_m1, two_m2, -two_M)){
       return 0;
     }

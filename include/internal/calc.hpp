@@ -114,7 +114,7 @@ namespace wigcpp::internal::calc{
     static def::double_type eval_calcsum_info(const global::PrimeTable &prime_table, TempStorage &csi) noexcept;
 
   public:
-    static def::double_type calc_cg(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_m1, int two_j2, int two_m2, int two_J,  int two_M)  noexcept;
+    static def::double_type calc_cg(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_m1, int two_m2, int two_J,  int two_M)  noexcept;
 
     static def::double_type calc_3j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept;
 
