@@ -50,7 +50,7 @@ endif()
 
 if(BUILD_TEST)
   enable_testing()
-  add_subdirectory(test)
+  add_subdirectory(tests)
 else()
   message(STATUS "Testing is disabled.") 
 endif()

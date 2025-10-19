@@ -41,7 +41,7 @@ TEST(test_vector, test_pod){
   }
   vector<int> g(8);
   EXPECT_EQ(g.size(), 8);
-  for(int i = 0; i < g.size(); ++i){
+  for(std::size_t i = 0; i < g.size(); ++i){
     EXPECT_EQ(g[i], 0);
   }
 }
