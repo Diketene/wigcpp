@@ -70,6 +70,8 @@ namespace wigcpp::internal::mwi{
       return data.capacity();
     }
 
+    void clear() noexcept;
+
     bool is_minus() const noexcept {
       return data.back() & def::sign_bit;
     }

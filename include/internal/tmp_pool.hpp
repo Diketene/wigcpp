@@ -75,6 +75,8 @@ namespace wigcpp::internal::tmp{
     std::size_t get_aligned_bytes() const {
       return aligned_bytes;
     }
+
+    void reset() noexcept;
   };
 
   class TempManager{
@@ -84,6 +86,8 @@ namespace wigcpp::internal::tmp{
     static void init(int max_two_j, std::size_t aligned_bytes) noexcept; 
 
     static TempStorage &get(int max_two_j, std::size_t aligned_bytes) noexcept;
+
+    static void reset() noexcept;
   };
 
 }

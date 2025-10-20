@@ -1,4 +1,5 @@
 #include "internal/big_int.hpp"
+#include <cstring>
 #include <utility>
 #include <cmath>
 #include <string_view>

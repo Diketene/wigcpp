@@ -11,6 +11,9 @@ module wigcpp
       integer(c_int), value :: max_two_j, wigner_type
     end subroutine
 
+    subroutine wigcpp_reset_tls() bind(c, name="wigcpp_reset_tls")
+    end subroutine
+
     function clebsch_gordan(two_j1, two_j2, two_m1, two_m2, two_J, two_M) bind(c, name="clebsch_gordan")
       import c_int, c_double
       integer(c_int), value :: two_j1, two_j2, two_m1, two_m2, two_J, two_M

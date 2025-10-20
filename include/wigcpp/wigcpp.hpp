@@ -19,6 +19,10 @@ namespace wigcpp {
     wigcpp_global_init(max_two_j, wigner_type);
   }
 
+  inline void reset_tls(){
+    wigcpp_reset_tls();
+  }
+
   [[nodiscard]] inline double cg(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M){
     return ::clebsch_gordan(two_j1, two_j2, two_m1, two_m2, two_J, two_M);
   }

@@ -117,4 +117,15 @@ namespace wigcpp::internal::prime_calc {
     std::swap(this -> prod_pos[active_pos], big_prod_pos);
     std::swap(this -> prod_neg[active_neg], big_prod_neg);
   }
+
+  void pexpo_eval_temp::reset() noexcept {
+    prod_pos[0] = 0;
+    prod_pos[1] = 0;
+    prod_neg[0] = 0;
+    prod_neg[1] = 0;
+    factor[0] = 0;
+    factor[1] = 0;
+    big_up[0] = 0;
+    big_up[1] = 0;
+  }
 }

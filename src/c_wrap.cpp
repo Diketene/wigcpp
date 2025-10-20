@@ -9,6 +9,7 @@
  
 #include "wigcpp/wigcpp.h"
 #include "internal/global_pool.hpp"
+#include "internal/tmp_pool.hpp"
 #include "internal/error.hpp"
 #include "internal/calc.hpp"
 
@@ -20,6 +21,10 @@ API_EXPORT void wigcpp_global_init(int max_two_j, int wigner_type){
   }else{
     wigcpp::internal::error::error_process(wigcpp::internal::error::ErrorCode::BAD_WIGNER_TYPE);
   }
+}
+
+API_EXPORT void wigcpp_reset_tls(){
+  wigcpp::internal::tmp::TempManager::reset();
 }
 
 API_EXPORT double clebsch_gordan(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M){

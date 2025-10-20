@@ -8,6 +8,7 @@
  */
  
 #include "internal/tmp_pool.hpp"
+#include <cstring>
 
 namespace wigcpp::internal::tmp{
   TempStorage::TempStorage(int max_iter, std::size_t aligned_bytes) noexcept : buffer{}, aligned_bytes(aligned_bytes), max_iter(max_iter){
@@ -20,6 +21,20 @@ namespace wigcpp::internal::tmp{
     for(std::size_t i = 0; i < new_size; ++i){
       new (buffer.raw_pointer() + i * aligned_bytes) prime_exponents_view();
     }
+  }
+
+  void TempStorage::reset() noexcept {
+    std::memset(buffer.raw_pointer(), 0, buffer.size() * sizeof(std::byte));
+    sum_prod = 0;
+    big_prod = 0;
+    big_sqrt = 0;
+    big_nume = 0;
+    big_div = 0;
+    big_nume_prod = 0;
+    triprod = 0;
+    triprod_tmp = 0;
+    triprod_factor = 0;
+    pexpo_tmp.reset();
   }
 
   void TempManager::init(int max_two_j, std::size_t aligned_bytes) noexcept {
@@ -35,5 +50,11 @@ namespace wigcpp::internal::tmp{
       ptr = std::make_unique<TempStorage>(max_two_j / 2 + 1, aligned_bytes);
     }
     return *ptr;
+  }
+
+  void TempManager::reset() noexcept {
+    if(ptr){
+      ptr -> reset();
+    }
   }
 }
