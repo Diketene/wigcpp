@@ -62,12 +62,12 @@ Which means that **static library is built defaultly.**
 
 ## API
 
-Wigcpp provides C, C++ and Fortran interface. 
-
-In C interface, functions that calculates clebsch-gordan coeffcient, winger-3j, wigner-6j and wigner-9j symbols are: `clebsch_gordan`,`wigner3j`, `wigner6j` and `wigner9j`. Before calling these functions, a function that maintains a global factorization table must be called **firstly**, which is `wigcpp_global_init`. Declarations of these functions are:
+Wigcpp provides C, C++ and Fortran interface. In C interface, it provides these several functions:
 
 ```C
 void wigcpp_global_init(int max_two_j, int wigner_type);
+
+void wigcpp_reset_tls();
 
 double clebsch_gordan(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M);
 
@@ -80,9 +80,12 @@ double wigner9j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int 
 
 All of the angular-momentum quantum numbers and magnetic quantum numbers must be passed to the functions in their **doubled form**, that means if you have a physical value $j$, you must pass $2j$ to these functions.
 
-For the same reason, the `wigcpp_global_init` function accepts **twice the maximum physical angular momentum value** as its first parameter. And `wigcpp_global_init` accepts the maximum wigner symbol type that will be used in the whole calculation process as its second parameter, which is must be **3, 6 or 9**.
+For the same reason, `wigcpp_global_init` function accepts **twice the maximum physical angular momentum value** as its first parameter. And `wigcpp_global_init` accepts the maximum wigner symbol type that will be used in the whole calculation process as its second parameter, which is must be **3, 6 or 9**.
 
 Calling of `wigcpp_global_init` must be done in the **Main Thread**, if you call this function in other threads, the behavior of it is **undefined**.
+
+`wigcpp_reset_tls`'s duty is to reset the Thread Local Storage which is used by `wigner3j`, `wigner6j` and `wigner9j`, then
+ provide a clean thread local state when a thread begins to execute a new task. An example using OpenMP with wigcpp will be provided in the [Multi-threaded calling of functuions](#multi\-threaded-calling-of-functuions), which contains the calling of `wigcpp_reset_tls`.
 
 A simple example in C is as followed.
 
@@ -118,6 +121,8 @@ In C++ interface, we use namespace to encapsulate these functions. Declarations 
 namespace wigcpp{
 
 	void global_init(int max_two_j, int wigner_type);
+
+	void reset_tls();
 
 	double cg(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M);
 
@@ -159,6 +164,9 @@ For Fortran interface, it maintains the same name as C interface:
 ```Fortran
 subroutine wigcpp_global_init(max_two_j, wigner_type)
 	integer :: max_two_j, wigner_type
+end subroutine
+
+subroutine wigcpp_reset_tls()
 end subroutine
 
 function clebsch_gordan(two_j1, two_j2, two_m1, two_m2, two_J, two_M)
@@ -230,9 +238,7 @@ in the stdout.
 
 ### Multi-threaded calling of functions
 
-The use of `thread_local` in C++11 eliminates the need for users to explicitly initialize thread-local resources at thread startup. So when calling these functions in multi-thread, you can proceed just as you would in a single-threaded environment. 
-
-An example in C++ is as followed:
+The use of `thread_local` in C++11 eliminates the need for users to explicitly initialize thread-local resources at thread startup. So when calling these functions in pthread-like(1:1 threading model) multi-threads, you can proceed just as you would in a single-threaded environment.
 
 ```C++
 #include "wigcpp/wigcpp.hpp"
@@ -285,13 +291,42 @@ Result in Thread2: -0.29277
 Result in Thread3: -6.07534e-05
 ```
 
+But when using thread pool, users must make sure that TLS has a certain and correct initial state when a worker thread begins processing a new task. `wigcpp_reset_tls` is designed to handle this problem. An example using OpenMP in Fortran is
+
+```Fortran
+!$OMP PARALLEL PRIVATE(iJtot, imj, imjp, iLr, iLp) NUM_THREADS(24)
+
+call wigcpp_reset_tls
+
+!$OMP DO COLLAPSE(5) SCHEDULE(DYNAMIC)
+  do iJtot = 0, nJtot
+      do imj = -qn_j, qn_j
+          do imjp = -qn_jp, qn_jp
+              do iLr = 0, nLr
+                  do iLp = 0, nLp
+                      iml = imj - imjp
+                      if (abs(iml) > iLp) cycle
+                      if ((iJtot > qn_j+iLr .or. iJtot < abs(qn_j-iLr)) .or. (iJtot > qn_jp+iLp .or. iJtot < abs(qn_jp-iLp))) cycle
+                      CG1(iJtot,imj,iLr) = clebsch_gordan(qn_j*2,iLr*2,imj*2,0,iJtot*2,imj*2)
+                      CG2(iJtot,imjp,iLp,iml) = clebsch_gordan(qn_jp*2,iLp*2,imjp*2,iml*2,iJtot*2,(imjp + iml)*2)
+                  end do
+              end do
+          end do
+      end do
+  end do
+!$OMP END DO
+!$OMP END PARALLEL
+
+```
+
+Also, when you using wigcpp in any M:N threading model, make sure that using `wigcpp_tls_reset` to reset the state of Thread Local Storage at the begining of the task process in every threads.
+
 ## ToDo
 
 This project is in progress. In further, more benchmarks will be implemented, and performance optimization will be conducted through techniques such as:
 
-1. Refactoring mathematical kernels using SIMD intrisics.
-2. LTO/PGO builds (LTO using GNU has added).
-3. More tests for `wigner6j` and `wigner9j`.
+1. LTO/PGO builds (LTO using GNU has added).
+2. More tests for `wigner6j` and `wigner9j`.
 
 
 ## License
