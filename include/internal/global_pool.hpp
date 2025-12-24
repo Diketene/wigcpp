@@ -148,11 +148,11 @@ namespace wigcpp::internal::global {
     FactorPool(const PrimeTable &prime_table) noexcept;
 
     prime_exponents_view &operator[](std::size_t n) noexcept{
-      return *reinterpret_cast<prime_exponents_view*>(buffer.raw_pointer() + n * aligned_block_bytes);
+      return *reinterpret_cast<prime_exponents_view*>(buffer.data() + n * aligned_block_bytes);
     }
 
     const prime_exponents_view &operator[](std::size_t n) const noexcept {
-      return *reinterpret_cast<const prime_exponents_view *>(buffer.raw_pointer() + n * aligned_block_bytes);
+      return *reinterpret_cast<const prime_exponents_view *>(buffer.data() + n * aligned_block_bytes);
     }
 
     std::size_t block_size() const noexcept {

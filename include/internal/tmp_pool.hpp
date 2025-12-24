@@ -65,7 +65,7 @@ namespace wigcpp::internal::tmp{
     TempStorage(int max_iter, std::size_t aligned_bytes) noexcept;
 
     prime_exponents_view &operator[] (std::size_t n) noexcept {
-      return *reinterpret_cast<prime_exponents_view*>(buffer.raw_pointer() + n * aligned_bytes);
+      return *reinterpret_cast<prime_exponents_view*>(buffer.data() + n * aligned_bytes);
     }
 
     std::size_t size() const {

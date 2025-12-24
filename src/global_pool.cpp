@@ -160,7 +160,7 @@ namespace wigcpp::internal::global {
   FactorPool::FactorPool(const PrimeTable &prime_table) noexcept: aligned_block_bytes{prime_table.aligned_bytes}, buffer{}{
     buffer.resize((prime_table.max_factorial + 1) * aligned_block_bytes, std::byte{0});
     for(std::size_t i = 0; i <= prime_table.max_factorial; ++i){
-      new (buffer.raw_pointer() + i * aligned_block_bytes) prime_exponents_view();
+      new (buffer.data() + i * aligned_block_bytes) prime_exponents_view();
     }
   }
 

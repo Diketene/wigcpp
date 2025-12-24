@@ -30,7 +30,7 @@ namespace wigcpp::internal::container{
   
     inline static Allocator allocator;
     
-    value_type* data;
+    value_type* data_;
     value_type* first_free;
     value_type* cap;
     
@@ -53,14 +53,14 @@ namespace wigcpp::internal::container{
     }
 
     void destroy_elements() noexcept {
-      for(value_type* it = first_free ; it != data; ){
+      for(value_type* it = first_free ; it != data_; ){
         --it;
         destroy_at(it);
       }
     }
 
     void release_memory() noexcept {
-      alloc_traits::deallocate(allocator, data, capacity());
+      alloc_traits::deallocate(allocator, data_, capacity());
     }
 
     void free() noexcept{
@@ -68,7 +68,7 @@ namespace wigcpp::internal::container{
         destroy_elements();
       }
       release_memory();
-      data = first_free = cap = nullptr;
+      data_ = first_free = cap = nullptr;
     }
 
   public:
@@ -77,42 +77,42 @@ namespace wigcpp::internal::container{
   static_assert(std::is_nothrow_copy_constructible_v<value_type>, "value_type T must have nothrow copy constructor.");
   static_assert(std::is_nothrow_destructible_v<value_type>, "value_type T must have nothrow destructor");
 
-    vector() noexcept: data(nullptr), first_free(nullptr), cap(nullptr){}
+    vector() noexcept: data_(nullptr), first_free(nullptr), cap(nullptr){}
 
     vector(const vector &src) noexcept {
-      value_type *new_data = alloc(src.capacity());
+      value_type *new_data_ = alloc(src.capacity());
 
 
       if constexpr(!std::is_trivially_copyable_v<value_type>){
-        for(value_type *it = new_data, *src_elem = src.data; src_elem != src.first_free; ++it, ++src_elem){
+        for(value_type *it = new_data_, *src_elem = src.data_; src_elem != src.first_free; ++it, ++src_elem){
           construct_at(it, *src_elem);
         }
       }else{
-        std::memcpy(new_data, src.data, src.size() * sizeof(value_type));
+        std::memcpy(new_data_, src.data_, src.size() * sizeof(value_type));
       }
 
-      data = new_data;
-      first_free = new_data + src.size();
-      cap = new_data + src.capacity();
+      data_ = new_data_;
+      first_free = new_data_ + src.size();
+      cap = new_data_ + src.capacity();
     }
 
-    vector(vector &&src) noexcept :data(src.data), first_free(src.first_free), cap(src.cap){
-      src.data = src.first_free = src.cap = nullptr;
+    vector(vector &&src) noexcept :data_(src.data_), first_free(src.first_free), cap(src.cap){
+      src.data_ = src.first_free = src.cap = nullptr;
     }
 
     vector(value_type *begin, value_type *end) noexcept {
       const size_type size = end - begin;
-      value_type *new_data = alloc(size);
+      value_type *new_data_ = alloc(size);
       if constexpr(!std::is_trivially_copyable_v<value_type>){
-        for(value_type *it = new_data, *src_elem = begin; src_elem != end; ++it, ++src_elem){
+        for(value_type *it = new_data_, *src_elem = begin; src_elem != end; ++it, ++src_elem){
           construct_at(it, *src_elem);
         }
       }else{
-        std::memcpy(new_data, begin, size * sizeof(value_type));
+        std::memcpy(new_data_, begin, size * sizeof(value_type));
       }
-      data = new_data;
-      first_free = new_data + size;
-      cap = new_data + size;
+      data_ = new_data_;
+      first_free = new_data_ + size;
+      cap = new_data_ + size;
     }
 
     vector &operator= (const vector &src) noexcept {
@@ -127,21 +127,21 @@ namespace wigcpp::internal::container{
         free();
       }
 
-      value_type *new_data = alloc(src_capacity);
+      value_type *new_data_ = alloc(src_capacity);
 
       if constexpr(!std::is_trivially_copyable_v<value_type>){
-        for(value_type *it = new_data, *src_elem = src.data; src_elem != src.first_free; ++it, ++src_elem){
+        for(value_type *it = new_data_, *src_elem = src.data_; src_elem != src.first_free; ++it, ++src_elem){
           construct_at(it, *src_elem);
         }
       }else{
-        std::memcpy(new_data, src.data, src_size * sizeof(value_type));
+        std::memcpy(new_data_, src.data_, src_size * sizeof(value_type));
       }
 
       free();
 
-      data = new_data;
-      first_free = new_data + src_size;
-      cap = new_data + src_capacity;
+      data_ = new_data_;
+      first_free = new_data_ + src_size;
+      cap = new_data_ + src_capacity;
       return *this;
     }
 
@@ -150,10 +150,10 @@ namespace wigcpp::internal::container{
         return *this;
       }
       free();
-      data = src.data;
+      data_ = src.data_;
       first_free = src.first_free;
       cap = src.cap;
-      src.data = src.first_free = src.cap = nullptr;
+      src.data_ = src.first_free = src.cap = nullptr;
       return *this;
     }
 
@@ -161,20 +161,20 @@ namespace wigcpp::internal::container{
     vector(size_type size, const Args &... args) noexcept {
       static_assert(std::is_nothrow_constructible_v<value_type, Args...>, "value_type T must have nothrow constructor under given parameters");
 
-      value_type *new_data = alloc(size);
+      value_type *new_data_ = alloc(size);
 
-      data = new_data;
-      first_free = new_data + size;
-      cap = new_data + size;  /* doesn't have free capacity after first_free */
+      data_ = new_data_;
+      first_free = new_data_ + size;
+      cap = new_data_ + size;  /* doesn't have free capacity after first_free */
 
       if constexpr(!std::is_trivially_constructible_v<value_type>){
-        for(value_type *it = data; it != first_free; ++it){
+        for(value_type *it = data_; it != first_free; ++it){
           construct_at(it, args...);
         }
       }else{
         if constexpr(sizeof...(Args) == 1){
           const value_type &val = templates::first_value(args...);
-          std::uninitialized_fill_n(data, size, val);
+          std::uninitialized_fill_n(data_, size, val);
         }else{
           static_assert(sizeof...(Args) == 1, "constructor for trival types must have less than 2 parameters");
         }
@@ -182,13 +182,13 @@ namespace wigcpp::internal::container{
     }
 
     vector(size_type size) noexcept {
-      value_type *new_data = alloc(size);
+      value_type *new_data_ = alloc(size);
 
-      data = new_data;
-      first_free = new_data + size;
-      cap = new_data + size;
+      data_ = new_data_;
+      first_free = new_data_ + size;
+      cap = new_data_ + size;
 
-      std::uninitialized_value_construct_n(data, size);
+      std::uninitialized_value_construct_n(data_, size);
     }
     
     ~vector()noexcept{
@@ -196,23 +196,23 @@ namespace wigcpp::internal::container{
     }
 
     size_type size() const noexcept {
-      return first_free - data;
+      return first_free - data_;
     }
 
     size_type capacity() const noexcept {
-      return cap - data;
+      return cap - data_;
     }
 
     value_type &operator[](size_type index){
-      return *(data + index);
+      return *(data_ + index);
     }
 
     const value_type &operator[](size_type index) const{
-      return *(data + index);
+      return *(data_ + index);
     }
 
     value_type *begin() noexcept{
-      return data;
+      return data_;
     }
 
     value_type *end() noexcept{
@@ -220,27 +220,27 @@ namespace wigcpp::internal::container{
     }
 
     const value_type *cbegin() const noexcept{
-      return data;
+      return data_;
     }
 
     const value_type *cend() const noexcept{
       return first_free;
     }
 
-    value_type *raw_pointer() noexcept{
-      return this -> data;
+    value_type *data() noexcept{
+      return this -> data_;
     }
 
-    const value_type *raw_pointer() const noexcept{
-      return this -> data;
+    const value_type *data() const noexcept{
+      return this -> data_;
     }
 
     value_type &front() noexcept {
-      return *data;
+      return *data_;
     }
 
     const value_type &front()const noexcept {
-      return *data;
+      return *data_;
     }
 
     value_type &back() noexcept {
@@ -262,24 +262,24 @@ namespace wigcpp::internal::container{
       const size_type factor_cap = static_cast<size_type>(oldcap * growth_factor / 2);
       const size_type new_capacity = min_capacity > factor_cap ? min_capacity : factor_cap;
 
-      value_type *new_data = alloc(new_capacity);
+      value_type *new_data_ = alloc(new_capacity);
 
       if constexpr (std::is_nothrow_move_constructible_v<value_type>) {
-        for (value_type *src = data, *dest = new_data; src != first_free; ++src, ++dest) {
+        for (value_type *src = data_, *dest = new_data_; src != first_free; ++src, ++dest) {
           construct_at(dest, std::move(*src));
         }
       } else if constexpr (!std::is_trivially_copyable_v<value_type>) {
-        for (value_type *src = data, *dest = new_data; src != first_free; ++src, ++dest) {
+        for (value_type *src = data_, *dest = new_data_; src != first_free; ++src, ++dest) {
           construct_at(dest, *src);
         }
       } else {
-        std::memcpy(new_data, data, oldsize * sizeof(value_type));
+        std::memcpy(new_data_, data_, oldsize * sizeof(value_type));
       }
 
       free();
-      data = new_data;
-      first_free = new_data + oldsize;
-      cap = new_data + new_capacity;
+      data_ = new_data_;
+      first_free = new_data_ + oldsize;
+      cap = new_data_ + new_capacity;
     }
 
     void resize(size_type size)noexcept{
@@ -290,7 +290,7 @@ namespace wigcpp::internal::container{
       }
       if(size == 0){
         free();
-        data = first_free = cap = nullptr;
+        data_ = first_free = cap = nullptr;
         return;
       }
       if(size > capof){
@@ -300,14 +300,14 @@ namespace wigcpp::internal::container{
         std::uninitialized_value_construct_n(first_free, size - sz);
       }else{
         if constexpr(!std::is_trivially_destructible_v<value_type>){
-          for(value_type *it = first_free; it != data + size;){
+          for(value_type *it = first_free; it != data_ + size;){
             --it;
             destroy_at(it);
           }
         }
       }
       
-      first_free = data + size;
+      first_free = data_ + size;
     }
 
     void resize(size_type size, const value_type &src)noexcept{
@@ -318,7 +318,7 @@ namespace wigcpp::internal::container{
       }
       if(size == 0){
         free();
-        data = first_free = cap = nullptr;
+        data_ = first_free = cap = nullptr;
         return;
       }
       if(size > capof){
@@ -328,19 +328,19 @@ namespace wigcpp::internal::container{
         if constexpr(std::is_trivially_copy_constructible_v<value_type>){
           std::uninitialized_fill_n(first_free, size - sz, src);
         }else{
-          for(value_type *it = first_free; it != data + size; ++it){
+          for(value_type *it = first_free; it != data_ + size; ++it){
             construct_at(it, src); 
           }
         }
       }else{
         if constexpr(!std::is_trivially_destructible_v<value_type>){
-          for(value_type *it = first_free; it != data + size; ){
+          for(value_type *it = first_free; it != data_ + size; ){
             --it;
             destroy_at(it);
           }
         }
       }
-      first_free = data + size;
+      first_free = data_ + size;
     }
 
     template <typename ...Args>
@@ -388,14 +388,14 @@ namespace wigcpp::internal::container{
     bool is_small = true;
     size_type size_ = 0;
 
-    // cached pointer to the active contiguous storage (inline buffer or heap->raw_pointer())
-    value_type *data_ptr = nullptr;
+    // cached pointer to the active contiguous storage (inline buffer or heap->data())
+    value_type *data__ptr = nullptr;
 
-    inline void update_data_ptr() noexcept {
+    inline void update_data__ptr() noexcept {
       if(is_small){
-        data_ptr = buffer.data();
+        data__ptr = buffer.data_();
       }else{
-        data_ptr = heap_ptr->raw_pointer();
+        data__ptr = heap_ptr->data();
       }
     }
 
@@ -410,13 +410,13 @@ namespace wigcpp::internal::container{
       for(size_type i = 0; i < size_; ++i){
         heap_ptr -> push_back(buffer[i]);
       }
-      update_data_ptr();
+      update_data__ptr();
     }
 
   public:
     sso_vector() noexcept {
       // start in small mode
-      data_ptr = buffer.data();
+      data__ptr = buffer.data_();
     }
 
     ~sso_vector() noexcept = default;
@@ -425,24 +425,24 @@ namespace wigcpp::internal::container{
       if(src.is_small){
         is_small = true;
         size_ = src.size_;
-        std::memcpy(buffer.data(), src.buffer.data(), src.size_ * sizeof(value_type));
-        data_ptr = buffer.data();
+        std::memcpy(buffer.data_(), src.buffer.data_(), src.size_ * sizeof(value_type));
+        data__ptr = buffer.data_();
       }else{
         is_small = false;
         size_ = src.heap_ptr -> size();
         heap_ptr = std::make_unique<vector<value_type>>(*src.heap_ptr);
-        update_data_ptr();
+        update_data__ptr();
       }
     }
 
     sso_vector(sso_vector &&src) noexcept : is_small(src.is_small), size_(src.size_), heap_ptr(std::move(src.heap_ptr)) {
       if(src.is_small){
-        std::memcpy(buffer.data(), src.buffer.data(), src.size_ * sizeof(value_type));
+        std::memcpy(buffer.data_(), src.buffer.data_(), src.size_ * sizeof(value_type));
         src.size_ = 0;
-        data_ptr = buffer.data();
+        data__ptr = buffer.data_();
         // moved-from small src already zeroed size_
       }else{
-        update_data_ptr();
+        update_data__ptr();
       }
     }
 
@@ -450,12 +450,12 @@ namespace wigcpp::internal::container{
       this -> size_ = size;
       if(size <= N){
         is_small = true;
-        std::uninitialized_value_construct_n(buffer.data(), size_);
-        data_ptr = buffer.data();
+        std::uninitialized_value_construct_n(buffer.data_(), size_);
+        data__ptr = buffer.data_();
       }else{
         is_small = false;
         heap_ptr = std::make_unique<vector<T>>(size);
-        update_data_ptr();
+        update_data__ptr();
       }
     }
 
@@ -468,13 +468,13 @@ namespace wigcpp::internal::container{
         if(!(this -> is_small)){
           heap_ptr.reset();
         }
-        std::memcpy(buffer.data(), src.buffer.data(), src.size_ * sizeof(value_type));
+        std::memcpy(buffer.data_(), src.buffer.data_(), src.size_ * sizeof(value_type));
         is_small = true;
-        data_ptr = buffer.data();
+        data__ptr = buffer.data_();
       }else{
         heap_ptr = std::make_unique<vector<value_type>>(*src.heap_ptr);
         is_small = false;
-        update_data_ptr();
+        update_data__ptr();
       }
 
       this -> size_ = src.size_;
@@ -489,13 +489,13 @@ namespace wigcpp::internal::container{
         heap_ptr.reset();
       }
       if(src.is_small){
-        std::memcpy(buffer.data(), src.buffer.data(), src.size_ * sizeof(value_type));
+        std::memcpy(buffer.data_(), src.buffer.data_(), src.size_ * sizeof(value_type));
         is_small = true;
-        data_ptr = buffer.data();
+        data__ptr = buffer.data_();
       }else{
         heap_ptr = std::move(src.heap_ptr);
         is_small = false;
-        update_data_ptr();
+        update_data__ptr();
       }
       this -> size_ = src.size_;
       return *this;
@@ -511,35 +511,35 @@ namespace wigcpp::internal::container{
 
     value_type &operator[](size_type index) noexcept {
       // use cached pointer to eliminate branch
-      return data_ptr[index];
+      return data__ptr[index];
     }
 
     const value_type&operator[](size_type index) const noexcept {
-      return data_ptr[index];
+      return data__ptr[index];
     }
 
     value_type *begin() noexcept{
-      return data_ptr;
+      return data__ptr;
     }
 
     const value_type* cbegin() const noexcept{
-      return data_ptr;
+      return data__ptr;
     }
 
     value_type* end() noexcept {
-      return data_ptr + size_;
+      return data__ptr + size_;
     }
 
     const value_type* cend() const noexcept {
-      return data_ptr + size_;
+      return data__ptr + size_;
     }
 
     value_type &back() noexcept{
-      return *(data_ptr + size_ - 1);
+      return *(data__ptr + size_ - 1);
     }
 
     const value_type &back() const noexcept {
-      return *(data_ptr + size_ - 1);
+      return *(data__ptr + size_ - 1);
     }
 
     void reserve(size_type min_capacity) noexcept{
@@ -551,7 +551,7 @@ namespace wigcpp::internal::container{
         return;
       }else{
         heap_ptr -> reserve(min_capacity);
-        update_data_ptr();
+        update_data__ptr();
       }
     }
 
@@ -559,18 +559,18 @@ namespace wigcpp::internal::container{
       if(!is_small){
         heap_ptr -> resize(new_size);
         size_ = new_size;
-        update_data_ptr();
+        update_data__ptr();
         return;
       }
 
       if(new_size <= N){
         if(new_size > size_){
-          std::uninitialized_value_construct_n(buffer.data() + size_, new_size - size_);
+          std::uninitialized_value_construct_n(buffer.data_() + size_, new_size - size_);
         }
       }else{
         up_to_heap(new_size);
         heap_ptr -> resize(new_size);
-        // up_to_heap already updated data_ptr
+        // up_to_heap already updated data__ptr
       }
       size_ = new_size;
     }
@@ -579,7 +579,7 @@ namespace wigcpp::internal::container{
       if(!is_small){
         heap_ptr -> push_back(val);
         ++size_;
-        update_data_ptr();
+        update_data__ptr();
         return;
       }
       if(size_ < N){

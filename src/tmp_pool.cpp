@@ -19,12 +19,12 @@ namespace wigcpp::internal::tmp{
     buffer.resize(total_bytes, std::byte{0});
 
     for(std::size_t i = 0; i < new_size; ++i){
-      new (buffer.raw_pointer() + i * aligned_bytes) prime_exponents_view();
+      new (buffer.data() + i * aligned_bytes) prime_exponents_view();
     }
   }
 
   void TempStorage::reset() noexcept {
-    std::memset(buffer.raw_pointer(), 0, buffer.size() * sizeof(std::byte));
+    std::memset(buffer.data(), 0, buffer.size() * sizeof(std::byte));
     sum_prod = 0;
     big_prod = 0;
     big_sqrt = 0;
