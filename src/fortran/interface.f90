@@ -3,7 +3,7 @@ module wigcpp
   implicit none
   private
 
-  public :: wigcpp_global_init, clebsch_gordan, wigner3j, wigner6j, wigner9j
+  public :: wigcpp_global_init, wigcpp_reset_tls, clebsch_gordan, wigner3j, wigner6j, wigner9j
 
   interface
     subroutine wigcpp_global_init(max_two_j, wigner_type) bind(c, name="wigcpp_global_init")
