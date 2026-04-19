@@ -1,8 +1,9 @@
-# Wigcpp: A Wigner-3j 6j and 9j Symbol Calculation Library Written in C++ 17
+# wigcpp: A Wigner-3j 6j and 9j Symbol Calculation Library Written in C++ 17
 
+![C++ Standard](https://img.shields.io/badge/C++-17-blue.svg)
 [![zread](https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/Diketene/wigcpp)
 
-Wigcpp is a high precision and high performance C++ library for computing Wigner 3j, 6j and 9j symbols using prime factorization and multi word integer arithmetic based on the precalculated prime factorization table.
+**wigcpp** is a high precision and high performance C++ library for computing Wigner 3j, 6j and 9j symbols using prime factorization and multi word integer arithmetic based on the precalculated prime factorization table.
 
 The computational methods implemented in this project are derived from [WIGXJPF](https://fy.chalmers.se/subatom/wigxjpf/). 
 
@@ -327,8 +328,11 @@ Also, when you using wigcpp in any M:N threading model, make sure that using `wi
 
 This project is in progress. In further, more benchmarks will be implemented, and performance optimization will be conducted through techniques such as:
 
-1. LTO/PGO builds (LTO using GNU has added).
+1. More compatible LTO builds.
 2. More tests for `wigner6j` and `wigner9j`.
+3. More benchmark and comparison.
+4. Python bindings.
+5. More API such as wigner D functions.
 
 
 ## License
@@ -347,6 +351,19 @@ This project uses prime factorization and multi word integer arithmetic to calcu
 > H. T. Johansson and C. Forssén, 
 > "Fast and Accurate Evaluation of Wigner 3j, 6j, and 9j Symbols Using Prime Factorization and Multiword Integer Arithmetic" ,
 > SIAM J. Sci. Comput., 38(1) (2016), A376-A384.
+
+And if you want to cite this project, please use the following BibTeX template in scientific discourse:
+
+```
+@misc{wigcpp,
+	author = {Haotian Liu},
+	title = {wigcpp: A Wigner-3j 6j and 9j Symbol Calculation Library Written in C++ 17},
+	year = {2025},
+	url = {https://github.com/Diketene/wigcpp},
+	note = {Version as of April 19, 2026.}
+	license = {GPL-3.0}
+}
+```
 
 ## Acknowledgments
 
