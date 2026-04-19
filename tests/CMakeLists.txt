@@ -53,5 +53,6 @@ add_wigcpp_test(test_big_int_new test_big_int.cpp)
 add_wigcpp_test(test_vector test_vector.cpp)
 add_wigcpp_test(test_prime_factor test_prime_factor.cpp)
 add_wigcpp_test(test_xj_symbol test_xj_symbol.cpp)
+add_wigcpp_test(test_xj_multi_thread test_xj_multi_thread.cpp)
 
 include(GoogleTest)
