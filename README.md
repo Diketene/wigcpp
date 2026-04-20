@@ -325,19 +325,6 @@ call wigcpp_reset_tls
 
 Also, when you using wigcpp in any M:N threading model, make sure that using `wigcpp_tls_reset` to reset the state of Thread Local Storage at the begining of the task process in every threads.
 
-## ToDo
-
-This project is in progress. In further, more tests, benchmarks, APIs and documentation will be implemented, such as:
-
-1. More compatible LTO builds.
-2. More tests for `wigner6j` and `wigner9j`.
-3. More benchmark and comparison.
-4. Python bindings.
-5. More calculation API such as wigner D functions.
-6. More ordered documentation.
-7. Serialization and deserialization API.
-
-
 ## License
 
 This project is licensed under the GPL-3.0 license, see the [LICENSE](./LICENSE) for details.
