@@ -54,14 +54,16 @@ else()
   message(STATUS "Testing is disabled.") 
 endif()
 
-add_library(
-  wigcpp  src/c_wrap.cpp 
-          src/calc.cpp
-          src/error.cpp
-          src/global_pool.cpp
-          src/prime_factor.cpp
-          src/tmp_pool.cpp
-          src/big_int.cpp
+add_library(wigcpp)
+target_sources(wigcpp
+  PRIVATE 
+    src/c_wrap.cpp 
+    src/calc.cpp
+    src/error.cpp
+    src/global_pool.cpp
+    src/prime_factor.cpp
+    src/tmp_pool.cpp
+    src/big_int.cpp
 )
 
 if(BUILD_BENCHMARK)
