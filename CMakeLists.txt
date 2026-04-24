@@ -8,12 +8,11 @@
 #
 
 cmake_minimum_required(VERSION 3.20)
+project(WigCpp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-project(WigCpp LANGUAGES CXX)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(BUILD_FORTRAN_INTERFACE "Build Fortran interface" ON)
