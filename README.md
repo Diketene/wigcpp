@@ -57,9 +57,10 @@ These three options were set defaultly as:
 
 |options|status|
 |:-:|:-:|
-|`BUILD_FORTRAN_INTERFACE`|`ON`|
 |`BUILD_SHARED_LIBS`|`OFF`|
-|`BUILD_TEST`|`OFF`|
+|`WIGCPP_BUILD_TEST`|`OFF`|
+|`WIGCPP_BUILD_BENCHMARK`|`OFF`|
+|`WIGCPP_BUILD_FORTRAN_INTERFACE`|`ON`|
 
 </div>
 
