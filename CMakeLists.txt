@@ -10,10 +10,6 @@
 cmake_minimum_required(VERSION 3.23)
 project(WigCpp LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(BUILD_FORTRAN_INTERFACE "Build Fortran interface" ON)
 option(BUILD_TEST "Build the testing tree" OFF)
@@ -22,8 +18,6 @@ option(BUILD_BENCHMARK "Build benchmark" OFF)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
-
-include(cmake/CheckCompileFeature.cmake)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
   if(NOT CMAKE_GENERATOR STREQUAL "Xcode")
@@ -57,6 +51,9 @@ else()
 endif()
 
 add_library(wigcpp)
+
+add_library(wigcpp::wigcpp ALIAS wigcpp)
+
 target_sources(wigcpp
   PRIVATE 
     src/c_wrap.cpp 
@@ -74,6 +71,8 @@ target_sources(wigcpp
       include/wigcpp/wigcpp.h
       include/wigcpp/wigcpp.hpp
 )
+
+target_compile_features(wigcpp PRIVATE cxx_std_17)
 
 target_include_directories(wigcpp 
   PRIVATE
