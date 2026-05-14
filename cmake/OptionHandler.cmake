@@ -27,8 +27,7 @@ if(WIGCPP_BUILD_FORTRAN_INTERFACE)
     message(STATUS "Fortran support enabled(compiler: ${CMAKE_Fortran_COMPILER})")
     add_library(fortran_interface OBJECT src/fortran/interface.f90)
 
-    set(_fortran_mod_dir ${CMAKE_CURRENT_BINARY_DIR}/mod)
-    file(MAKE_DIRECTORY ${_fortran_mod_dir})
+    set(_fortran_mod_dir ${CMAKE_CURRENT_BINARY_DIR}/fortran_module)
 
     set_target_properties(
       fortran_interface 
