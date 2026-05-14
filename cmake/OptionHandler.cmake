@@ -47,3 +47,16 @@ if(WIGCPP_BUILD_FORTRAN_INTERFACE)
     )
   endif()
 endif()
+
+if(WIGCPP_ENABLE_IPO)
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT result OUTPUT output)
+  if(result)
+    set_target_properties(wigcpp
+      PROPERTIES
+      INTERPROCEDURAL_OPTIMIZATION TRUE
+    )
+  else()
+    message(WARNING "IPO is not supported: ${output}")
+  endif()
+endif()

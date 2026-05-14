@@ -15,6 +15,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(WIGCPP_BUILD_TEST "Build the testing tree" OFF)
 option(WIGCPP_BUILD_BENCHMARK "Build benchmark" OFF)
 option(WIGCPP_BUILD_FORTRAN_INTERFACE "Build Fortran interface" ON)
+option(WIGCPP_ENABLE_IPO "Enable IPO/LTO" OFF)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
