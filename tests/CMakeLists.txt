@@ -11,42 +11,13 @@
 find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)
 
-add_library(
-  wigcpp_test STATIC
-  ${CMAKE_SOURCE_DIR}/src/c_wrap.cpp
-  ${CMAKE_SOURCE_DIR}/src/calc.cpp
-  ${CMAKE_SOURCE_DIR}/src/tmp_pool.cpp
-  ${CMAKE_SOURCE_DIR}/src/prime_factor.cpp
-  ${CMAKE_SOURCE_DIR}/src/global_pool.cpp
-  ${CMAKE_SOURCE_DIR}/src/error.cpp
-  ${CMAKE_SOURCE_DIR}/src/big_int.cpp
-)
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  include(ConfigureLibCXX)
-  configure_libcxx_for_clang(wigcpp_test)
-endif()
-
-target_include_directories(
-  wigcpp_test PUBLIC
-  ${CMAKE_SOURCE_DIR}/include
-)
-
 function(add_wigcpp_test test_name source_file)
+
   add_executable(${test_name} ${source_file})
 
-  #if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  #  include(ConfigureLibCXX)
-  #  configure_libcxx_for_clang(${test_name})
-  #  target_link_libraries(${test_name} PRIVATE c++)
-  #endif()
-  
-  target_link_libraries(${test_name} PRIVATE wigcpp_test GTest::gtest GTest::gtest_main)
-  target_include_directories(
-    ${test_name} PRIVATE 
-    ${CMAKE_SOURCE_DIR}/include
-  )
+  target_link_libraries(${test_name} PRIVATE wigcpp::wigcpp GTest::gtest GTest::gtest_main)
   gtest_discover_tests(${test_name})
+
 endfunction()
 
 add_wigcpp_test(test_big_int_new test_big_int.cpp)
