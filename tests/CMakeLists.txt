@@ -11,19 +11,18 @@
 find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)
 
-function(add_wigcpp_test test_name source_file)
-
-  add_executable(${test_name} ${source_file})
-
-  target_link_libraries(${test_name} PRIVATE wigcpp::wigcpp GTest::gtest GTest::gtest_main)
-  gtest_discover_tests(${test_name})
-
-endfunction()
-
-add_wigcpp_test(test_big_int_new test_big_int.cpp)
-add_wigcpp_test(test_vector test_vector.cpp)
-add_wigcpp_test(test_prime_factor test_prime_factor.cpp)
-add_wigcpp_test(test_xj_symbol test_xj_symbol.cpp)
-add_wigcpp_test(test_xj_multi_thread test_xj_multi_thread.cpp)
-
 include(GoogleTest)
+
+add_executable(wigcpp_tests)
+target_sources(wigcpp_tests 
+  PRIVATE
+    test_big_int.cpp
+    test_prime_factor.cpp
+    test_vector.cpp
+    test_xj_multi_thread.cpp
+    test_xj_symbol.cpp
+)
+
+target_link_libraries(wigcpp_tests PRIVATE wigcpp::wigcpp GTest::gtest GTest::gtest_main)
+
+gtest_discover_tests(wigcpp_tests)
