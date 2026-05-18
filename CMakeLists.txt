@@ -17,8 +17,6 @@ option(WIGCPP_BUILD_BENCHMARK "Build benchmark" OFF)
 option(WIGCPP_BUILD_FORTRAN_INTERFACE "Build Fortran interface" ON)
 option(WIGCPP_ENABLE_IPO "Enable IPO/LTO" OFF)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 
 add_library(wigcpp)
