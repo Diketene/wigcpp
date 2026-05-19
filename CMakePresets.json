@@ -30,6 +30,20 @@
 			}
 		},
 		{
+			"name": "debug_shared",
+			"displayName": "debug build shared lib with tests",
+			"description": "build shared library with Debug mode",
+			"binaryDir": "${sourceDir}/build",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug",
+				"BUILD_SHARED_LIBS": "ON",
+				"WIGCPP_BUILD_TEST": "ON",
+				"WIGCPP_BUILD_BENCHMARK": "OFF",
+				"WIGCPP_BUILD_FORTRAN_INTERFACE": "OFF",
+				"WIGCPP_ENABLE_IPO": "OFF"
+			}
+		},
+		{
 			"name": "benchmark",
 			"displayName": "build benchmarks",
 			"description": "build static library and benchmarks with Release mode",
