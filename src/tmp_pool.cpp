@@ -11,7 +11,6 @@
 #include <cstring>
 
 namespace wigcpp::internal::tmp{
-  thread_local std::unique_ptr<TempStorage> TempManager::ptr = nullptr;
 
   TempStorage::TempStorage(int max_iter, std::size_t aligned_bytes) noexcept : buffer{}, aligned_bytes(aligned_bytes), max_iter(max_iter){
     constexpr std::size_t iter_start = static_cast<std::size_t>(TempIndex::iter_start);
