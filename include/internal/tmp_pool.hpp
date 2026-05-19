@@ -80,7 +80,7 @@ namespace wigcpp::internal::tmp{
   };
 
   class TempManager{
-    static inline thread_local std::unique_ptr<TempStorage> ptr = nullptr;
+    static thread_local std::unique_ptr<TempStorage> ptr;
 
   public:
     static void init(int max_two_j, std::size_t aligned_bytes) noexcept; 
