@@ -13,7 +13,11 @@
 #include "internal/error.hpp"
 #include "internal/calc.hpp"
 
-#define API_EXPORT __attribute__((visibility("default")))
+#ifdef _WIN32
+  #define API_EXPORT
+#else
+  #define API_EXPORT __attribute__((visibility("default")))
+#endif
 
 API_EXPORT void wigcpp_global_init(int max_two_j, int wigner_type){
   if(wigner_type == 3 || wigner_type == 6 || wigner_type == 9){
