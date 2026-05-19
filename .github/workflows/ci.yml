@@ -7,16 +7,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - run: cmake -S . -B build && cmake --build build
+      - run: cmake --preset debug && cmake --build build && ctest --test-dir build
   
   build-macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
-      - run: cmake -S . -B build && cmake --build build
+      - run: cmake --preset debug && cmake --build build && ctest --test-dir build
   
-  build-macos-xcode:
-    runs-on: macos-latest
+  build-windows:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
-      - run: cmake -S . -B build -G Xcode && cmake --build build
+      - run: cmake --preset debug -G "Ninja" && cmake --build build && ctest --test-dir build
