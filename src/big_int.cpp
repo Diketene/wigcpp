@@ -380,11 +380,10 @@ namespace wigcpp::internal::mwi {
     };
 
     auto remove_leading_zeros = [](const std::string_view str){
-      const char *it = str.begin();
-      for( ; it != str.end(); it++){
-        if(*it != '0'){
-          break;
-        }
+      const char *it = str.data();
+      const char *end = str.data() + str.size();
+      for(; it != end && *it == '0'; ++it){
+        // jump 
       }
       return it;
     };
