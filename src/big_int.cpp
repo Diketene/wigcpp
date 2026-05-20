@@ -376,7 +376,7 @@ namespace wigcpp::internal::mwi {
       for(std::size_t i = 0; i < digits_per_word; i++){
         hex_digits[i] = parser((word >> (digits_per_word - 1 - i) * 4) & mask);
       }
-      std::memcpy(buffer_current, hex_digits.begin(), digits_per_word);
+      std::memcpy(buffer_current, hex_digits.data(), digits_per_word);
     };
 
     auto remove_leading_zeros = [](const std::string_view str){
