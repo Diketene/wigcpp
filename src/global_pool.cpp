@@ -16,15 +16,15 @@
 
 namespace wigcpp::internal::global {
   PrimeTable::PrimeTable(int max_factorial) noexcept : max_factorial(max_factorial), prime_list{}, num_primes{0},  aligned_bytes(0){
-    vector<char> is_prime(max_factorial + 1, true);
+    vector<int> is_prime(max_factorial + 1, 1);
     for(int i = 2; i * i < max_factorial; ++i){
       if(is_prime[i]){
         for(int j = i * i; j <= max_factorial; j += i){
-          is_prime[j] = false;
+          is_prime[j] = 0;
         }
       }
     }
-    num_primes = std::count(is_prime.begin() + 2, is_prime.end(), true);
+    num_primes = std::count(is_prime.begin() + 2, is_prime.end(), 1);
     prime_list.reserve(num_primes);
     for(int i = 2; i <= max_factorial; ++i){
       if(is_prime[i]){
