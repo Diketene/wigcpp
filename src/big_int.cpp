@@ -380,7 +380,7 @@ namespace wigcpp::internal::mwi {
     };
 
     auto remove_leading_zeros = [](const std::string_view str){
-      auto it = str.begin();
+      const char *it = str.begin();
       for( ; it != str.end(); it++){
         if(*it != '0'){
           break;
@@ -395,15 +395,15 @@ namespace wigcpp::internal::mwi {
       buffer.resize(hex_digits_per_word, '0');
       if(is_minus()){
         word_to_hex(-data.back(), buffer.data());
-        auto non_zero_begin = remove_leading_zeros(buffer);
+        const char *non_zero_begin = remove_leading_zeros(buffer);
         const char *buffer_end = buffer.data() + buffer.size();
-        auto length = buffer_end - non_zero_begin;
+        long length = buffer_end - non_zero_begin;
         return '-' + std::string(non_zero_begin, length);
       }
       word_to_hex(data.back(), buffer.data());
-      auto non_zero_begin = remove_leading_zeros(buffer);
+      const char *non_zero_begin = remove_leading_zeros(buffer);
       const char *buffer_end = buffer.data() + buffer.size();
-      auto length = buffer_end - non_zero_begin;
+      long length = buffer_end - non_zero_begin;
       if(length == 0){
         return "0";
       }
@@ -428,7 +428,7 @@ namespace wigcpp::internal::mwi {
 
     const char *it = remove_leading_zeros(buffer);
     const char *buffer_end = buffer.data() + buffer.size();
-    auto length = buffer_end - it;
+    long length = buffer_end - it;
     
     if(length == 0){
       return "0";
