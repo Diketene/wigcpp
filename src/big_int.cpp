@@ -396,12 +396,14 @@ namespace wigcpp::internal::mwi {
       if(is_minus()){
         word_to_hex(-data.back(), buffer.data());
         auto non_zero_begin = remove_leading_zeros(buffer);
-        auto length = buffer.data() + buffer.size() - non_zero_begin;
+        const char *buffer_end = buffer.data() + buffer.size();
+        auto length = buffer_end - non_zero_begin;
         return '-' + std::string(non_zero_begin, length);
       }
       word_to_hex(data.back(), buffer.data());
       auto non_zero_begin = remove_leading_zeros(buffer);
-      auto length = buffer.data() + buffer.size() - non_zero_begin;
+      const char *buffer_end = buffer.data() + buffer.size();
+      auto length = buffer_end - non_zero_begin;
       if(length == 0){
         return "0";
       }
@@ -424,9 +426,9 @@ namespace wigcpp::internal::mwi {
       buffer_current += hex_digits_per_word;
     }
 
-    auto it = remove_leading_zeros(buffer);
-
-    auto length = buffer.data() + buffer.size() - it;
+    const char *it = remove_leading_zeros(buffer);
+    const char *buffer_end = buffer.data() + buffer.size();
+    auto length = buffer_end - it;
     
     if(length == 0){
       return "0";
