@@ -21,40 +21,41 @@ namespace wigcpp::internal::mwi{
 
     static inline auto add_kernel(def::uword_t src1, def::uword_t src2, def::uword_t carry)noexcept{
 			def::udword_t s = static_cast<def::udword_t>(src1),
-										t = static_cast<def::udword_t>(src2);
-			s = s + t + carry;
-			carry = static_cast<def::uword_t>(s >> def::shift_bits);
-			return std::pair<def::uword_t, def::uword_t>(s, carry);
+										t = static_cast<def::udword_t>(src2),
+			              sum = s + t + static_cast<def::udword_t>(carry);
+      def::uword_t result = static_cast<def::uword_t>(sum);
+      def::uword_t carry_out  = static_cast<def::uword_t>(sum >> (sizeof(def::uword_t) << 3));
+			return std::pair<def::uword_t, def::uword_t>(result, carry_out);
 		}
 
 		static inline auto sub_kernel(def::uword_t src1, def:: uword_t src2, def::uword_t carry)noexcept{
 			def::udword_t s = static_cast<def::udword_t>(src1),
-										t = static_cast<def::udword_t>(src2);
-			s = s - t - carry;
-			carry = static_cast<def::uword_t>((s >> def::shift_bits) & 1);
-			return std::pair<def::uword_t, def::uword_t>(s, carry);
+										t = static_cast<def::udword_t>(src2),
+                    sub = s - t - static_cast<def::udword_t>(carry);
+      def::uword_t result = static_cast<def::uword_t>(sub);
+			def::uword_t carry_out = static_cast<def::uword_t>((sub >> def::shift_bits) & 1);
+			return std::pair<def::uword_t, def::uword_t>(result, carry_out);
 		}
 
 		static inline auto mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower, def::uword_t add_src)noexcept{
 			def::udword_t s = static_cast<def::udword_t>(src),
 										f = static_cast<def::udword_t>(factor);
-			def::udword_t p = s * f;
-			def::udword_t fl = static_cast<def::udword_t>(from_lower);
-			def::udword_t as = static_cast<def::udword_t>(add_src);
-			p += fl + as;
+			def::udword_t p = s * f + static_cast<def::udword_t>(from_lower) + static_cast<def::udword_t>(add_src);
 
-			from_lower = static_cast<def::uword_t>(p >> def::shift_bits);
-			p = static_cast<def::uword_t>(p);
-			return std::pair<def::uword_t, def::uword_t>(p, from_lower);
+			def::uword_t from_lower_out = static_cast<def::uword_t>(p >> def::shift_bits);
+			def::uword_t product = static_cast<def::uword_t>(p);
+			return std::pair<def::uword_t, def::uword_t>(product, from_lower_out);
 		}
 
   public:
-    big_int() noexcept: data(8) {
-      data.resize(1);
+    big_int() noexcept {
+      data.reserve(8);
+      data.resize(1, 0);
     }
 
-    big_int(def::uword_t init_value) noexcept: data(8) {
-      data.resize(1);
+    big_int(def::uword_t init_value) noexcept {
+      data.reserve(8);
+      data.resize(1, 0);
       data[0] = init_value;
     }
 
