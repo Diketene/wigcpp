@@ -3,6 +3,7 @@
 #include <utility>
 #include <cmath>
 #include <string_view>
+#include <array>
 
 namespace wigcpp::internal::mwi {
 
@@ -368,11 +369,11 @@ namespace wigcpp::internal::mwi {
 
     auto word_to_hex = [&](def::uword_t word, char *buffer_current){
       std::uint8_t mask = 0x0F;
-      char hex_digits[hex_digits_per_word];
+      std::array<char, hex_digits_per_word> hex_digits;
       for(std::size_t i = 0; i < hex_digits_per_word; i++){
         hex_digits[i] = parser((word >> (hex_digits_per_word - 1 - i) * 4) & mask);
       }
-      std::memcpy(buffer_current, hex_digits, hex_digits_per_word);
+      std::memcpy(buffer_current, hex_digits.begin(), hex_digits_per_word);
     };
 
     auto remove_leading_zeros = [](const std::string_view str){
