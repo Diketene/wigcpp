@@ -366,11 +366,7 @@ namespace wigcpp::internal::mwi {
       return nibble < 10 ? '0' + nibble : 'a' + (nibble - 10);
     };
 
-#if defined(_MSC_VER)
-    auto word_to_hex = [hex_digits_per_word, &parser](def::uword_t word, char *buffer_current){
-#else
-    auto word_to_hex = [&parser](def::uword_t word, char *buffer_current){
-#endif
+    auto word_to_hex = [&](def::uword_t word, char *buffer_current){
       std::uint8_t mask = 0x0F;
       char hex_digits[hex_digits_per_word];
       for(std::size_t i = 0; i < hex_digits_per_word; i++){
