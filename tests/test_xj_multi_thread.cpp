@@ -16,7 +16,7 @@ TEST(test_xj_thread, SingleFunc_3j){
     std::vector<double> result(kThreads);
 
     for(int i = 0; i < kThreads; ++i){
-      threads.emplace_back([&result, i]{
+      threads.emplace_back([=, &result]{
         result[i] = wigcpp::three_j(two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
       });
     }
