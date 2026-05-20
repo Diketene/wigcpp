@@ -1,4 +1,6 @@
 #include "internal/big_int.hpp"
+#include "internal/definitions.hpp"
+#include <cstddef>
 #include <cstring>
 #include <utility>
 #include <cmath>
@@ -369,11 +371,12 @@ namespace wigcpp::internal::mwi {
 
     auto word_to_hex = [&](def::uword_t word, char *buffer_current){
       std::uint8_t mask = 0x0F;
-      std::array<char, hex_digits_per_word> hex_digits;
-      for(std::size_t i = 0; i < hex_digits_per_word; i++){
-        hex_digits[i] = parser((word >> (hex_digits_per_word - 1 - i) * 4) & mask);
+      constexpr std::size_t digits_per_word = sizeof(def::uword_t) * 2;
+      std::array<char, digits_per_word> hex_digits;
+      for(std::size_t i = 0; i < digits_per_word; i++){
+        hex_digits[i] = parser((word >> (digits_per_word - 1 - i) * 4) & mask);
       }
-      std::memcpy(buffer_current, hex_digits.begin(), hex_digits_per_word);
+      std::memcpy(buffer_current, hex_digits.begin(), digits_per_word);
     };
 
     auto remove_leading_zeros = [](const std::string_view str){
