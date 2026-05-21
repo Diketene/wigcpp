@@ -94,6 +94,12 @@ TEST(test_xj, test_6j){
     EXPECT_NEAR(res, -0.00502940645686796, near);
     res = wigcpp::six_j(2 * 20, 2 * 20, 2 * 20, 2 * 20, 2 * 20, 0);
     EXPECT_NEAR(res, 0.0243902439024390, near);
+    res = wigcpp::six_j(2, 4, 6, 4, 2, 4);
+    EXPECT_NEAR(res, 0.04364357804719848, near);
+    res = wigcpp::six_j(1, 1, 2, 1, 1, 2);
+    EXPECT_NEAR(res, 1.0/6.0, near);
+    res = wigcpp::six_j(4, 4, 10, 4, 4, 4);
+    EXPECT_EQ(res, 0.0);
   }
 }
 
