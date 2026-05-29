@@ -29,6 +29,6 @@ target_sources(wigcpp_tests
     test_xj_symbol.cpp
 )
 
-target_link_libraries(wigcpp_tests PRIVATE wigcpp::wigcpp GTest::gtest GTest::gtest_main)
+target_link_libraries(wigcpp_tests PRIVATE wigcpp_core GTest::gtest GTest::gtest_main)
 
 gtest_discover_tests(wigcpp_tests)

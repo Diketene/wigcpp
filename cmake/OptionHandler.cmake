@@ -51,7 +51,7 @@ if(WIGCPP_ENABLE_IPO)
   include(CheckIPOSupported)
   check_ipo_supported(RESULT result OUTPUT output)
   if(result)
-    set_target_properties(wigcpp
+    set_target_properties(wigcpp_core
       PROPERTIES
       INTERPROCEDURAL_OPTIMIZATION TRUE
     )

@@ -19,11 +19,13 @@ option(WIGCPP_ENABLE_IPO "Enable IPO/LTO" OFF)
 
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 
+add_library(wigcpp_core OBJECT)
+
 add_library(wigcpp)
 
-add_library(wigcpp::wigcpp ALIAS wigcpp)
+target_link_libraries(wigcpp PUBLIC wigcpp_core)
 
-target_sources(wigcpp
+target_sources(wigcpp_core
   PRIVATE 
     src/c_wrap.cpp 
     src/calc.cpp
@@ -33,17 +35,28 @@ target_sources(wigcpp
     src/tmp_pool.cpp
     src/big_int.cpp
   PUBLIC
-    FILE_SET HEADERS
+    FILE_SET public_headers
+    TYPE HEADERS
     BASE_DIRS
       include
     FILES
       include/wigcpp/wigcpp.h
+  INTERFACE
+    FILE_SET interface_headers
+    TYPE HEADERS
+    BASE_DIRS
+      include
+    FILES
       include/wigcpp/wigcpp.hpp
 )
 
-target_compile_features(wigcpp PRIVATE cxx_std_17)
+target_compile_features(wigcpp_core PRIVATE cxx_std_17)
 
-target_include_directories(wigcpp 
+set_target_properties(wigcpp_core PROPERTIES
+  POSITION_INDEPENDENT_CODE ON
+)
+
+target_include_directories(wigcpp_core
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/internal
 )
@@ -51,24 +64,19 @@ target_include_directories(wigcpp
 include(cmake/OptionHandler.cmake)
 
 install(
-  TARGETS wigcpp
+  TARGETS wigcpp wigcpp_core
   EXPORT wigcppConfig
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
-  FILE_SET HEADERS
+  FILE_SET public_headers
+  FILE_SET interface_headers
 )
 
 install(
   EXPORT wigcppConfig
   DESTINATION lib/cmake/wigcpp
   FILE wigcppConfig.cmake
-  NAMESPACE wigcpp::
-)
-
-export(
-  EXPORT wigcppConfig
-  FILE ${CMAKE_CURRENT_BINARY_DIR}/wigcppConfig.cmake
   NAMESPACE wigcpp::
 )

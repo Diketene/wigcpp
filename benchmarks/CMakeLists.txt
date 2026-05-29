@@ -17,5 +17,5 @@ target_sources(3j_benchmark PRIVATE 3j_benchmark.cpp)
 
 target_link_libraries(
   3j_benchmark PRIVATE
-  wigcpp::wigcpp benchmark::benchmark
+  wigcpp_core benchmark::benchmark
 )
