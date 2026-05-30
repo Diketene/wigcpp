@@ -11,6 +11,7 @@
 #include <cstring>
 
 namespace wigcpp::internal::tmp{
+
   TempStorage::TempStorage(int max_iter, std::size_t aligned_bytes) noexcept : buffer{}, aligned_bytes(aligned_bytes), max_iter(max_iter){
     constexpr std::size_t iter_start = static_cast<std::size_t>(TempIndex::iter_start);
     const std::size_t new_size = (static_cast<std::size_t>(max_iter) + iter_start);
@@ -42,12 +43,15 @@ namespace wigcpp::internal::tmp{
   }
 
   TempStorage &TempManager::get(int max_two_j = 0, std::size_t aligned_bytes = 0) noexcept {
-    if(!ptr){
-      if(max_two_j <= 0 || aligned_bytes <= 0){
+    int max_iter = max_two_j / 2 + 1;
+    if(!ptr)[[unlikely]]{
+      if(max_two_j <= 0 || aligned_bytes <= 0)[[unlikely]]{
         std::fprintf(stderr, "Error: TempManager not initialized.\n");
         error::error_process(error::ErrorCode::NOT_INITIALIZED);
       }
-      ptr = std::make_unique<TempStorage>(max_two_j / 2 + 1, aligned_bytes);
+      ptr = std::make_unique<TempStorage>(max_iter, aligned_bytes);
+    }else if(max_two_j > 0 && aligned_bytes > 0 && (ptr -> max_iter != max_iter || ptr -> get_aligned_bytes() != aligned_bytes))[[unlikely]]{
+      ptr = std::make_unique<TempStorage>(max_iter, aligned_bytes);
     }
     return *ptr;
   }

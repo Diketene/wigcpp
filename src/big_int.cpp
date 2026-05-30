@@ -1,8 +1,11 @@
 #include "internal/big_int.hpp"
+#include "internal/definitions.hpp"
+#include <cstddef>
 #include <cstring>
 #include <utility>
 #include <cmath>
 #include <string_view>
+#include <array>
 
 namespace wigcpp::internal::mwi {
 
@@ -366,21 +369,21 @@ namespace wigcpp::internal::mwi {
       return nibble < 10 ? '0' + nibble : 'a' + (nibble - 10);
     };
 
-    auto word_to_hex = [&parser](def::uword_t word, char *buffer_current){
+    auto word_to_hex = [&](def::uword_t word, char *buffer_current){
       std::uint8_t mask = 0x0F;
-      char hex_digits[hex_digits_per_word];
-      for(std::size_t i = 0; i < hex_digits_per_word; i++){
-        hex_digits[i] = parser((word >> (hex_digits_per_word - 1 - i) * 4) & mask);
+      constexpr std::size_t digits_per_word = sizeof(def::uword_t) * 2;
+      std::array<char, digits_per_word> hex_digits;
+      for(std::size_t i = 0; i < digits_per_word; i++){
+        hex_digits[i] = parser((word >> (digits_per_word - 1 - i) * 4) & mask);
       }
-      std::memcpy(buffer_current, hex_digits, hex_digits_per_word);
+      std::memcpy(buffer_current, hex_digits.data(), digits_per_word);
     };
 
     auto remove_leading_zeros = [](const std::string_view str){
-      auto it = str.begin();
-      for( ; it != str.end(); it++){
-        if(*it != '0'){
-          break;
-        }
+      const char *it = str.data();
+      const char *end = str.data() + str.size();
+      for(; it != end && *it == '0'; ++it){
+        // jump 
       }
       return it;
     };
@@ -391,13 +394,15 @@ namespace wigcpp::internal::mwi {
       buffer.resize(hex_digits_per_word, '0');
       if(is_minus()){
         word_to_hex(-data.back(), buffer.data());
-        auto non_zero_begin = remove_leading_zeros(buffer);
-        auto length = buffer.data() + buffer.size() - non_zero_begin;
+        const char *non_zero_begin = remove_leading_zeros(buffer);
+        const char *buffer_end = buffer.data() + buffer.size();
+        long length = buffer_end - non_zero_begin;
         return '-' + std::string(non_zero_begin, length);
       }
       word_to_hex(data.back(), buffer.data());
-      auto non_zero_begin = remove_leading_zeros(buffer);
-      auto length = buffer.data() + buffer.size() - non_zero_begin;
+      const char *non_zero_begin = remove_leading_zeros(buffer);
+      const char *buffer_end = buffer.data() + buffer.size();
+      long length = buffer_end - non_zero_begin;
       if(length == 0){
         return "0";
       }
@@ -420,9 +425,9 @@ namespace wigcpp::internal::mwi {
       buffer_current += hex_digits_per_word;
     }
 
-    auto it = remove_leading_zeros(buffer);
-
-    auto length = buffer.data() + buffer.size() - it;
+    const char *it = remove_leading_zeros(buffer);
+    const char *buffer_end = buffer.data() + buffer.size();
+    long length = buffer_end - it;
     
     if(length == 0){
       return "0";

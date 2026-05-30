@@ -71,34 +71,64 @@ TEST(test_mwi_new, test_operator_add){
 	EXPECT_EQ(e[0], 15);
 	EXPECT_EQ(e.size(), 1);
 
-	big_int f(0x7F'FF'FF'FF'FF'FF'FF'FFu);
-	big_int h = f + big_int(1); //operator +(const big_int &lhs, const big_int &rhs)
-	EXPECT_EQ(h.size(), 2);
-	EXPECT_EQ(h[0], 0x80'00'00'00'00'00'00'00u);
-	EXPECT_EQ(h[1], 0);
-
-	f += 1; //operator +=(def::uword_t scalar)
-	EXPECT_EQ(f.size(), 2);
-	EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'00u);
-
-	++f; //operator ++()
-	EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'01u);
-	EXPECT_EQ(f[1], 0);
-	big_int i = f++; // operator ++(int)
-	EXPECT_EQ(i[0], 0x80'00'00'00'00'00'00'01u);
-	EXPECT_EQ(i[1], 0);
-	EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'02u);
-
 	a = -3, b = -5;
 	big_int j = a + b; // operator +(const big_int &lhs, const big_int &rhs)
 	EXPECT_EQ(j[0], -8);
 
-	a = 0x80'00'00'00'00'00'00'00u;
-	--a;
+	if constexpr(sizeof_mwi_item == 8){
+		big_int f(0x7F'FF'FF'FF'FF'FF'FF'FFu);
+		big_int h = f + big_int(1); //operator +(const big_int &lhs, const big_int &rhs)
+		EXPECT_EQ(h.size(), 2);
+		EXPECT_EQ(h[0], 0x80'00'00'00'00'00'00'00u);
+		EXPECT_EQ(h[1], 0u);
 
-	EXPECT_EQ(a.size(), 2);
-	EXPECT_EQ(a[0], 0x7F'FF'FF'FF'FF'FF'FF'FFu);
-	EXPECT_EQ(a[1], 0xFF'FF'FF'FF'FF'FF'FF'FFu);
+		f += 1; //operator +=(def::uword_t scalar)
+		EXPECT_EQ(f.size(), 2);
+		EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'00u);
+		EXPECT_EQ(f[1], 0u);
+
+		++f; //operator ++()
+		EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'01u);
+		EXPECT_EQ(f[1], 0u);
+		big_int i = f++; // operator ++(int)
+		EXPECT_EQ(i.size(), 2);
+		EXPECT_EQ(i[0], 0x80'00'00'00'00'00'00'01u);
+		EXPECT_EQ(i[1], 0u);
+		EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'02u);
+
+		big_int a = 0x80'00'00'00'00'00'00'00u;
+		--a;
+
+		EXPECT_EQ(a.size(), 2);
+		EXPECT_EQ(a[0], 0x7F'FF'FF'FF'FF'FF'FF'FFu);
+		EXPECT_EQ(a[1], 0xFF'FF'FF'FF'FF'FF'FF'FFu);
+	}else{
+		big_int f(0x7F'FF'FF'FFu);
+		big_int h = f + big_int(1);
+		EXPECT_EQ(h.size(), 2);
+		EXPECT_EQ(h[0], 0x80'00'00'00u);
+		EXPECT_EQ(h[1], 0u);
+
+		f += 1;
+		EXPECT_EQ(f.size(), 2);
+		EXPECT_EQ(f[0], 0x80'00'00'00u);
+		EXPECT_EQ(f[1], 0u);
+
+		++f;
+		EXPECT_EQ(f[0], 0x80'00'00'01u);
+		EXPECT_EQ(f[1], 0u);
+		big_int i = f++;
+		EXPECT_EQ(i.size(), 2);
+		EXPECT_EQ(i[0], 0x80'00'00'01u);
+		EXPECT_EQ(i[1], 0u);
+		EXPECT_EQ(f[0], 0x80'00'00'02u);
+
+		big_int a = 0x80'00'00'00u;
+		--a;
+		EXPECT_EQ(a.size(), 2);
+		EXPECT_EQ(a[0], 0x7F'FF'FF'FFu);
+		EXPECT_EQ(a[1], 0xFF'FF'FF'FFu);
+	}
 }
 
 
@@ -111,11 +141,20 @@ TEST(test_mwi_new, test_operator_minus){
 	big_int c(-10);
 	big_int d = -c;
 	EXPECT_EQ(d[0], 10);
-	big_int e(0x80'00'00'00'00'00'00'00);
-	big_int f = -e;
-	EXPECT_EQ(f.size(), 2);
-	EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'00);
-	EXPECT_EQ(f[1], 0);
+	if constexpr(sizeof_mwi_item == 8){
+		big_int e(0x80'00'00'00'00'00'00'00);
+		big_int f = -e;
+		EXPECT_EQ(f.size(), 2);
+		EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'00);
+		EXPECT_EQ(f[1], 0u);
+	}else{
+		big_int e(0x80'00'00'00);
+		big_int f = -e;
+		EXPECT_EQ(f.size(), 2);
+		EXPECT_EQ(f[0], 0x80'00'00'00);
+		EXPECT_EQ(f[1], 0u);
+	}
+
 }
 
 TEST(test_mwi_new, test_to_hex_str){
@@ -133,9 +172,13 @@ TEST(test_mwi_new, test_to_hex_str){
 	big_int a(-1);
 	EXPECT_EQ(a.to_hex_str(), "-1");
 
-	a = 0x80'00'00'00'00'00'00'00u;
-	EXPECT_EQ(a.to_hex_str(), "-8000000000000000");
-
+	if constexpr(sizeof_mwi_item == 8){
+		a = 0x80'00'00'00'00'00'00'00u;
+		EXPECT_EQ(a.to_hex_str(), "-8000000000000000");
+	}else{
+		a = 0x80'00'00'00u;
+		EXPECT_EQ(a.to_hex_str(), "-80000000");
+	}
 	a = 0;
 	EXPECT_EQ(a.to_hex_str(), "0");
 

@@ -7,52 +7,28 @@
 #	if not, see <http://www.gnu.org/licenses/>.
 #
 
+include(FetchContent)
 
-find_package(GTest REQUIRED)
-find_package(Threads REQUIRED)
-
-add_library(
-  wigcpp_test STATIC
-  ${CMAKE_SOURCE_DIR}/src/c_wrap.cpp
-  ${CMAKE_SOURCE_DIR}/src/calc.cpp
-  ${CMAKE_SOURCE_DIR}/src/tmp_pool.cpp
-  ${CMAKE_SOURCE_DIR}/src/prime_factor.cpp
-  ${CMAKE_SOURCE_DIR}/src/global_pool.cpp
-  ${CMAKE_SOURCE_DIR}/src/error.cpp
-  ${CMAKE_SOURCE_DIR}/src/big_int.cpp
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG v1.17.0
 )
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  include(ConfigureLibCXX)
-  configure_libcxx_for_clang(wigcpp_test)
-endif()
-
-target_include_directories(
-  wigcpp_test PUBLIC
-  ${CMAKE_SOURCE_DIR}/include
-)
-
-function(add_wigcpp_test test_name source_file)
-  add_executable(${test_name} ${source_file})
-
-  #if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  #  include(ConfigureLibCXX)
-  #  configure_libcxx_for_clang(${test_name})
-  #  target_link_libraries(${test_name} PRIVATE c++)
-  #endif()
-  
-  target_link_libraries(${test_name} PRIVATE wigcpp_test GTest::gtest GTest::gtest_main)
-  target_include_directories(
-    ${test_name} PRIVATE 
-    ${CMAKE_SOURCE_DIR}/include
-  )
-  gtest_discover_tests(${test_name})
-endfunction()
-
-add_wigcpp_test(test_big_int_new test_big_int.cpp)
-add_wigcpp_test(test_vector test_vector.cpp)
-add_wigcpp_test(test_prime_factor test_prime_factor.cpp)
-add_wigcpp_test(test_xj_symbol test_xj_symbol.cpp)
-add_wigcpp_test(test_xj_multi_thread test_xj_multi_thread.cpp)
+FetchContent_MakeAvailable(googletest)
 
 include(GoogleTest)
+
+add_executable(wigcpp_tests)
+target_sources(wigcpp_tests 
+  PRIVATE
+    test_big_int.cpp
+    test_prime_factor.cpp
+    test_vector.cpp
+    test_xj_multi_thread.cpp
+    test_xj_symbol.cpp
+)
+
+target_link_libraries(wigcpp_tests PRIVATE wigcpp_core GTest::gtest GTest::gtest_main)
+
+gtest_discover_tests(wigcpp_tests)

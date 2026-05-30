@@ -16,15 +16,15 @@
 
 namespace wigcpp::internal::global {
   PrimeTable::PrimeTable(int max_factorial) noexcept : max_factorial(max_factorial), prime_list{}, num_primes{0},  aligned_bytes(0){
-    vector<char> is_prime(max_factorial + 1, true);
+    vector<int> is_prime(max_factorial + 1, 1);
     for(int i = 2; i * i < max_factorial; ++i){
       if(is_prime[i]){
         for(int j = i * i; j <= max_factorial; j += i){
-          is_prime[j] = false;
+          is_prime[j] = 0;
         }
       }
     }
-    num_primes = std::count(is_prime.begin() + 2, is_prime.end(), true);
+    num_primes = std::count(is_prime.begin() + 2, is_prime.end(), 1);
     prime_list.reserve(num_primes);
     for(int i = 2; i <= max_factorial; ++i){
       if(is_prime[i]){
@@ -220,24 +220,24 @@ namespace wigcpp::internal::global {
     }
   
   void PoolManager::init(int max_two_j, int wigner_type) noexcept {
-    std::call_once(init_flag, [max_two_j, wigner_type]{
-      int max_factorial = (wigner_type / 3 + 2) * (max_two_j / 2) + 1;
-      if( max_factorial < 2){
-        max_factorial = 2;
-      }
-      
-      if(static_cast<std::uint32_t>(max_factorial) * 50 > max_exp){
-        std::fprintf(stderr, "Error: Factorial pool size exceeds maximum allowed size.\n");
-        error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
-        return;
-      }
+    std::size_t max_factorial = (wigner_type / 3 + 2) * (max_two_j / 2) + 1;
+    if(max_factorial < 2) max_factorial = 2;
 
+    if(static_cast<std::uint32_t>(max_factorial) * 50u > def::prime::max_exp)[[unlikely]]{
+      std::fprintf(stderr, "Error: Factorial pool size exceeds maximum allowed size.\n");
+      error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
+      return;
+    }
+
+    if(!ptr)[[unlikely]]{
       ptr = std::make_unique<GlobalFactorialPool>(max_two_j, wigner_type);
-    });
+    }else if(max_factorial > ptr -> prime_table.max_factorial) [[unlikely]]{
+      ptr = std::make_unique<GlobalFactorialPool>(max_two_j, wigner_type);
+    }
   }
 
   const GlobalFactorialPool &PoolManager::get() noexcept{
-    if(!ptr){
+    if(!ptr)[[unlikely]]{
       std::fprintf(stderr, "Error: can't operate any function calls before initialization.\n");
       error::error_process(error::ErrorCode::NOT_INITIALIZED);
     }

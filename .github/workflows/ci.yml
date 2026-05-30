@@ -6,17 +6,67 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: cmake -S . -B build && cmake --build build
+      - uses: actions/checkout@v6
+      - name: Configure and build
+        run: |
+          cmake --preset debug
+          cmake --build build
+      - name: Run tests
+        id: test
+        run: |
+          ctest --test-dir build --output-on-failure 2>&1 | tee ctest-output.log
+      - name: Upload Test Log on Failure
+        if: failure() && steps.test.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ctest-failure-logs
+          path: |
+            build/Testing/**/*.log
+            ctest-output.log
+          retention-days: 7
+
   
   build-macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: cmake -S . -B build && cmake --build build
+      - uses: actions/checkout@v6
+      - name: Configure and build
+        run: |
+          cmake --preset debug
+          cmake --build build
+      - name: Run tests
+        id: test
+        run: |
+          ctest --test-dir build --output-on-failure 2>&1 | tee ctest-output.log
+      - name: Upload Test Log on Failure
+        if: failure() && steps.test.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ctest-failure-logs
+          path: |
+            build/Testing/**/*.log
+            ctest-output.log
+          retention-days: 7
+
   
-  build-macos-xcode:
-    runs-on: macos-latest
+  build-windows:
+    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: cmake -S . -B build -G Xcode && cmake --build build
+      - uses: actions/checkout@v6
+      - name: Configure and build
+        run: |
+          cmake --preset debug
+          cmake --build build
+      - name: Run tests
+        id: test
+        run: |
+          ctest --test-dir build --output-on-failure 2>&1 | tee ctest-output.log
+      - name: Upload Test Log on Failure
+        if: failure() && steps.test.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ctest-failure-logs
+          path: |
+            build/Testing/**/*.log
+            ctest-output.log
+          retention-days: 7
