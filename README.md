@@ -92,56 +92,14 @@ We start from the functions that actually calculate the results: `clebsch_gordan
 
 |function|calculates|
 |:-:|:-:|
-|`clebsch_gordan`|$\braket{j_{1}j_{2};m_1m_2 \| JM}$|
-|`wigner3j`|$\begin{pmatrix}j_1 & j_2 & j_3 \\ m_1 & m_2 & m_3 \end{pmatrix}$|
-|`wigner6j`|$\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \end{Bmatrix}$|
-|`wigner9j`|$\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \\ j_7 & j_8 & j_9 \end{Bmatrix}$
+|`clebsch_gordan`|$$\braket{j_{1}j_{2};m_1m_2 \| JM}$$|
+|`wigner3j`|$$\begin{pmatrix}j_1 & j_2 & j_3 \\ m_1 & m_2 & m_3 \end{pmatrix}$$|
+|`wigner6j`|$$\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \end{Bmatrix}$$|
+|`wigner9j`|$$\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \\ j_7 & j_8 & j_9 \end{Bmatrix}$$|
 
 </div>
 
-<div align="center">
-
-<ul style="list-style: none; padding: 0;">
-  
-  <li style="margin-bottom: 15px;">
-    <code>clebsch_gordan</code><br>
-    <pre><code>$\braket{j_{1}j_{2};m_1m_2 | JM}$</code></pre>
-  </li>
-
-  <li style="margin-bottom: 15px;">
-    <code>wigner3j</code><br>
-    <pre><code>$$
-\begin{pmatrix}
-j_1 & j_2 & j_3 \\
-m_1 & m_2 & m_3
-\end{pmatrix}
-$$</code></pre>
-  </li>
-
-  <li style="margin-bottom: 15px;">
-    <code>wigner6j</code><br>
-    <pre><code>$$
-\begin{Bmatrix}
-j_1 & j_2 & j_3 \\
-j_4 & j_5 & j_6
-\end{Bmatrix}
-$$</code></pre>
-  </li>
-
-  <li>
-    <code>wigner9j</code><br>
-    <pre><code>$$
-\begin{Bmatrix}
-j_1 & j_2 & j_3 \\
-j_4 & j_5 & j_6 \\
-j_7 & j_8 & j_9
-\end{Bmatrix}
-$$</code></pre>
-  </li>
-
-</ul>
-
-</div>
+Note that the positions​ of these variables correspond to the order​ of the parameters in the functions above.
 
 For the same reason, `wigcpp_global_init` function accepts **twice the maximum physical angular momentum value** as its first parameter. And `wigcpp_global_init` accepts the maximum wigner symbol type that will be used in the whole calculation process as its second parameter, which is must be **3, 6 or 9**.
 
@@ -237,7 +195,7 @@ target_sources(test PRIVATE test.cpp)
 target_link_libraries(test PRIVATE wigcpp::wigcpp)
 ```
 
-We also provide a CMake project example contains C, C++ and Fortran source code, see this [CMakeLists.txt](examples/standalone/CMakeLists.txt) in example.
+We also provide a CMake project example contains C, C++ and Fortran source code, see this [CMakeLists.txt](examples/standalone/CMakeLists.txt) in example for more detail.
 
 To build this example, simply use
 
@@ -247,7 +205,7 @@ cmake -B build -DCMAKE_PREFIX_PATH="/path/to/wigcpp"
 cmake --build build
 ```
 
-Run `cd buid`; the built executables(`test_c`, `test_cpp` and `test_fortran`) will be located there.
+Then `cd buid`; the built executables(`test_c`, `test_cpp` and `test_fortran`) will be located there.
 
 ### Multi-threaded calling of functions
 
