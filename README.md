@@ -88,16 +88,28 @@ double wigner9j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int 
 We start from the functions that actually calculate the results: `clebsch_gordan`, `wigner3j`, `wigner6j` and `wigner9j`. All the angular-momentum quantum numbers and magnetic quantum numbers must be passed to these functions in their **doubled form**, that means if you have a physical value $j$, you must pass $2j$ to these functions. The corresponding mathematical expressions of these functions are as follows:
 
 
-<div align="center">
 
-|function|calculates|
-|:-:|:-:|
-|`clebsch_gordan`|$$\braket{j_{1}j_{2};m_1m_2 \| JM}$$|
-|`wigner3j`|$$\begin{pmatrix}j_1 & j_2 & j_3 \\ m_1 & m_2 & m_3 \end{pmatrix}$$|
-|`wigner6j`|$$\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \end{Bmatrix}$$|
-|`wigner9j`|$$\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \\ j_7 & j_8 & j_9 \end{Bmatrix}$$|
+`clebsch_gordan`
 
-</div>
+```math
+\braket{j_{1}j_{2};m_1m_2 | JM}
+```
+
+`wigner3j`
+
+```math
+\begin{pmatrix}j_1 & j_2 & j_3 \\ m_1 & m_2 & m_3 \end{pmatrix}
+```
+
+`wigner6j`
+```math
+\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \end{Bmatrix}
+```
+
+`wigner9j`
+```math
+\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \\ j_7 & j_8 & j_9 \end{Bmatrix}
+```
 
 Note that the positions​ of these variables correspond to the order​ of the parameters in the functions above.
 
