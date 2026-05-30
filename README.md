@@ -69,81 +69,34 @@ Furthermore, the cache variable `CMAKE_BUILD_TYPE` are set to `Release` in "rele
 
 ## API
 
-Wigcpp provides C, C++ and Fortran interface. In C interface, it provides these several functions:
+### Overview
+
+Wigcpp provides C, C++ and Fortran interface. The C interface provides these several functions:
 
 ```C
 void wigcpp_global_init(int max_two_j, int wigner_type);
-
 void wigcpp_reset_tls();
-
 double clebsch_gordan(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M);
-
 double wigner3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3);
-
 double wigner6j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
-
 double wigner9j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9);
 ```
 
-We start from the functions that actually calculate the results: `clebsch_gordan`, `wigner3j`, `wigner6j` and `wigner9j`. All the angular-momentum quantum numbers and magnetic quantum numbers must be passed to these functions in their **doubled form**, that means if you have a physical value $j$, you must pass $2j$ to these functions. The corresponding mathematical expressions of these functions are as follows:
-
-
-
-`clebsch_gordan`
-
-```math
-\braket{j_{1}j_{2};m_1m_2 | JM}
-```
-
-`wigner3j`
-
-```math
-\begin{pmatrix}j_1 & j_2 & j_3 \\ m_1 & m_2 & m_3 \end{pmatrix}
-```
-
-`wigner6j`
-```math
-\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \end{Bmatrix}
-```
-
-`wigner9j`
-```math
-\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \\ j_7 & j_8 & j_9 \end{Bmatrix}
-```
-
-Note that the positions​ of these variables correspond to the order​ of the parameters in the functions above.
-
-For the same reason, `wigcpp_global_init` function accepts **twice the maximum physical angular momentum value** as its first parameter. And `wigcpp_global_init` accepts the maximum wigner symbol type that will be used in the whole calculation process as its second parameter, which is must be **3, 6 or 9**.
-
-Calling of `wigcpp_global_init` must be done in the **Main Thread**, if you call this function in other threads, the behavior of it is **undefined**.
-
-`wigcpp_reset_tls`'s duty is to reset the Thread Local Storage which is used by `wigner3j`, `wigner6j` and `wigner9j`, then
- provide a clean thread local state when a thread begins to execute a new task. An example using OpenMP with wigcpp will be provided in the [Multi-threaded calling of functuions](#multi\-threaded-calling-of-functuions), which contains the calling of `wigcpp_reset_tls`.
-
-
-In C++ interface, we use namespace to encapsulate these functions. Declarations of these functions are:
+The C++ interface uses namespace to encapsulate these C functions. Declarations of these functions are:
 
 ```C++
 
 namespace wigcpp{
-
 	void global_init(int max_two_j, int wigner_type);
-
 	void reset_tls();
-
 	double cg(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M);
-
 	double three_j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3);
-
 	double six_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6);
-
 	double nine_j(int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8, int two_j9);
-
 }
 ```
 
-
-For Fortran interface, it maintains the same name as C interface:
+Functions in the Fortran interface maintain the same name as C interface:
 
 ```Fortran
 subroutine wigcpp_global_init(max_two_j, wigner_type)
@@ -173,6 +126,53 @@ function wigner9j(two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8
 	real :: wigner9j
 end function
 ```
+
+And we will use the C interface to explain these functions.
+
+### Global Initialization Function and TLS Reset Function
+`wigcpp_global_init` initializes the global factorial pool. Its first parameter, `max_two_j`, specifies **twice** the maximum angular momentum quantum number​ provided by the user. The second parameter `wigner_type` must be one of `3`, `6` or `9`.
+
+Calling of `wigcpp_global_init` must be done in the **Main Thread**, and **before** any calling of Wigner symbol calculation functions.
+
+`wigcpp_global_init` allows the global factorial pool to be expanded. Users can call this function more than once to expand the global factorial pool, but making sure that there is no active Wigner symbol calculation while a call to `wigcpp_global_init` is in progress. Furthermore, if the parameters provided aren't larger than before, `wigcpp_global_init` has no effect, which means that `wigcpp_global_init` is idempotent.
+
+`wigcpp_reset_tls` is designed to reset the Thread Local Storage which is used by `wigner3j`, `wigner6j` and `wigner9j`, then provides a clean thread local state before a thread begins to execute a new task. An example using OpenMP with wigcpp in Fortran is provided in the [Multi-threaded calling of functuions](#multi\-threaded-calling-of-functuions), which contains the calling of `wigcpp_reset_tls`.
+
+### Calculation Functions
+Wigcpp has four Wigner symbol calculation functions in the present: `clebsch_gordan`, `wigner3j`, `wigner6j` and `wigner9j`. The parameters passed to these functions must be **twice** the physical value, that means if you have a physical value $j$, you must pass $2j$ to these functions. 
+
+The corresponding mathematical expressions of these functions are as follows:
+
+
+
+`clebsch_gordan`
+
+```math
+\braket{j_{1}j_{2};m_1m_2 | JM}
+```
+
+`wigner3j`
+
+```math
+\begin{pmatrix}j_1 & j_2 & j_3 \\ m_1 & m_2 & m_3 \end{pmatrix}
+```
+
+`wigner6j`
+```math
+\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \end{Bmatrix}
+```
+
+`wigner9j`
+```math
+\begin{Bmatrix}j_1 & j_2 & j_3 \\ j_4 & j_5 & j_6 \\ j_7 & j_8 & j_9 \end{Bmatrix}
+```
+
+Note that the positions​ of these variables correspond to the order​ of the parameters in the functions above.
+
+
+
+
+
 
 ## Examples
 
@@ -207,7 +207,7 @@ target_sources(test PRIVATE test.cpp)
 target_link_libraries(test PRIVATE wigcpp::wigcpp)
 ```
 
-We also provide a CMake project example contains C, C++ and Fortran source code, see this [CMakeLists.txt](examples/standalone/CMakeLists.txt) in example for more detail.
+We also provide a CMake project example contains C, C++ and Fortran source code, see this [CMakeLists.txt](examples/standalone/CMakeLists.txt) in example for more details.
 
 To build this example, simply use
 
@@ -274,7 +274,7 @@ Result in Thread2: -0.29277
 Result in Thread3: -6.07534e-05
 ```
 
-But when using thread pool, users must make sure that TLS has a certain and correct initial state when a worker thread begins processing a new task. `wigcpp_reset_tls` is designed to handle this problem. An example using OpenMP in Fortran is
+But when using thread pool, users must make sure that TLS has a certain and correct initial state before a worker thread begins processing a new task. `wigcpp_reset_tls` is designed to handle this problem. An example using OpenMP in Fortran is
 
 ```Fortran
 !$OMP PARALLEL PRIVATE(iJtot, imj, imjp, iLr, iLp) NUM_THREADS(24)
@@ -302,7 +302,10 @@ call wigcpp_reset_tls
 
 ```
 
-Also, when you using wigcpp in any M:N threading model, make sure that using `wigcpp_tls_reset` to reset the state of Thread Local Storage at the begining of the task process in every threads.
+Also, when you using wigcpp in any M:N threading model, making sure that using `wigcpp_tls_reset` to reset the state of Thread Local Storage at the begining of the task process in every threads.
+
+## Optimization
+Wigcpp provides IPO/LTO optimization through the option `WIGCPP_ENABLE_IPO`.
 
 ## License
 
@@ -329,7 +332,7 @@ And if you want to cite this project, please use the following BibTeX template i
 	title = {wigcpp: A Wigner-3j 6j and 9j Symbol Calculation Library Written in C++ 17},
 	year = {2025},
 	url = {https://github.com/Diketene/wigcpp},
-	note = {Version as of April 19, 2026.}
+	note = {Version as of May 31, 2026.}
 	license = {GPL-3.0}
 }
 ```
