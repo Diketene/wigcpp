@@ -50,7 +50,7 @@ target_sources(wigcpp_core
       include/wigcpp/wigcpp.hpp
 )
 
-target_compile_features(wigcpp_core PRIVATE cxx_std_17)
+target_compile_features(wigcpp_core PRIVATE cxx_std_20)
 
 set_target_properties(wigcpp_core PROPERTIES
   POSITION_INDEPENDENT_CODE ON
