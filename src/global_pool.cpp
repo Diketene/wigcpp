@@ -220,24 +220,24 @@ namespace wigcpp::internal::global {
     }
   
   void PoolManager::init(int max_two_j, int wigner_type) noexcept {
-    std::call_once(init_flag, [max_two_j, wigner_type]{
-      int max_factorial = (wigner_type / 3 + 2) * (max_two_j / 2) + 1;
-      if( max_factorial < 2){
-        max_factorial = 2;
-      }
-      
-      if(static_cast<std::uint32_t>(max_factorial) * 50 > max_exp){
-        std::fprintf(stderr, "Error: Factorial pool size exceeds maximum allowed size.\n");
-        error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
-        return;
-      }
+    std::size_t max_factorial = (wigner_type / 3 + 2) * (max_two_j / 2) + 1;
+    if(max_factorial < 2) max_factorial = 2;
 
+    if(static_cast<std::uint32_t>(max_factorial) * 50u > def::prime::max_exp)[[unlikely]]{
+      std::fprintf(stderr, "Error: Factorial pool size exceeds maximum allowed size.\n");
+      error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
+      return;
+    }
+
+    if(!ptr)[[unlikely]]{
       ptr = std::make_unique<GlobalFactorialPool>(max_two_j, wigner_type);
-    });
+    }else if(max_factorial > ptr -> prime_table.max_factorial) [[unlikely]]{
+      ptr = std::make_unique<GlobalFactorialPool>(max_two_j, wigner_type);
+    }
   }
 
   const GlobalFactorialPool &PoolManager::get() noexcept{
-    if(!ptr){
+    if(!ptr)[[unlikely]]{
       std::fprintf(stderr, "Error: can't operate any function calls before initialization.\n");
       error::error_process(error::ErrorCode::NOT_INITIALIZED);
     }

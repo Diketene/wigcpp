@@ -5,10 +5,11 @@
 #include "internal/global_pool.hpp"
 #include "internal/tmp_pool.hpp"
 
+using namespace wigcpp::internal::global;
+using namespace wigcpp::internal::prime_calc;
+using namespace wigcpp::internal::tmp;
+
 TEST(test_prime_factor, test_aligned){
-  using namespace wigcpp::internal::global;
-  using namespace wigcpp::internal::prime_calc;
-  using namespace wigcpp::internal::tmp;
   {
     PoolManager::init(1000, 3);
     const auto &pool = PoolManager::get();
@@ -22,5 +23,22 @@ TEST(test_prime_factor, test_aligned){
     ptr = &tmp[index(TempIndex::prefact)];
     EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(ptr) % 64, 0);
 
+  }
+}
+
+TEST(test_prime_factor, test_global_init){
+  {
+    PoolManager::init(500, 3);
+    const auto &pool = PoolManager::get();
+    EXPECT_EQ(pool.max_two_j, 500);
+    EXPECT_EQ(pool.wigner_type, 3);
+    PoolManager::init(20, 9);
+    const auto &pool2 = PoolManager::get();
+    EXPECT_EQ(pool2.max_two_j, 500);
+    EXPECT_EQ(pool2.wigner_type, 3);
+    PoolManager::init(1000, 6);
+    const auto &pool3 = PoolManager::get();
+    EXPECT_EQ(pool3.max_two_j, 1000);
+    EXPECT_EQ(pool3.wigner_type, 6);
   }
 }
