@@ -99,6 +99,50 @@ We start from the functions that actually calculate the results: `clebsch_gordan
 
 </div>
 
+<div align="center">
+
+<ul style="list-style: none; padding: 0;">
+  
+  <li style="margin-bottom: 15px;">
+    <code>clebsch_gordan</code><br>
+    <pre><code>$\braket{j_{1}j_{2};m_1m_2 | JM}$</code></pre>
+  </li>
+
+  <li style="margin-bottom: 15px;">
+    <code>wigner3j</code><br>
+    <pre><code>$$
+\begin{pmatrix}
+j_1 & j_2 & j_3 \\
+m_1 & m_2 & m_3
+\end{pmatrix}
+$$</code></pre>
+  </li>
+
+  <li style="margin-bottom: 15px;">
+    <code>wigner6j</code><br>
+    <pre><code>$$
+\begin{Bmatrix}
+j_1 & j_2 & j_3 \\
+j_4 & j_5 & j_6
+\end{Bmatrix}
+$$</code></pre>
+  </li>
+
+  <li>
+    <code>wigner9j</code><br>
+    <pre><code>$$
+\begin{Bmatrix}
+j_1 & j_2 & j_3 \\
+j_4 & j_5 & j_6 \\
+j_7 & j_8 & j_9
+\end{Bmatrix}
+$$</code></pre>
+  </li>
+
+</ul>
+
+</div>
+
 For the same reason, `wigcpp_global_init` function accepts **twice the maximum physical angular momentum value** as its first parameter. And `wigcpp_global_init` accepts the maximum wigner symbol type that will be used in the whole calculation process as its second parameter, which is must be **3, 6 or 9**.
 
 Calling of `wigcpp_global_init` must be done in the **Main Thread**, if you call this function in other threads, the behavior of it is **undefined**.
