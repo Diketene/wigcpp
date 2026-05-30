@@ -17,7 +17,6 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
-#include <mutex>
 
 namespace wigcpp::internal::global {
   using namespace wigcpp::internal::def::prime;
@@ -218,7 +217,6 @@ namespace wigcpp::internal::global {
 
   class PoolManager{
     inline static std::unique_ptr<GlobalFactorialPool> ptr;
-    inline static std::once_flag init_flag;
 
     PoolManager() = delete;
     ~PoolManager() = delete;
