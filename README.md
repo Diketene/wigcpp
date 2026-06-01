@@ -2,11 +2,12 @@
 
 ![C++ Standard](https://img.shields.io/badge/C++-20-blue.svg)
 ![GitHub issues](https://img.shields.io/github/issues/Diketene/wigcpp)
+![CI](https://github.com/Diketene/wigcpp/actions/workflows/ci.yml/badge.svg)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![zread](https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/Diketene/wigcpp)
 [![Ask Deepwiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Diketene/wigcpp)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-**wigcpp** is a high precision and high performance C++ library for computing Wigner 3j, 6j and 9j symbols using prime factorization and multi word integer arithmetic based on the precalculated prime factorization table.
+wigcpp is a high precision and high performance C++ library for computing Wigner 3j, 6j and 9j symbols using prime factorization and multi word integer arithmetic based on the precalculated prime factorization table.
 
 The computational methods implemented in this project are derived from [WIGXJPF](https://fy.chalmers.se/subatom/wigxjpf/). 
 
@@ -14,7 +15,7 @@ The computational methods implemented in this project are derived from [WIGXJPF]
 
 ### In Numerical Analysis
 
-It could be proved that wigner $xj$ symbols can be presented as:
+It can be proved that wigner $xj$ symbols can be presented as:
 
 ```math
 W_{x} = \frac{n\sqrt{s}}{q}
@@ -30,7 +31,7 @@ where $n$, $s$ and $q$ are integers. Algorithm in wigcpp leverages this principl
 
 ## Build
 
-Wigcpp uses CMake and provides [`CMakePresets.json`](CMakePresets.json) as its build system. To build project in Release mode, users need to change directory into the project root, using
+wigcpp uses CMake and provides [`CMakePresets.json`](CMakePresets.json) as its build system. The minimun CMake Version that wigcpp required is CMake 3.23. Also, a compiler that supports C++20 is required. To build this project in Release mode, change directory into the project root, using
 
 ```bash
 cmake --preset release -B build
@@ -50,7 +51,7 @@ cmake --install build --prefix <path/to/your/prefix/>
 
 to install the product of the compilation.
 
-Wigcpp provides several options to control the build process, in preset named "release", options are set defaultly as follows.
+wigcpp provides several options to control the build process, in preset named "release", options are set defaultly as follows.
 
 <div align="center">
 
@@ -71,10 +72,10 @@ Furthermore, the cache variable `CMAKE_BUILD_TYPE` are set to `Release` in "rele
 
 ### Overview
 
-Wigcpp provides C, C++ and Fortran interface. The C interface provides these several functions:
+wigcpp provides C, C++ and Fortran interface. The C interface provides these several functions:
 
 ```C
-void wigcpp_global_init(int max_two_j, int wigner_type);
+void wigcpp_ensure_global(int max_two_j, int wigner_type);
 void wigcpp_reset_tls();
 double clebsch_gordan(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M);
 double wigner3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3);
@@ -87,7 +88,7 @@ The C++ interface uses namespace to encapsulate these C functions. Declarations 
 ```C++
 
 namespace wigcpp{
-	void global_init(int max_two_j, int wigner_type);
+	void ensure_global(int max_two_j, int wigner_type);
 	void reset_tls();
 	double cg(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M);
 	double three_j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3);
@@ -99,7 +100,7 @@ namespace wigcpp{
 Functions in the Fortran interface maintain the same name as C interface:
 
 ```Fortran
-subroutine wigcpp_global_init(max_two_j, wigner_type)
+subroutine wigcpp_ensure_global(max_two_j, wigner_type)
 	integer :: max_two_j, wigner_type
 end subroutine
 
@@ -130,16 +131,16 @@ end function
 And we will use the C interface to explain these functions.
 
 ### Global Initialization Function and TLS Reset Function
-`wigcpp_global_init` initializes the global factorial pool. Its first parameter, `max_two_j`, specifies **twice** the maximum angular momentum quantum number​ provided by the user. The second parameter `wigner_type` must be one of `3`, `6` or `9`.
+`wigcpp_ensure_global` initializes the global factorial pool. Its first parameter, `max_two_j`, specifies **twice** the maximum angular momentum quantum number​ provided by the user. The second parameter `wigner_type` must be one of `3`, `6` or `9`.
 
-Calling of `wigcpp_global_init` must be done in the **Main Thread**, and **before** any calling of Wigner symbol calculation functions.
+The function `wigcpp_ensure_global` must be invoked exclusively on the main thread. Additionally, its initial invocation must precede all calls to Wigner symbol computation routines.
 
-`wigcpp_global_init` allows the global factorial pool to be expanded. Users can call this function more than once to expand the global factorial pool, but making sure that there is no active Wigner symbol calculation while a call to `wigcpp_global_init` is in progress. Furthermore, if the parameters provided aren't larger than before, `wigcpp_global_init` has no effect, which means that `wigcpp_global_init` is idempotent.
+`wigcpp_ensure_global` allows the global factorial pool to be expanded. Users can call this function more than once to expand the global factorial pool, but making sure that there is no active Wigner symbol calculation while a call to `wigcpp_ensure_global` is in progress. Furthermore, if the parameters provided aren't larger than before, `wigcpp_ensure_global` has no effect, which means that `wigcpp_ensure_global` is idempotent.
 
 `wigcpp_reset_tls` is designed to reset the Thread Local Storage which is used by `wigner3j`, `wigner6j` and `wigner9j`, then provides a clean thread local state before a thread begins to execute a new task. An example using OpenMP with wigcpp in Fortran is provided in the [Multi-threaded calling of functuions](#multi\-threaded-calling-of-functuions), which contains the calling of `wigcpp_reset_tls`.
 
 ### Calculation Functions
-Wigcpp has four Wigner symbol calculation functions in the present: `clebsch_gordan`, `wigner3j`, `wigner6j` and `wigner9j`. The parameters passed to these functions must be **twice** the physical value, that means if you have a physical value $j$, you must pass $2j$ to these functions. 
+wigcpp has four Wigner symbol calculation functions in the present: `clebsch_gordan`, `wigner3j`, `wigner6j` and `wigner9j`. The parameters passed to these functions must be **twice** the physical value, that means if you have a physical value $j$, you must pass $2j$ to these functions. 
 
 The corresponding mathematical expressions of these functions are as follows:
 
@@ -169,11 +170,6 @@ The corresponding mathematical expressions of these functions are as follows:
 
 Note that the positions​ of these variables correspond to the order​ of the parameters in the functions above.
 
-
-
-
-
-
 ## Examples
 
 A simple example in C++ is as follows:
@@ -186,13 +182,13 @@ A simple example in C++ is as follows:
 #include <cfloat>
 
 auto main(void) -> int{
-	wigcpp::global_init(2 * 2, 3);
+	wigcpp::ensure_global(2 * 2, 3);
 	double result = wigcpp::three_j(2 * 1, 2 * 1, 2 * 2, 0, 0, 0);
 	std::printf("result is %.*g\n", (int)DBL_DECIMAL_DIG, result);
 }
 ```
 
-We recommand using CMake to integrate other projects with wigcpp. Wigcpp exposes the `wigcpp::wigcpp` target, which presents a unified interface for linking from C, C++ and Fortran targets. A minimal usage of wigcpp is as follows.
+We recommand using CMake to integrate other projects with wigcpp. wigcpp exposes the `wigcpp::wigcpp` target, which presents a unified interface for linking from C, C++ and Fortran targets. A minimal usage of wigcpp is as follows.
 ```CMake
 # CMakeLists.txt
 cmake_minimum_required(VERSION 3.23)
@@ -207,7 +203,7 @@ target_sources(test PRIVATE test.cpp)
 target_link_libraries(test PRIVATE wigcpp::wigcpp)
 ```
 
-We also provide a CMake project example contains C, C++ and Fortran source code, see this [CMakeLists.txt](examples/standalone/CMakeLists.txt) in example for more details.
+We also provide a standalone example project using CMake contains C, C++ and Fortran source code, see [souce code](examples/standalone) for more details.
 
 To build this example, simply use
 
@@ -245,7 +241,7 @@ auto main(void) -> int{
 	thread_data[2] = {2, 4, 6, 0, 0, 0, 0.0};
 	thread_data[3] = {2 * 300, 2 * 400, 2 * 700, 2 *50, -25 * 2, -25 * 2, 0.0};
 
-	wigcpp::global_init(2 * 1000, 3);
+	wigcpp::ensure_global(2 * 1000, 3);
 
 	for(int i = 0; i < kThreads; ++i){
 		threads.emplace_back([&thread_data, i]{
@@ -305,7 +301,11 @@ call wigcpp_reset_tls
 Also, when you using wigcpp in any M:N threading model, making sure that using `wigcpp_tls_reset` to reset the state of Thread Local Storage at the begining of the task process in every threads.
 
 ## Optimization
-Wigcpp provides IPO/LTO optimization through the option `WIGCPP_ENABLE_IPO`.
+wigcpp provides IPO/LTO optimization through the option `WIGCPP_ENABLE_IPO`.
+
+## Cross-platform Build
+
+Wigcpp supports all major platforms (Linux, macOS and Windows). Users can use `BUILD_SHARED_LIBS` option to specify whether to build shared or static libraries. Currently, both build types are supported on Linux and macOS, whereas Windows is static-only.
 
 ## License
 
