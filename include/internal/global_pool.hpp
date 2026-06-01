@@ -221,7 +221,7 @@ namespace wigcpp::internal::global {
     PoolManager() = delete;
     ~PoolManager() = delete;
   public:
-    static void init(int max_two_j, int wigner_type) noexcept;
+    static void ensure(int max_two_j, int wigner_type) noexcept;
 
     static const GlobalFactorialPool &get() noexcept;
   };

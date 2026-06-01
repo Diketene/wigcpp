@@ -13,7 +13,7 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
-  void wigcpp_global_init(int max_two_j, int wigner_type);
+  void wigcpp_ensure_global(int max_two_j, int wigner_type);
   void wigcpp_reset_tls();
   double clebsch_gordan(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M);
   double wigner3j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3);

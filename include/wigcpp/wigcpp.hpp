@@ -15,8 +15,8 @@
 #ifdef __cplusplus
 namespace wigcpp {
 
-  inline void global_init(int max_two_j, int wigner_type){
-    wigcpp_global_init(max_two_j, wigner_type);
+  inline void ensure_global(int max_two_j, int wigner_type){
+    wigcpp_ensure_global(max_two_j, wigner_type);
   }
 
   inline void reset_tls(){
@@ -24,7 +24,7 @@ namespace wigcpp {
   }
 
   [[nodiscard]] inline double cg(int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M){
-    return ::clebsch_gordan(two_j1, two_j2, two_m1, two_m2, two_J, two_M);
+    return clebsch_gordan(two_j1, two_j2, two_m1, two_m2, two_J, two_M);
   }
 
   [[nodiscard]] inline double three_j(int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3){

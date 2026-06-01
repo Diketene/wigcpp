@@ -8,7 +8,7 @@ TEST(test_xj_thread, SingleFunc_3j){
   {
     constexpr int kThreads = 4;
     constexpr int two_j1 = 400, two_j2 = 80, two_j3 = 480, two_m1 = 2, two_m2 = -2, two_m3 = 0;
-    wigcpp::global_init(2 * 1000, 9);
+    wigcpp::ensure_global(2 * 1000, 9);
 
     const auto expected = wigcpp::three_j(two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
 
@@ -50,7 +50,7 @@ TEST(test_xj_thread, MultiFunc_3j){
     thread_data[2] = {2, 4, 6, 0, 0, 0, -0.29277002188456, 0.0};
     thread_data[3] = {2 * 300, 2 * 400, 2 * 700, 2 *50, -25 * 2, -25 * 2, -0.00006075343272560838, 0.0};
 
-    wigcpp::global_init(2 * 1000, 3);
+    wigcpp::ensure_global(2 * 1000, 3);
 
     for(int i = 0; i < kThreads; ++i){
       threads.emplace_back([&thread_data, i]{

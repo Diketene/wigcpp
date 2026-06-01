@@ -19,9 +19,9 @@
   #define API_EXPORT __attribute__((visibility("default")))
 #endif
 
-API_EXPORT void wigcpp_global_init(int max_two_j, int wigner_type){
+API_EXPORT void wigcpp_ensure_global(int max_two_j, int wigner_type){
   if(wigner_type == 3 || wigner_type == 6 || wigner_type == 9){
-    wigcpp::internal::global::PoolManager::init(max_two_j, wigner_type);
+    wigcpp::internal::global::PoolManager::ensure(max_two_j, wigner_type);
   }else{
     wigcpp::internal::error::error_process(wigcpp::internal::error::ErrorCode::BAD_WIGNER_TYPE);
   }

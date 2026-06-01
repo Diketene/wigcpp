@@ -219,7 +219,7 @@ namespace wigcpp::internal::global {
       fill_factorial_pool(prime_table.max_factorial, prime_table.num_primes);
     }
   
-  void PoolManager::init(int max_two_j, int wigner_type) noexcept {
+  void PoolManager::ensure(int max_two_j, int wigner_type) noexcept {
     std::size_t max_factorial = (wigner_type / 3 + 2) * (max_two_j / 2) + 1;
     if(max_factorial < 2) max_factorial = 2;
 
