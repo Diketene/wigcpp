@@ -39,11 +39,13 @@ if(WIGCPP_BUILD_FORTRAN_INTERFACE)
     target_include_directories(fortran_interface PUBLIC ${_fortran_mod_dir})
     target_sources(wigcpp PRIVATE $<TARGET_OBJECTS:fortran_interface>)
 
-    install(
-      DIRECTORY "${_fortran_mod_dir}/"
-      DESTINATION include
-      FILES_MATCHING PATTERN "*.mod"
-    )
+    if(PROJECT_IS_TOP_LEVEL)
+      install(
+        DIRECTORY "${_fortran_mod_dir}/"
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.mod"
+      )
+    endif()
   endif()
 endif()
 
