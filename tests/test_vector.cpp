@@ -8,14 +8,14 @@
 #include <utility>
 #include "internal/vector.hpp"
 
-TEST(test_vector, test_pod){
+TEST(test_vector, test_pod) {
   using wigcpp::internal::container::vector;
   vector<int> a;
   EXPECT_EQ(a.size(), 0);
   vector<int> b(4, 4);
   EXPECT_EQ(b.size(), 4);
-  for(std::size_t i = 0; i < b.size(); ++i){
-    EXPECT_EQ(b[i],4);
+  for (std::size_t i = 0; i < b.size(); ++i) {
+    EXPECT_EQ(b[i], 4);
   }
   a = b;
   EXPECT_EQ(a.size(), 4);
@@ -36,17 +36,17 @@ TEST(test_vector, test_pod){
   vector<double> f;
   f.resize(5);
   EXPECT_EQ(f.size(), 5);
-  for(std::size_t i = 0; i < f.size(); ++i){
+  for (std::size_t i = 0; i < f.size(); ++i) {
     EXPECT_EQ(f[i], 0.0);
   }
   vector<int> g(8);
   EXPECT_EQ(g.size(), 8);
-  for(std::size_t i = 0; i < g.size(); ++i){
+  for (std::size_t i = 0; i < g.size(); ++i) {
     EXPECT_EQ(g[i], 0);
   }
 }
 
-TEST(test_vector, test_non_trivial){
+TEST(test_vector, test_non_trivial) {
   using wigcpp::internal::container::vector;
   using wigcpp::internal::mwi::big_int;
   using Bigint = big_int;
@@ -75,18 +75,18 @@ TEST(test_vector, test_non_trivial){
   e.push_back(f);
   EXPECT_EQ(e.size(), 12);
   e.emplace_back(1);
-  EXPECT_EQ(e.size(),13);
+  EXPECT_EQ(e.size(), 13);
   e.push_back(1);
   EXPECT_EQ(e.size(), 14);
 }
 
-TEST(test_vector, test_no_throw_alignment){
+TEST(test_vector, test_no_throw_alignment) {
   using wigcpp::internal::container::vector;
   using AlignedVec = vector<int, wigcpp::internal::allocator::nothrow_allocator<int, 64>>;
   AlignedVec a;
   a.reserve(10);
   EXPECT_EQ(reinterpret_cast<uintptr_t>(a.data()) % 64, 0);
-  for(int i = 0; i < 1000; ++i){
+  for (int i = 0; i < 1000; ++i) {
     a.push_back(i);
     EXPECT_EQ(reinterpret_cast<uintptr_t>(a.data()) % 64, 0);
   }

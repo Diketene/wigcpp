@@ -9,7 +9,7 @@ using namespace wigcpp::internal::global;
 using namespace wigcpp::internal::prime_calc;
 using namespace wigcpp::internal::tmp;
 
-TEST(test_prime_factor, test_aligned){
+TEST(test_prime_factor, test_aligned) {
   {
     PoolManager::ensure(1000, 3);
     const auto &pool = PoolManager::get();
@@ -22,11 +22,10 @@ TEST(test_prime_factor, test_aligned){
     EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(ptr) % 64, 0);
     ptr = &tmp[index(TempIndex::prefact)];
     EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(ptr) % 64, 0);
-
   }
 }
 
-TEST(test_prime_factor, test_global_init){
+TEST(test_prime_factor, test_global_init) {
   {
     PoolManager::ensure(500, 3);
     const auto &pool = PoolManager::get();
