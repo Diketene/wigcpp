@@ -38,3 +38,45 @@ jobs:
             build/Testing/**/*.log
             ctest-output.log
           retention-days: 7
+  
+  sanitize:
+    name: Sanitizers (Linux)
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, undefined]
+    
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v2.2.0
+        with:
+          cmake-version: '3.28'
+      
+      - name: Configure with ${{ matrix.sanitizer }}
+        run: |
+          cmake --preset debug -B build \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++ -fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=${{ matrix.sanitizer }}"
+      - name: Build
+        run: cmake --build build -j 4 --config Debug
+      
+      - name: Run tests
+        id: test
+        run: |
+          ctest --test-dir build -j 4 --output-on-failure --no-tests=error 2>&1 | tee ctest-output.log
+      
+      - name: Upload Test Log on Failure
+        if: failure() && steps.test.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ctest-failure-logs-${{ matrix.sanitizer }}
+          path: |
+            build/Testing/**/*.log
+            ctest-output.log
+          retention-days: 7
