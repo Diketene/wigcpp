@@ -40,13 +40,12 @@ namespace wigcpp::internal::allocator{
     void deallocate(value_type* p, std::size_t n) noexcept{
       if(!p || !n) return;
       constexpr std::size_t alignof_T = alignof(value_type);
-      const std::size_t size = sizeof(value_type) * n;
 
       if constexpr(Alignment > alignof_T){
-        ::operator delete(static_cast<void*>(p), size, std::align_val_t{Alignment});
+        ::operator delete(static_cast<void*>(p), std::align_val_t{Alignment}, std::nothrow);
         return;
       }else if constexpr(alignof_T > alignof(std::max_align_t)){
-        ::operator delete(static_cast<void*>(p), size, std::align_val_t{alignof_T});
+        ::operator delete(static_cast<void*>(p), std::align_val_t{alignof_T}, std::nothrow);
         return;
       }else{
         std::free(static_cast<void*>(p));
