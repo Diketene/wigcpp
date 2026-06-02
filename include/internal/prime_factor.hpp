@@ -15,7 +15,6 @@
 #include "internal/global_pool.hpp"
 #include <array>
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 
 namespace wigcpp::internal::prime_calc {

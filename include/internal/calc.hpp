@@ -15,7 +15,6 @@
 #include "internal/tmp_pool.hpp"
 #include "internal/big_int.hpp"
 #include <climits>
-#include <cstddef>
 #include <cstdlib>
 
 namespace wigcpp::internal::calc {
