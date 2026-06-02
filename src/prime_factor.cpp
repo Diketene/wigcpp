@@ -13,9 +13,9 @@
 #include <utility>
 
 namespace wigcpp::internal::prime_calc {
-int pexpo_eval_temp::compute_prime_factor(std::array<mwi::big_int, 2> &factor, std::int64_t prime, exp_t fpf) noexcept {
+int pexpo_eval_temp::compute_prime_factor(std::int64_t prime, exp_t fpf) noexcept {
   def::u_mul_word_t fact = 1;
-  def::u_mul_word_t up = static_cast<def::u_mul_word_t>(prime);
+  auto up = static_cast<def::u_mul_word_t>(prime);
   constexpr def::u_mul_word_t half_mask = static_cast<def::u_mul_word_t>(-1) << (def::shift_bits / 2 - 1);
   for (;;) {
     def::u_mul_word_t mult = (fpf & 1) ? up : 1;
@@ -49,7 +49,8 @@ full_mult: {
     }
 
     fpf >>= 1;
-    if (!fpf) break;
+    if (!fpf)
+      break;
 
     // big_up[!up_active] = big_up[up_active] * big_up[up_active];
     big_up[up_active] *= big_up[up_active];
@@ -87,7 +88,7 @@ void pexpo_eval_temp::evaluate(const global::PrimeTable &prime_table, mwi::big_i
 
     std::int64_t prime = prime_table.prime_list[i];
 
-    int factor_active = compute_prime_factor(this->factor, prime, fpf);
+    int factor_active = compute_prime_factor(prime, fpf);
 
     active = merge_factor(factor_active, active, prod_pos);
   }
@@ -108,10 +109,10 @@ void pexpo_eval_temp::evaluate2(const global::PrimeTable &prime_table, mwi::big_
 
     int64_t prime = prime_table.prime_list[i];
     if (fpf > 0) {
-      int factor_active = compute_prime_factor(this->factor, prime, fpf);
+      int factor_active = compute_prime_factor(prime, fpf);
       active_pos = merge_factor(factor_active, active_pos, prod_pos);
     } else {
-      int factor_active = compute_prime_factor(this->factor, prime, -fpf);
+      int factor_active = compute_prime_factor(prime, -fpf);
       active_neg = merge_factor(factor_active, active_neg, prod_neg);
     }
   }
