@@ -140,6 +140,21 @@ TEST(test_mwi_new, test_operator_minus) {
   big_int d = -c;
   EXPECT_EQ(d[0], 10);
   if constexpr (sizeof_mwi_item == 8) {
+    a = 0;
+    b = a - 1;
+    EXPECT_EQ(b[0], 0xFF'FF'FF'FF'FF'FF'FF'FFu);
+    a = 5;
+    b = a - 3;
+    EXPECT_EQ(b[0], 0x2u);
+  } else {
+    a = 0;
+    b = a - 1;
+    EXPECT_EQ(b[0], 0xFF'FF'FF'FF);
+    a = 5;
+    b = a - 3;
+    EXPECT_EQ(b[0], 0x2u);
+  }
+  if constexpr (sizeof_mwi_item == 8) {
     big_int e(0x80'00'00'00'00'00'00'00);
     big_int f = -e;
     EXPECT_EQ(f.size(), 2);
