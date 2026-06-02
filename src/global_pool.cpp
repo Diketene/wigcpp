@@ -212,7 +212,6 @@ void PoolManager::ensure(int max_two_j, int wigner_type) noexcept {
   if (static_cast<std::uint32_t>(max_factorial) * 50u > def::prime::max_exp) [[unlikely]] {
     std::fprintf(stderr, "Error: Factorial pool size exceeds maximum allowed size.\n");
     error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
-    return;
   }
 
   if (!ptr) [[unlikely]] {
