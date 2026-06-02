@@ -25,7 +25,7 @@ class pexpo_eval_temp {
   std::array<mwi::big_int, 2> factor;
   std::array<mwi::big_int, 2> big_up;
 
-  int compute_prime_factor(std::array<mwi::big_int, 2> &factor, std::int64_t prime, exp_t fpf) noexcept;
+  int compute_prime_factor(std::int64_t prime, exp_t fpf) noexcept;
 
   int merge_factor(int factor_active, int active, std::array<mwi::big_int, 2> &prod) noexcept;
 
