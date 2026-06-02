@@ -11,7 +11,8 @@
 #include <cstdio>
 
 namespace wigcpp::internal::error {
-void DefaultHandler::handle(ErrorCode code) const noexcept {
+
+void error_process(ErrorCode code) noexcept {
   switch (code) {
   case ErrorCode::Bad_Alloc:
     std::fprintf(stderr, "Memory allocation failed.\nwigcpp: aborted.\n");
@@ -27,10 +28,8 @@ void DefaultHandler::handle(ErrorCode code) const noexcept {
     std::abort();
   default:
     std::fprintf(stderr, "Unknown error occurred.\nwigcpp: aborted.\n");
+    std::abort();
   }
 }
 
-void error_process(ErrorCode code) noexcept {
-  error_handler->handle(code);
-}
 } // namespace wigcpp::internal::error
