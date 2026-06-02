@@ -22,13 +22,13 @@ std::pair<def::double_type, int> big_int::to_floating_point() const noexcept {
 
   for (std::size_t i = 2; i >= 1; i--) {
     def::uword_t wi = (high >= i) ? data[high - i] : 0;
-    def::double_type di = static_cast<def::double_type>(wi);
+    auto di = static_cast<def::double_type>(wi);
     di = std::ldexp(di, -(static_cast<int>(i) * static_cast<int>(def::shift_bits)));
     ds += di;
   }
 
   def::uword_t wi = data[high];
-  def::double_type di = static_cast<def::double_type>(static_cast<def::word_t>(wi));
+  auto di = static_cast<def::double_type>(static_cast<def::word_t>(wi));
   ds += di;
 
   int exp = static_cast<int>(high * def::shift_bits);
@@ -106,8 +106,8 @@ big_int &big_int::operator+=(const big_int &rhs) noexcept {
 
   if (next_word != next_sign_word || ((next_word ^ data.back()) & def::sign_bit)) {
 
-    /* the first condition is never trigged at any time.
-    ** the seconde condition aims to find if there's sign bit change when overflow occurs.
+    /* the first condition is never triggered at any time.
+    ** the second condition aims to find if there's sign bit change when overflow occurs.
     */
     data.push_back(next_word);
   }
@@ -129,7 +129,7 @@ big_int &big_int::operator-=(def::uword_t scalar) noexcept {
     carry = borrow;
   }
 
-  for (std::size_t i = 0; i < this_oldsz && (carry != 0); i++) {
+  for (std::size_t i = 1; i < this_oldsz && (carry != 0); i++) {
     auto [s, borrow] = sub_kernel(this->data[i], scalar_sign_bits, carry);
     this->data[i] = s;
     carry = borrow;
@@ -351,16 +351,6 @@ big_int operator*(const big_int &src, const big_int &factor) noexcept {
 }
 
 std::string big_int::to_hex_str() const {
-
-  /*if(size() == 1){
-    std::ostringstream oss;
-    if(is_minus()){
-      oss << '-' << std::setbase(16) << -back();
-    }else{
-      oss << std::setbase(16) << back();
-    }
-    return oss.str();
-  }*/
 
   constexpr std::size_t hex_digits_per_word = sizeof(def::uword_t) * 2;
 
