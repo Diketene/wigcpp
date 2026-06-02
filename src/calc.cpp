@@ -105,7 +105,7 @@ void Calculator::calcsum_cg(const global::GlobalFactorialPool &pool, TempStorage
 
   const std::size_t max_factorial = (two_j1 + two_j2 + two_J) / 2 + 1;
 
-  if (max_factorial > pool.prime_table.max_factorial) {
+  if (max_factorial > pool.prime_table.max_factorial) [[unlikely]] {
     std::fprintf(stderr, "error in calcsum_cg: \n");
     error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
   }
@@ -115,7 +115,7 @@ void Calculator::calcsum_cg(const global::GlobalFactorialPool &pool, TempStorage
 
   const int k_lim = k_max - k_min;
 
-  if (k_lim + 1 > csi.max_iter) {
+  if (k_lim + 1 > csi.max_iter) [[unlikely]] {
     std::fprintf(stderr, "Error: k_lim [%d] exceeds maximum allowed iterations [%d]. \n", k_lim, csi.max_iter);
     std::abort();
   }
@@ -182,7 +182,7 @@ void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage
   const int k_max = std::min({two_j2 + two_m2, two_j1 - two_m1, two_j1 + two_j2 - two_j3}) / 2;
 
   const std::size_t max_factorial = (two_j1 + two_j2 + two_j3) / 2 + 1;
-  if (max_factorial > pool.prime_table.max_factorial) {
+  if (max_factorial > pool.prime_table.max_factorial) [[unlikely]] {
     std::fprintf(stderr, "error in calcsum_3j: \n");
     error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
   }
@@ -193,7 +193,7 @@ void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage
 
   const int k_lim = k_max - k_min;
 
-  if (k_lim + 1 > csi.max_iter) {
+  if (k_lim + 1 > csi.max_iter) [[unlikely]] {
     std::fprintf(stderr, "Error: k_lim [%d] exceeds maximum allowed iterations [%d]. \n", k_lim, csi.max_iter);
     std::abort();
   }
@@ -277,7 +277,7 @@ void Calculator::factor_6j(const GlobalFactorialPool &pool, TempStorage &csi, in
 
   const std::size_t max_factorial = std::max({k_max + 1, beta1 / 2, beta2 / 2, beta3 / 2});
 
-  if (max_factorial > pool.prime_table.max_factorial) {
+  if (max_factorial > pool.prime_table.max_factorial) [[unlikely]] {
     std::fprintf(stderr, "error in factor_6j: \n");
     error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
   }
@@ -286,7 +286,7 @@ void Calculator::factor_6j(const GlobalFactorialPool &pool, TempStorage &csi, in
   min_nume_fpf.set_max(max_used);
 
   const int k_lim = k_max - k_min;
-  if (k_lim + 1 > csi.max_iter) {
+  if (k_lim + 1 > csi.max_iter) [[unlikely]] {
     std::fprintf(stderr, "Error: k_lim [%d] exceeds maximum allowed iterations [%d]. \n", k_lim, csi.max_iter);
     std::abort();
   }
@@ -356,37 +356,23 @@ void Calculator::calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, i
   csi[index(TempIndex::min_nume)].set_zero(0);
 
   csi.sum_prod = 0;
-  //    std::printf("----------------\n");
 
   for (int two_k = two_k_min; two_k <= two_k_max; two_k += 2) {
-    //      std::printf("two_k = %d:\n", two_k);
 
     factor_6j(pool, csi, two_a, two_b, two_c, two_f, two_i, two_k, csi[index(TempIndex::triprod_Fx) + 0], csi.triprod);
-
-    //      std::printf("csi[index(TempIndex::triprod_Fx) + 0]: ");
-    //      dump_fpf(csi[index(TempIndex::triprod_Fx) + 0]);
 
     factor_6j(pool, csi, two_f, two_d, two_e, two_h, two_b, two_k, csi[index(TempIndex::triprod_Fx) + 1],
               csi.triprod_factor);
 
-    //      std::printf("csi[index(TempIndex::triprod_Fx) + 1]: ");
-    //      dump_fpf(csi[index(TempIndex::triprod_Fx) + 1]);
-
     csi.triprod_tmp = csi.triprod * csi.triprod_factor;
     factor_6j(pool, csi, two_h, two_i, two_g, two_a, two_d, two_k, csi[index(TempIndex::triprod_Fx) + 2],
               csi.triprod_factor);
-
-    //      std::printf("csi[index(TempIndex::triprod_Fx) + 2]: ");
-    //      dump_fpf(csi[index(TempIndex::triprod_Fx) + 2]);
 
     csi.triprod = csi.triprod_tmp * csi.triprod_factor;
 
     csi[index(TempIndex::nume_triprod)].expand_sum3(csi[index(TempIndex::triprod_Fx) + 0],
                                                     csi[index(TempIndex::triprod_Fx) + 1],
                                                     csi[index(TempIndex::triprod_Fx) + 2]);
-
-    //      std::printf("csi[index(TempIndex::nume_triprod)]: ");
-    //      dump_fpf(csi[index(TempIndex::nume_triprod)]);
 
     delta_coeff(pool, two_a, two_i, two_k, csi[index(TempIndex::nume_triprod)]);
     delta_coeff(pool, two_f, two_b, two_k, csi[index(TempIndex::nume_triprod)]);
@@ -395,9 +381,6 @@ void Calculator::calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, i
     const auto &p_f1 = pool.prime_factor(two_k + 1);
 
     csi[index(TempIndex::nume_triprod)].expand_add(p_f1);
-
-    //      std::printf("csi[index(TempIndex::nume_triprod)] after delta and p_f1: ");
-    //      dump_fpf(csi[index(TempIndex::nume_triprod)]);
 
     if (two_k == two_k_min) {
       csi[index(TempIndex::min_nume)].copy(csi[index(TempIndex::nume_triprod)]);
@@ -428,9 +411,6 @@ void Calculator::calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, i
   delta_coeff(pool, two_a, two_d, two_g, csi[index(TempIndex::prefact)]);
   delta_coeff(pool, two_b, two_e, two_h, csi[index(TempIndex::prefact)]);
   delta_coeff(pool, two_c, two_f, two_i, csi[index(TempIndex::prefact)]);
-
-  //    std::printf("csi[index(TempIndex::prefact)]: ");
-  //    dump_fpf(csi[index(TempIndex::prefact)]);
 }
 
 def::double_type Calculator::eval_calcsum_info(const global::PrimeTable &prime_table, TempStorage &csi) noexcept {
@@ -438,8 +418,6 @@ def::double_type Calculator::eval_calcsum_info(const global::PrimeTable &prime_t
   split_sqrt_add(prime_table, csi[index(TempIndex::prefact)], csi.big_sqrt, csi[index(TempIndex::min_nume)]);
 
   csi.pexpo_tmp.evaluate2(prime_table, csi.big_nume, csi.big_div, csi[index(TempIndex::prefact)]);
-
-  // csi.big_nume_prod = csi.big_nume * csi.sum_prod;
 
   csi.big_nume *= csi.sum_prod;
   std::swap(csi.big_nume_prod, csi.big_nume);

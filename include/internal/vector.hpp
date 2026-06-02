@@ -35,7 +35,7 @@ template <typename T, class Allocator = allocator::nothrow_allocator<T>> class v
 
   [[nodiscard]] value_type *alloc(size_type capacity) noexcept {
     value_type *p = alloc_traits::allocate(allocator, capacity);
-    if (!p) {
+    if (!p) [[unlikely]] {
       std::fprintf(stderr, "error in wigcpp::internal::container::vector::alloc: allocation failed.\n");
       error::error_process(error::ErrorCode::Bad_Alloc);
     }
