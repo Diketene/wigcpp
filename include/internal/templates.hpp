@@ -14,10 +14,6 @@
 namespace wigcpp::internal::templates {
 template <typename... Args> struct first_type;
 
-template <> struct first_type<> {
-  static_assert("prameters pack shoudn't be empty.");
-};
-
 template <typename First, typename... Rest> struct first_type<First, Rest...> {
   using type = First;
 };
