@@ -1,0 +1,32 @@
+---
+Checks: >
+  -*,
+  modernize-use-auto,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-using,
+  modernize-redundant-void-arg,
+  readability-redundant-string-cstr,
+  readability-const-return-type,
+  readability-redundant-control-flow,
+  readability-container-size-empty,
+  performance-for-range-copy,
+  performance-unnecessary-copy-initialization,
+  performance-unnecessary-value-param,
+  bugprone-assignment-in-if-condition,
+  bugprone-copy-constructor-init,
+  bugprone-integer-division,
+  bugprone-unused-return-value,
+  misc-redundant-expression,
+  misc-unused-parameters,
+WarningsAsErrors: ''
+HeaderFilterRegex: 'include/.*\.hpp'
+FormatStyle: file
+CheckOptions:
+  - key:   modernize-use-auto.MinTypeNameLength
+    value: 8
+  - key:   modernize-use-auto.RemoveStars
+    value: false
+  - key:   performance-unnecessary-value-param.AllowedTypes
+    value: 'big_int'
+...
