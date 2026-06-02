@@ -201,11 +201,11 @@ public:
     return cap - data_;
   }
 
-  value_type &operator[](size_type index) {
+  value_type &operator[](size_type index) noexcept {
     return *(data_ + index);
   }
 
-  const value_type &operator[](size_type index) const {
+  const value_type &operator[](size_type index) const noexcept {
     return *(data_ + index);
   }
 
@@ -257,7 +257,7 @@ public:
     }
 
     const double growth_factor = oldcap < 1024 ? 4 : 3;
-    const size_type factor_cap = static_cast<size_type>(oldcap * growth_factor / 2);
+    const auto factor_cap = static_cast<size_type>(oldcap * growth_factor / 2);
     const size_type new_capacity = min_capacity > factor_cap ? min_capacity : factor_cap;
 
     value_type *new_data_ = alloc(new_capacity);
@@ -372,225 +372,6 @@ public:
     emplace_back(std::forward<Arg>(arg));
   }
 };
-
-/* template <typename T, size_t N = 8>
-class sso_vector{
-  static_assert(N > 0, "SSO vector must have positive small size.");
-  static_assert(std::is_trivially_copyable_v<T>, "SSO vector only supports trivially copyable types.");
-public:
-  using value_type = T;
-  using size_type = std::size_t;
-private:
-  std::array<value_type, N> buffer;
-  std::unique_ptr<vector<value_type>> heap_ptr;
-
-  bool is_small = true;
-  size_type size_ = 0;
-
-  // cached pointer to the active contiguous storage (inline buffer or heap->data())
-  value_type *data__ptr = nullptr;
-
-  inline void update_data__ptr() noexcept {
-    if(is_small){
-      data__ptr = buffer.data_();
-    }else{
-      data__ptr = heap_ptr->data();
-    }
-  }
-
-  void up_to_heap(size_type min_capacity) noexcept {
-    if(!is_small){
-      return;
-    }
-    is_small = false;
-    heap_ptr = std::make_unique<vector<value_type>>();
-    size_type capacity = min_capacity > size_ ? min_capacity : size_;
-    heap_ptr -> reserve(capacity);
-    for(size_type i = 0; i < size_; ++i){
-      heap_ptr -> push_back(buffer[i]);
-    }
-    update_data__ptr();
-  }
-
-public:
-  sso_vector() noexcept {
-    // start in small mode
-    data__ptr = buffer.data_();
-  }
-
-  ~sso_vector() noexcept = default;
-
-  sso_vector(const sso_vector& src) noexcept {
-    if(src.is_small){
-      is_small = true;
-      size_ = src.size_;
-      std::memcpy(buffer.data_(), src.buffer.data_(), src.size_ * sizeof(value_type));
-      data__ptr = buffer.data_();
-    }else{
-      is_small = false;
-      size_ = src.heap_ptr -> size();
-      heap_ptr = std::make_unique<vector<value_type>>(*src.heap_ptr);
-      update_data__ptr();
-    }
-  }
-
-  sso_vector(sso_vector &&src) noexcept : is_small(src.is_small), size_(src.size_), heap_ptr(std::move(src.heap_ptr)) {
-    if(src.is_small){
-      std::memcpy(buffer.data_(), src.buffer.data_(), src.size_ * sizeof(value_type));
-      src.size_ = 0;
-      data__ptr = buffer.data_();
-      // moved-from small src already zeroed size_
-    }else{
-      update_data__ptr();
-    }
-  }
-
-  sso_vector(size_type size) noexcept{
-    this -> size_ = size;
-    if(size <= N){
-      is_small = true;
-      std::uninitialized_value_construct_n(buffer.data_(), size_);
-      data__ptr = buffer.data_();
-    }else{
-      is_small = false;
-      heap_ptr = std::make_unique<vector<T>>(size);
-      update_data__ptr();
-    }
-  }
-
-  sso_vector &operator= (const sso_vector &src) noexcept {
-    if(this == &src){
-      return *this;
-    }
-
-    if(src.is_small){
-      if(!(this -> is_small)){
-        heap_ptr.reset();
-      }
-      std::memcpy(buffer.data_(), src.buffer.data_(), src.size_ * sizeof(value_type));
-      is_small = true;
-      data__ptr = buffer.data_();
-    }else{
-      heap_ptr = std::make_unique<vector<value_type>>(*src.heap_ptr);
-      is_small = false;
-      update_data__ptr();
-    }
-
-    this -> size_ = src.size_;
-    return *this;
-  }
-
-  sso_vector &operator= (sso_vector &&src) noexcept {
-    if(this == &src){
-      return *this;
-    }
-    if(!(this -> is_small)){
-      heap_ptr.reset();
-    }
-    if(src.is_small){
-      std::memcpy(buffer.data_(), src.buffer.data_(), src.size_ * sizeof(value_type));
-      is_small = true;
-      data__ptr = buffer.data_();
-    }else{
-      heap_ptr = std::move(src.heap_ptr);
-      is_small = false;
-      update_data__ptr();
-    }
-    this -> size_ = src.size_;
-    return *this;
-  }
-
-  size_type size() const noexcept {
-    return this -> size_;
-  }
-
-  size_type capacity() const noexcept {
-    return is_small ? N : heap_ptr -> capacity();
-  }
-
-  value_type &operator[](size_type index) noexcept {
-    // use cached pointer to eliminate branch
-    return data__ptr[index];
-  }
-
-  const value_type&operator[](size_type index) const noexcept {
-    return data__ptr[index];
-  }
-
-  value_type *begin() noexcept{
-    return data__ptr;
-  }
-
-  const value_type* cbegin() const noexcept{
-    return data__ptr;
-  }
-
-  value_type* end() noexcept {
-    return data__ptr + size_;
-  }
-
-  const value_type* cend() const noexcept {
-    return data__ptr + size_;
-  }
-
-  value_type &back() noexcept{
-    return *(data__ptr + size_ - 1);
-  }
-
-  const value_type &back() const noexcept {
-    return *(data__ptr + size_ - 1);
-  }
-
-  void reserve(size_type min_capacity) noexcept{
-    if(is_small && min_capacity <= N){
-      return;
-    }
-    if(is_small && min_capacity > N){
-      up_to_heap(min_capacity);
-      return;
-    }else{
-      heap_ptr -> reserve(min_capacity);
-      update_data__ptr();
-    }
-  }
-
-  void resize(size_type new_size) noexcept {
-    if(!is_small){
-      heap_ptr -> resize(new_size);
-      size_ = new_size;
-      update_data__ptr();
-      return;
-    }
-
-    if(new_size <= N){
-      if(new_size > size_){
-        std::uninitialized_value_construct_n(buffer.data_() + size_, new_size - size_);
-      }
-    }else{
-      up_to_heap(new_size);
-      heap_ptr -> resize(new_size);
-      // up_to_heap already updated data__ptr
-    }
-    size_ = new_size;
-  }
-
-  void push_back(const value_type &val) noexcept{
-    if(!is_small){
-      heap_ptr -> push_back(val);
-      ++size_;
-      update_data__ptr();
-      return;
-    }
-    if(size_ < N){
-      buffer[size_++] = val;
-      return;
-    }else{
-      up_to_heap(2 * N);
-      ++size_;
-      return;
-    }
-  }
-}; */
 
 } // namespace wigcpp::internal::container
 #endif /* __WIGCPP_VECTOR__ */
