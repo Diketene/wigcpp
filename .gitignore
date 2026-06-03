@@ -4,3 +4,4 @@ Testing/
 .cache/
 benchmarks/third_party
 examples/standalone/build
+settings.json

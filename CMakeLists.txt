@@ -8,7 +8,7 @@
 #
 
 cmake_minimum_required(VERSION 3.23)
-project(WIGCPP VERSION 0.1.0 LANGUAGES CXX)
+project(WIGCPP VERSION 0.1.1 LANGUAGES CXX)
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
