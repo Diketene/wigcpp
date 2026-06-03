@@ -65,16 +65,12 @@ void prime_exponents_view::copy(const prime_exponents_view &other) noexcept {
 
 void prime_exponents_view::expand_add(const prime_exponents_view &other) noexcept {
   expand_blocks(other.block_used);
-  for (int i = 0; i < block_used; ++i) {
-    data()[i] += other.data()[i];
-  }
+  combine<1>(other);
 }
 
 void prime_exponents_view::expand_sub(const prime_exponents_view &other) noexcept {
   expand_blocks(other.block_used);
-  for (int i = 0; i < block_used; ++i) {
-    data()[i] -= other[i];
-  }
+  combine<-1>(other);
 }
 
 void prime_exponents_view::expand_sum3(prime_exponents_view &a, prime_exponents_view &b,
@@ -84,40 +80,30 @@ void prime_exponents_view::expand_sum3(prime_exponents_view &a, prime_exponents_
   a.expand_blocks(max_blocks);
   b.expand_blocks(max_blocks);
   c.expand_blocks(max_blocks);
-  for (int i = 0; i < max_blocks; ++i) {
-    data()[i] = a.data()[i] + b.data()[i] + c.data()[i];
-  }
+  sum<1, 1, 1>(a, b, c);
 }
 
 void prime_exponents_view::add3_sub(const prime_exponents_view &a, const prime_exponents_view &b,
                                     const prime_exponents_view &c, const prime_exponents_view &d) noexcept {
-  for (int i = 0; i < block_used; ++i) {
-    data()[i] += a.data()[i] + b.data()[i] + c.data()[i] - d.data()[i];
-  }
+  combine<1, 1, 1, -1>(a, b, c, d);
 }
 
 void prime_exponents_view::add6(const prime_exponents_view &a, const prime_exponents_view &b,
                                 const prime_exponents_view &c, const prime_exponents_view &d,
                                 const prime_exponents_view &e, const prime_exponents_view &f) noexcept {
-  for (int i = 0; i < block_used; ++i) {
-    data()[i] += a.data()[i] + b.data()[i] + c.data()[i] + d.data()[i] + e.data()[i] + f.data()[i];
-  }
+  combine<1, 1, 1, 1, 1, 1>(a, b, c, d, e, f);
 }
 
 void prime_exponents_view::add7(const prime_exponents_view &a, const prime_exponents_view &b,
                                 const prime_exponents_view &c, const prime_exponents_view &d,
                                 const prime_exponents_view &e, const prime_exponents_view &f,
                                 const prime_exponents_view &g) noexcept {
-  for (int i = 0; i < block_used; ++i) {
-    data()[i] += a.data()[i] + b.data()[i] + c.data()[i] + d.data()[i] + e.data()[i] + f.data()[i] + g.data()[i];
-  }
+  combine<1, 1, 1, 1, 1, 1, 1>(a, b, c, d, e, f, g);
 }
 
 void prime_exponents_view::add_sub3(const prime_exponents_view &a, const prime_exponents_view &b,
                                     const prime_exponents_view &c, const prime_exponents_view &d) noexcept {
-  for (int i = 0; i < block_used; ++i) {
-    data()[i] += a.data()[i] - b.data()[i] - c.data()[i] - d.data()[i];
-  }
+  combine<1, -1, -1, -1>(a, b, c, d);
 }
 
 void prime_exponents_view::sum_sub7(const prime_exponents_view &a, const prime_exponents_view &b,
@@ -126,10 +112,7 @@ void prime_exponents_view::sum_sub7(const prime_exponents_view &a, const prime_e
                                     const prime_exponents_view &g, const prime_exponents_view &h,
                                     int num_blocks) noexcept {
   block_used = num_blocks;
-  for (int i = 0; i < block_used; ++i) {
-    data()[i] =
-        a.data()[i] - b.data()[i] - c.data()[i] - d.data()[i] - e.data()[i] - f.data()[i] - g.data()[i] - h.data()[i];
-  }
+  sum<1, -1, -1, -1, -1, -1, -1, -1>(a, b, c, d, e, f, g, h);
 }
 
 void prime_exponents_view::sum0_sub6(const prime_exponents_view &a, const prime_exponents_view &b,
@@ -137,9 +120,7 @@ void prime_exponents_view::sum0_sub6(const prime_exponents_view &a, const prime_
                                      const prime_exponents_view &e, const prime_exponents_view &f,
                                      int num_blocks) noexcept {
   block_used = num_blocks;
-  for (int i = 0; i < block_used; ++i) {
-    data()[i] = -a.data()[i] - b.data()[i] - c.data()[i] - d.data()[i] - e.data()[i] - f.data()[i];
-  }
+  sum<-1, -1, -1, -1, -1, -1>(a, b, c, d, e, f);
 }
 
 FactorPool::FactorPool(const PrimeTable &prime_table) noexcept

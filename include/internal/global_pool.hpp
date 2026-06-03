@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <concepts>
 
 namespace wigcpp::internal::global {
 using namespace wigcpp::internal::def::prime;
@@ -34,6 +35,14 @@ struct PrimeTable {
   PrimeTable() = delete;
 };
 
+struct prime_exponents_view;
+
+template <typename... Views>
+concept all_prime_exponents = (std::same_as<Views, prime_exponents_view> && ...);
+
+template <int... Signs>
+concept valid_signs = ((Signs == 1 || Signs == -1) && ...);
+
 struct prime_exponents_view {
   int block_used;
 
@@ -45,6 +54,26 @@ struct prime_exponents_view {
     return reinterpret_cast<const exp_t *>(this + 1);
   }
 
+private:
+  template <int... Signs, typename... Views>
+    requires all_prime_exponents<Views...> && valid_signs<Signs...> && (sizeof...(Signs) == sizeof...(Views))
+  void combine(const Views &...views) noexcept {
+    for (int i = 0; i < block_used; ++i) {
+      exp_t val = ((Signs * views.data()[i]) + ...);
+      data()[i] += val;
+    }
+  }
+
+  template <int... Signs, typename... Views>
+    requires all_prime_exponents<Views...> && valid_signs<Signs...> && (sizeof...(Signs) == sizeof...(Views))
+  void sum(const Views &...views) noexcept {
+    for (int i = 0; i < block_used; ++i) {
+      exp_t val = ((Signs * views.data()[i]) + ...);
+      data()[i] = val;
+    }
+  }
+
+public:
   exp_t &operator[](std::size_t i) noexcept {
     return data()[i];
   }
@@ -104,14 +133,6 @@ struct prime_exponents_view {
                  const prime_exponents_view &d, const prime_exponents_view &e, const prime_exponents_view &f,
                  int num_blocks) noexcept;
 };
-
-inline void dump_fpf(const prime_exponents_view &dump_dest) noexcept {
-  std::printf("block_used = %d, data = ", dump_dest.block_used);
-  for (int i = 0; i < dump_dest.block_used; ++i) {
-    std::printf("%d ", dump_dest[i]);
-  }
-  std::putchar('\n');
-}
 
 class FactorPool {
   template <typename T> using aligned_vector = container::vector<T, allocator::nothrow_allocator<T, 64>>;
