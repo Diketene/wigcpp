@@ -15,7 +15,6 @@
 #include <type_traits>
 
 namespace wigcpp::internal::def {
-#define DEBUG_PRINT 1
 
 constexpr inline unsigned sizeof_mulw = 8;
 static_assert(sizeof_mulw == 4 || sizeof_mulw == 8, "Invalid sizeof_mulw value, must be 4 or 8");
