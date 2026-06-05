@@ -25,9 +25,25 @@ where $n$, $s$ and $q$ are integers. Algorithm in wigcpp leverages this principl
 
 ### In Language
 
-1. RAII in C++ automates the acquisition and release of resources, including thread-local and global ones, so users don't need to manage them manually.
+1. **RAII** in C++ automates the acquisition and release of resources, including thread-local and global ones, so users don't need to manage them manually.
 
-2. Exception-free. This library is compatible with `-fno-exceptions` option.
+2. **Exception-free**. This library is compatible with `-fno-exceptions` option.
+
+3. **Zero hidden cost**. The global pool is immutable after initialization, which means no locks, no implicit reallocation, no surprise during concurrent computation. If you need a larger pool, you call init explicitly — the cost is always visible.
+
+## Validation
+
+Exhaustive testing was performed to compare the numerical precision of wigcpp with that of wigxjpf. ULPs between the result of wigcpp and wigxjpf were calculated. The table lists the `max_two_j` values and the ULP discrepancies percentage between the wigcpp and wigxjpf results.
+
+</div align="center">
+
+|test|`max_two_j`|0 ULP|1 ULP|2 ULP|≥3 ULP|
+|:-:|:-:|:-:|:-:|:-:|:-:|
+|3j|`30`|0.7748|0.2243|0.0009|0|
+|6j|`30`|0.6644|0.3327|0.0029|0|
+|9j|`12`|0.6813|0.3162|0.0025|0|
+
+Theoretically, each floating-point operation introduces a rounding error of at most 0.5 ULP, since wigcpp and wigxjpf each perform six floating-point operations, the worst-case absolute difference between their results is bounded above by 3 ULP. The results presented in the table are consistent with this theoretical bound. For more details, see [wigcpp-benchmark](https://github.com/Diketene/wigcpp-benchmark).
 
 ## Build
 
