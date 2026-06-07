@@ -47,6 +47,8 @@ Exhaustive testing was performed to compare the numerical precision of wigcpp wi
 
 Theoretically, each floating-point operation introduces a rounding error of at most 0.5 ULP, since wigcpp and wigxjpf each perform six floating-point operations, the worst-case absolute difference between their results is bounded above by 3 ULP. The results presented in the table are consistent with this theoretical bound. For more details, see [wigcpp-benchmark](https://github.com/Diketene/wigcpp-benchmark).
 
+Benchmarking and performance optimization are currently in progress. [wigcpp-benchmark](https://github.com/Diketene/wigcpp-benchmark) also provides benchmark data during optimization, sorted in [logs/baseline](https://github.com/Diketene/wigcpp-benchmark/tree/main/logs/baseline). These data serve as a baseline for comparing performance before and after optimization.
+
 ## Build
 
 wigcpp uses CMake and provides [`CMakePresets.json`](CMakePresets.json) as its build system. The minimun CMake Version that wigcpp required is CMake 3.23. Also, a compiler that supports C++20 is required. To build this project in Release mode, change directory into the project root, using
