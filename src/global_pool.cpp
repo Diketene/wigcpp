@@ -39,28 +39,33 @@ PrimeTable::PrimeTable(int max_factorial) noexcept
 
 void prime_exponents_view::set_max(int num_blocks) noexcept {
   block_used = num_blocks;
-  std::fill(data(), data() + num_blocks, def::prime::max_exp);
+  for (int i = 0; i < num_blocks; ++i) {
+    (*this)[i] = def::prime::max_exp;
+  }
 }
 
 void prime_exponents_view::keep_min(const prime_exponents_view &other) noexcept {
   assert(this->block_used == other.block_used);
   for (int i = 0; i < block_used; ++i) {
-    data()[i] = std::min(data()[i], other.data()[i]);
+    (*this)[i] = std::min((*this)[i], other[i]);
   }
 }
 
 void prime_exponents_view::keep_min_in_as_diff(prime_exponents_view &other) noexcept {
   assert(this->block_used == other.block_used);
   for (int i = 0; i < block_used; ++i) {
-    exp_t tmp = other.data()[i] - data()[i];
-    data()[i] = std::min(data()[i], other.data()[i]);
-    other.data()[i] = tmp;
+    exp_t &this_exp = (*this)[i];
+    exp_t tmp = other[i] - this_exp;
+    this_exp = std::min(this_exp, other[i]);
+    other[i] = tmp;
   }
 }
 
 void prime_exponents_view::copy(const prime_exponents_view &other) noexcept {
   this->block_used = other.block_used;
-  std::copy(other.data(), other.data() + block_used, data());
+  for (int i = 0; i < block_used; ++i) {
+    (*this)[i] = other[i];
+  }
 }
 
 void prime_exponents_view::expand_add(const prime_exponents_view &other) noexcept {
@@ -159,21 +164,22 @@ void GlobalFactorialPool::fill_num_pool(const PrimeTable &prime_table) noexcept 
         break;
       }
     }
-    std::copy(num_pool[0].data(), num_pool[0].data() + block_size, num_pool[cur].data());
+    for (int p = 0; p < block_size; ++p) {
+      num_pool[cur][p] = num_pool[0][p];
+    }
     num_pool[cur].block_used = (cur == 1) ? 0 : max_p + 1;
   }
-  std::fill(num_pool[0].data(), num_pool[0].data() + block_size, 0);
+
+  for (int p = 0; p < block_size; ++p) {
+    num_pool[0][p] = 0;
+  }
 }
 
 void GlobalFactorialPool::fill_factorial_pool(std::size_t max_factorial, std::uint32_t num_primes) noexcept {
   for (std::size_t i = 1; i <= max_factorial; ++i) {
-    exp_t *add = num_pool[i].data();
-    exp_t *src = factorial_pool[i - 1].data();
-    exp_t *dest = factorial_pool[i].data();
     for (std::size_t p = 0; p < num_primes; ++p) {
-      dest[p] = src[p] + add[p];
+      factorial_pool[i][p] = factorial_pool[i - 1][p] + num_pool[i][p];
     }
-
     factorial_pool[i].block_used = std::max(factorial_pool[i - 1].block_used, num_pool[i].block_used);
   }
 }

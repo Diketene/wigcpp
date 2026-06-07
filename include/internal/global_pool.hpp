@@ -59,8 +59,8 @@ private:
     requires all_prime_exponents<Views...> && valid_signs<Signs...> && (sizeof...(Signs) == sizeof...(Views))
   void combine(const Views &...views) noexcept {
     for (int i = 0; i < block_used; ++i) {
-      exp_t val = ((Signs * views.data()[i]) + ...);
-      data()[i] += val;
+      exp_t val = ((Signs * views[i]) + ...);
+      (*this)[i] += val;
     }
   }
 
@@ -68,8 +68,8 @@ private:
     requires all_prime_exponents<Views...> && valid_signs<Signs...> && (sizeof...(Signs) == sizeof...(Views))
   void sum(const Views &...views) noexcept {
     for (int i = 0; i < block_used; ++i) {
-      exp_t val = ((Signs * views.data()[i]) + ...);
-      data()[i] = val;
+      exp_t val = ((Signs * views[i]) + ...);
+      (*this)[i] = val;
     }
   }
 

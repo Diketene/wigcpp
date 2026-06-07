@@ -37,6 +37,7 @@ if(WIGCPP_BUILD_FORTRAN_INTERFACE)
     )
 
     target_include_directories(fortran_interface PUBLIC ${_fortran_mod_dir})
+    target_include_directories(wigcpp PUBLIC ${_fortran_mod_dir})
     target_sources(wigcpp PRIVATE $<TARGET_OBJECTS:fortran_interface>)
 
     if(PROJECT_IS_TOP_LEVEL)

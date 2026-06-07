@@ -3,7 +3,6 @@
 #include <thread>
 #include <vector>
 
-constexpr double near = 1e-16;
 TEST(test_xj_thread, SingleFunc_3j) {
   {
     constexpr int kThreads = 4;
@@ -25,7 +24,7 @@ TEST(test_xj_thread, SingleFunc_3j) {
     }
 
     for (int i = 0; i < kThreads; ++i) {
-      EXPECT_NEAR(result[i], expected, near);
+      EXPECT_DOUBLE_EQ(result[i], expected);
     }
   }
 }
@@ -62,7 +61,7 @@ TEST(test_xj_thread, MultiFunc_3j) {
     }
 
     for (int i = 0; i < kThreads; ++i) {
-      EXPECT_NEAR(thread_data[i].expected, thread_data[i].result, near);
+      EXPECT_DOUBLE_EQ(thread_data[i].expected, thread_data[i].result);
     }
   }
 }

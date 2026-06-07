@@ -25,9 +25,29 @@ where $n$, $s$ and $q$ are integers. Algorithm in wigcpp leverages this principl
 
 ### In Language
 
-1. RAII in C++ automates the acquisition and release of resources, including thread-local and global ones, so users don't need to manage them manually.
+1. **RAII** in C++ automates the acquisition and release of resources, including thread-local and global ones, so users don't need to manage them manually.
 
-2. Exception-free. This library is compatible with `-fno-exceptions` option.
+2. **Exception-free**. This library is compatible with `-fno-exceptions` option.
+
+3. **Zero hidden cost**. The global pool is immutable after initialization, which means no locks, no implicit reallocation, no surprise during concurrent computation. If you need a larger pool, you call init explicitly — the cost is always visible.
+
+## Validation
+
+Exhaustive testing was performed to compare the numerical precision of wigcpp with that of wigxjpf. ULPs between the result of wigcpp and wigxjpf were calculated. The table lists the `max_two_j` values and the ULP discrepancies percentage between the wigcpp and wigxjpf results.
+
+<div align="center">
+
+|test|`max_two_j`|0 ULP|1 ULP|2 ULP|≥3 ULP|
+|:-:|:-:|:-:|:-:|:-:|:-:|
+|3j|`25`|96.8683%|3.1168%|0.0149%|0|
+|6j|`25`|66.5155%|33.2014%|0.2831%|0|
+|9j|`10`|69.2316%|30.5688%|0.1996%|0|
+
+</div>
+
+Theoretically, each floating-point operation introduces a rounding error of at most 0.5 ULP, since wigcpp and wigxjpf each perform six floating-point operations, the worst-case absolute difference between their results is bounded above by 3 ULP. The results presented in the table are consistent with this theoretical bound. For more details, see [wigcpp-benchmark](https://github.com/Diketene/wigcpp-benchmark).
+
+Benchmarking and performance optimization are currently in progress. [wigcpp-benchmark](https://github.com/Diketene/wigcpp-benchmark) also provides benchmark data during optimization, sorted in [logs/baseline](https://github.com/Diketene/wigcpp-benchmark/tree/main/logs/baseline). These data serve as a baseline for comparing performance before and after optimization.
 
 ## Build
 
