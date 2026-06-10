@@ -15,7 +15,6 @@
 #include "internal/tmp_pool.hpp"
 #include "internal/big_int.hpp"
 #include <climits>
-#include <cstdlib>
 
 namespace wigcpp::internal::calc {
 using namespace wigcpp::internal::global;
@@ -94,8 +93,8 @@ public:
 
 class Calculator {
 
-  static void delta_coeff(const GlobalFactorialPool &pool, int two_a, int two_b, int two_c,
-                          prime_exponents_view &prefact_fpf) noexcept;
+  static void delta_coeff(const GlobalFactorialPool &pool, int two_a, int two_b, int two_c, exp_t *prefact_fpf,
+                          std::uint32_t &used) noexcept;
 
   static void calcsum_cg(const GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_m1, int two_j2,
                          int two_m2, int two_J, int two_M) noexcept;
@@ -104,7 +103,7 @@ class Calculator {
                          int two_m1, int two_m2, int two_m3) noexcept;
 
   static void factor_6j(const GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3,
-                        int two_j4, int two_j5, int two_j6, prime_exponents_view &min_nume_fpf,
+                        int two_j4, int two_j5, int two_j6, exp_t *min_nume_fpf, std::uint32_t &used,
                         mwi::big_int &sum_prod) noexcept;
 
   static void calcsum_6j(const GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3,
@@ -113,8 +112,8 @@ class Calculator {
   static void calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, int two_a, int two_b, int two_c, int two_d,
                          int two_e, int two_f, int two_g, int two_h, int two_i) noexcept;
 
-  static void split_sqrt_add(const global::PrimeTable &prime_table, prime_exponents_view &src_dest_fpf,
-                             mwi::big_int &big_sqrt, prime_exponents_view &add_fpf) noexcept;
+  static void split_sqrt_add(const global::PrimeTable &prime_table, exp_t *src_dest_fpf, std::uint32_t &used_src,
+                             mwi::big_int &big_sqrt, exp_t *add_fpf, std::uint32_t &used_add) noexcept;
 
   static def::double_type eval_calcsum_info(const global::PrimeTable &prime_table, TempStorage &csi) noexcept;
 
