@@ -10,28 +10,25 @@
 #ifndef __WIGCPP_TMP_POOL__
 #define __WIGCPP_TMP_POOL__
 
+#include "definitions.hpp"
 #include "internal/big_int.hpp"
-#include "internal/global_pool.hpp"
-#include "internal/nothrow_allocator.hpp"
-#include "internal/prime_factor.hpp"
-#include "vector.hpp"
+#include "internal/uniform_jagged_matrix.hpp"
+#include "internal/pexpo_eval_ctx.hpp"
 #include <cstddef>
 #include <cstdio>
 #include <memory>
 
 namespace wigcpp::internal::tmp {
 using namespace wigcpp::internal::global;
-enum class TempIndex : int { prefact = 0, min_nume = 1, nume_triprod = 2, triprod_Fx = 3, iter_start = 6 };
 
-static inline constexpr int index(TempIndex idx) noexcept {
-  return static_cast<int>(idx);
-}
+constexpr auto prefact = 0u;
+constexpr auto min_nume = 1u;
+constexpr auto nume_triprod = 2u;
+constexpr auto triprod_Fx = 3u;
+constexpr auto iter_start = 6u;
 
 class TempStorage {
-  template <typename T> using aligned_vector = container::vector<T, allocator::nothrow_allocator<T, 64>>;
-
-  aligned_vector<std::byte> buffer;
-  const std::size_t aligned_bytes;
+  uniform_jagged_matrix<exp_t> storage;
 
 public:
   const int max_iter;
@@ -46,38 +43,41 @@ public:
   mwi::big_int triprod_tmp;
   mwi::big_int triprod_factor;
 
-  prime_calc::pexpo_eval_temp pexpo_tmp;
+  prime::pexpo_eval_temp pexpo_tmp;
 
+  TempStorage(std::uint32_t max_iter, std::uint32_t stride) noexcept;
   TempStorage() = delete;
   TempStorage(const TempStorage &) = delete;
   TempStorage &operator=(const TempStorage &) = delete;
   TempStorage(TempStorage &&) = default;
   TempStorage &operator=(TempStorage &&) = delete;
 
-  TempStorage(int max_iter, std::size_t aligned_bytes) noexcept;
-
-  prime_exponents_view &operator[](std::size_t n) noexcept {
-    return *reinterpret_cast<prime_exponents_view *>(buffer.data() + n * aligned_bytes);
+  exp_t *data(std::uint32_t n) noexcept {
+    return storage.row(n);
   }
 
-  std::size_t size() const {
-    return buffer.size();
+  std::uint32_t &used(std::uint32_t n) noexcept {
+    return storage.used(n);
   }
 
-  std::size_t get_aligned_bytes() const {
-    return aligned_bytes;
+  uniform_jagged_matrix<exp_t>::row_view view(std::uint32_t n) const noexcept {
+    return storage.view(n);
   }
 
   void reset() noexcept;
+
+  std::uint32_t stride() const noexcept {
+    return storage.stride();
+  }
 };
 
 class TempManager {
   static inline thread_local std::unique_ptr<TempStorage> ptr = nullptr;
 
 public:
-  static void init(int max_two_j, std::size_t aligned_bytes) noexcept;
+  static void init(int max_two_j, std::size_t stride) noexcept;
 
-  static TempStorage &get(int max_two_j, std::size_t aligned_bytes) noexcept;
+  static TempStorage &get(int max_two_j, std::size_t stride) noexcept;
 
   static void reset() noexcept;
 };

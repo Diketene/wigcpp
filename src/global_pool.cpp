@@ -8,6 +8,7 @@
  */
 
 #include "internal/global_pool.hpp"
+#include "internal/definitions.hpp"
 #include "internal/error.hpp"
 #include <algorithm>
 #include <cassert>
@@ -16,7 +17,7 @@
 
 namespace wigcpp::internal::global {
 PrimeTable::PrimeTable(int max_factorial) noexcept
-    : max_factorial(max_factorial), prime_list{}, num_primes{0}, aligned_bytes(0) {
+    : max_factorial(max_factorial), prime_list{}, num_primes{0}, stride{0} {
   vector<int> is_prime(max_factorial + 1, 1);
   for (int i = 2; i * i < max_factorial; ++i) {
     if (is_prime[i]) {
@@ -32,128 +33,30 @@ PrimeTable::PrimeTable(int max_factorial) noexcept
       prime_list.push_back(i);
     }
   }
-  const std::size_t bytes_of_prime_exponents = sizeof(int) + sizeof(exp_t) * num_primes;
-  const std::size_t aligned_block_bytes = (bytes_of_prime_exponents + 63) & ~static_cast<std::size_t>(63);
-  aligned_bytes = aligned_block_bytes;
+  stride = ((num_primes * sizeof(exp_t) + 63u) / 64u) * 64u / sizeof(exp_t);
 }
 
-void prime_exponents_view::set_max(int num_blocks) noexcept {
-  block_used = num_blocks;
-  for (int i = 0; i < num_blocks; ++i) {
-    (*this)[i] = def::prime::max_exp;
-  }
-}
-
-void prime_exponents_view::keep_min(const prime_exponents_view &other) noexcept {
-  assert(this->block_used == other.block_used);
-  for (int i = 0; i < block_used; ++i) {
-    (*this)[i] = std::min((*this)[i], other[i]);
-  }
-}
-
-void prime_exponents_view::keep_min_in_as_diff(prime_exponents_view &other) noexcept {
-  assert(this->block_used == other.block_used);
-  for (int i = 0; i < block_used; ++i) {
-    exp_t &this_exp = (*this)[i];
-    exp_t tmp = other[i] - this_exp;
-    this_exp = std::min(this_exp, other[i]);
-    other[i] = tmp;
-  }
-}
-
-void prime_exponents_view::copy(const prime_exponents_view &other) noexcept {
-  this->block_used = other.block_used;
-  for (int i = 0; i < block_used; ++i) {
-    (*this)[i] = other[i];
-  }
-}
-
-void prime_exponents_view::expand_add(const prime_exponents_view &other) noexcept {
-  expand_blocks(other.block_used);
-  combine<1>(other);
-}
-
-void prime_exponents_view::expand_sub(const prime_exponents_view &other) noexcept {
-  expand_blocks(other.block_used);
-  combine<-1>(other);
-}
-
-void prime_exponents_view::expand_sum3(prime_exponents_view &a, prime_exponents_view &b,
-                                       prime_exponents_view &c) noexcept {
-  const int max_blocks = std::max({a.block_used, b.block_used, c.block_used});
-  block_used = max_blocks;
-  a.expand_blocks(max_blocks);
-  b.expand_blocks(max_blocks);
-  c.expand_blocks(max_blocks);
-  sum<1, 1, 1>(a, b, c);
-}
-
-void prime_exponents_view::add3_sub(const prime_exponents_view &a, const prime_exponents_view &b,
-                                    const prime_exponents_view &c, const prime_exponents_view &d) noexcept {
-  combine<1, 1, 1, -1>(a, b, c, d);
-}
-
-void prime_exponents_view::add6(const prime_exponents_view &a, const prime_exponents_view &b,
-                                const prime_exponents_view &c, const prime_exponents_view &d,
-                                const prime_exponents_view &e, const prime_exponents_view &f) noexcept {
-  combine<1, 1, 1, 1, 1, 1>(a, b, c, d, e, f);
-}
-
-void prime_exponents_view::add7(const prime_exponents_view &a, const prime_exponents_view &b,
-                                const prime_exponents_view &c, const prime_exponents_view &d,
-                                const prime_exponents_view &e, const prime_exponents_view &f,
-                                const prime_exponents_view &g) noexcept {
-  combine<1, 1, 1, 1, 1, 1, 1>(a, b, c, d, e, f, g);
-}
-
-void prime_exponents_view::add_sub3(const prime_exponents_view &a, const prime_exponents_view &b,
-                                    const prime_exponents_view &c, const prime_exponents_view &d) noexcept {
-  combine<1, -1, -1, -1>(a, b, c, d);
-}
-
-void prime_exponents_view::sum_sub7(const prime_exponents_view &a, const prime_exponents_view &b,
-                                    const prime_exponents_view &c, const prime_exponents_view &d,
-                                    const prime_exponents_view &e, const prime_exponents_view &f,
-                                    const prime_exponents_view &g, const prime_exponents_view &h,
-                                    int num_blocks) noexcept {
-  block_used = num_blocks;
-  sum<1, -1, -1, -1, -1, -1, -1, -1>(a, b, c, d, e, f, g, h);
-}
-
-void prime_exponents_view::sum0_sub6(const prime_exponents_view &a, const prime_exponents_view &b,
-                                     const prime_exponents_view &c, const prime_exponents_view &d,
-                                     const prime_exponents_view &e, const prime_exponents_view &f,
-                                     int num_blocks) noexcept {
-  block_used = num_blocks;
-  sum<-1, -1, -1, -1, -1, -1>(a, b, c, d, e, f);
-}
-
-FactorPool::FactorPool(const PrimeTable &prime_table) noexcept
-    : aligned_block_bytes{prime_table.aligned_bytes}, buffer{} {
-  buffer.resize((prime_table.max_factorial + 1) * aligned_block_bytes, std::byte{0});
-  for (std::size_t i = 0; i <= prime_table.max_factorial; ++i) {
-    new (buffer.data() + i * aligned_block_bytes) prime_exponents_view();
-  }
-}
-
-void GlobalFactorialPool::fill_num_pool(const PrimeTable &prime_table) noexcept {
+void GlobalFactorialPool::fill_num_pool() noexcept {
   const auto &prime_list = prime_table.prime_list;
-  const int block_size = num_pool.block_size();
+  const auto stride = num_pool.stride();
+  static constexpr std::uint32_t work_row = 0;
+
   uint64_t cur = 1;
-  std::size_t max_p = 0;
+  std::uint32_t max_p = 0;
   bool enum_done = false;
+
   while (!enum_done) {
     std::size_t p = 0;
     while (true) {
-      if (cur * prime_list[p] <= static_cast<uint64_t>(prime_table.max_factorial)) {
-        ++num_pool[0][p];
+      if (cur * prime_list[p] <= prime_table.max_factorial) {
+        ++num_pool.row(work_row)[p];
         cur *= prime_list[p];
         break;
       }
 
-      while (num_pool[0][p]) {
+      while (num_pool.row(work_row)[p]) {
         cur /= prime_list[p];
-        --num_pool[0][p];
+        --num_pool.row(work_row)[p];
       }
       ++p;
       if (p > max_p) {
@@ -164,31 +67,32 @@ void GlobalFactorialPool::fill_num_pool(const PrimeTable &prime_table) noexcept 
         break;
       }
     }
-    for (int p = 0; p < block_size; ++p) {
-      num_pool[cur][p] = num_pool[0][p];
+    for (auto p = 0u; p < stride; ++p) {
+      num_pool.row(cur)[p] = num_pool.row(work_row)[p];
     }
-    num_pool[cur].block_used = (cur == 1) ? 0 : max_p + 1;
+    num_pool.used(cur) = (cur == 1) ? 0 : max_p + 1;
   }
 
-  for (int p = 0; p < block_size; ++p) {
-    num_pool[0][p] = 0;
+  for (auto p = 0u; p < stride; ++p) {
+    num_pool.row(work_row)[p] = 0;
   }
 }
 
-void GlobalFactorialPool::fill_factorial_pool(std::size_t max_factorial, std::uint32_t num_primes) noexcept {
-  for (std::size_t i = 1; i <= max_factorial; ++i) {
-    for (std::size_t p = 0; p < num_primes; ++p) {
-      factorial_pool[i][p] = factorial_pool[i - 1][p] + num_pool[i][p];
+void GlobalFactorialPool::fill_factorial_pool() noexcept {
+  for (std::size_t i = 1; i <= prime_table.max_factorial; ++i) {
+    for (std::size_t p = 0; p < prime_table.num_primes; ++p) {
+      factorial_pool.row(i)[p] = factorial_pool.row(i - 1)[p] + num_pool.row(i)[p];
     }
-    factorial_pool[i].block_used = std::max(factorial_pool[i - 1].block_used, num_pool[i].block_used);
+    factorial_pool.used(i) = std::max(factorial_pool.used(i - 1), num_pool.used(i));
   }
 }
 
 GlobalFactorialPool::GlobalFactorialPool(int max_two_j, int wigner_type) noexcept
     : prime_table(((wigner_type / 3 + 2) * (max_two_j / 2)) + 1), max_two_j(max_two_j), wigner_type(wigner_type),
-      num_pool(prime_table), factorial_pool(prime_table) {
-  fill_num_pool(prime_table);
-  fill_factorial_pool(prime_table.max_factorial, prime_table.num_primes);
+      num_pool(prime_table.max_factorial + 1, prime_table.stride),
+      factorial_pool(prime_table.max_factorial + 1, prime_table.stride) {
+  fill_num_pool();
+  fill_factorial_pool();
 }
 
 void PoolManager::ensure(int max_two_j, int wigner_type) noexcept {

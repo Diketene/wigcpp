@@ -37,7 +37,9 @@ if(WIGCPP_BUILD_FORTRAN_INTERFACE)
     )
 
     target_include_directories(fortran_interface PUBLIC ${_fortran_mod_dir})
-    target_include_directories(wigcpp PUBLIC ${_fortran_mod_dir})
+    if(NOT PROJECT_IS_TOP_LEVEL)
+      target_include_directories(wigcpp PUBLIC ${_fortran_mod_dir})
+    endif()
     target_sources(wigcpp PRIVATE $<TARGET_OBJECTS:fortran_interface>)
 
     if(PROJECT_IS_TOP_LEVEL)
@@ -60,5 +62,25 @@ if(WIGCPP_ENABLE_IPO)
     )
   else()
     message(WARNING "IPO is not supported: ${output}")
+  endif()
+endif()
+
+if(WIGCPP_ENABLE_ASAN)
+  target_compile_options(wigcpp_core PRIVATE
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-fno-omit-frame-pointer>
+  )
+  target_link_options(wigcpp_core PRIVATE
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>
+  )
+  if(WIGCPP_BUILD_TEST)
+    target_compile_options(wigcpp_tests PRIVATE
+      $<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>
+      $<$<CXX_COMPILER_ID:GNU,Clang>:-fno-omit-frame-pointer>
+    )
+    target_link_options(wigcpp_tests PRIVATE
+      $<$<CXX_COMPILER_ID:GNU,Clang>:-fsanitize=address>
+      $<$<CXX_COMPILER_ID:GNU,Clang>:-fno-omit-frame-pointer>
+    )
   endif()
 endif()

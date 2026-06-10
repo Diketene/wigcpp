@@ -39,7 +39,8 @@ public:
   }
 
   void deallocate(value_type *p, std::size_t n) noexcept {
-    if (!p || !n)
+    (void)n;
+    if (!p)
       return;
     constexpr std::size_t alignof_T = alignof(value_type);
 

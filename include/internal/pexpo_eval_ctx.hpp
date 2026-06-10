@@ -17,8 +17,9 @@
 #include <cassert>
 #include <cstdint>
 
-namespace wigcpp::internal::prime_calc {
+namespace wigcpp::internal::prime {
 using exp_t = wigcpp::internal::def::prime::exp_t;
+using namespace wigcpp::internal::container;
 class pexpo_eval_temp {
   std::array<mwi::big_int, 2> prod_pos;
   std::array<mwi::big_int, 2> prod_neg;
@@ -31,13 +32,13 @@ class pexpo_eval_temp {
 
 public:
   void evaluate(const global::PrimeTable &prime_table, mwi::big_int &big_prod,
-                const global::prime_exponents_view &in_fpf) noexcept;
+                uniform_jagged_matrix<exp_t>::row_view in_fpf) noexcept;
 
   void evaluate2(const global::PrimeTable &prime_table, mwi::big_int &big_prod_pos, mwi::big_int &big_prod_neg,
-                 const global::prime_exponents_view &in_fpf) noexcept;
+                 uniform_jagged_matrix<exp_t>::row_view in_fpf) noexcept;
 
   void reset() noexcept;
 };
-} // namespace wigcpp::internal::prime_calc
+} // namespace wigcpp::internal::prime
 
 #endif /*__WIGCPP_PRIME_FACTOR__ */

@@ -16,6 +16,7 @@ option(WIGCPP_BUILD_TEST "Build the testing tree" OFF)
 option(WIGCPP_BUILD_BENCHMARK "Build benchmark" OFF)
 option(WIGCPP_BUILD_FORTRAN_INTERFACE "Build Fortran interface" ON)
 option(WIGCPP_ENABLE_IPO "Enable IPO/LTO" OFF)
+option(WIGCPP_ENABLE_ASAN "Enable address sanitizer" OFF)
 
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 
@@ -37,13 +38,13 @@ target_compile_definitions(wigcpp INTERFACE
 
 target_sources(wigcpp_core
   PRIVATE 
+    src/big_int.cpp
     src/c_wrap.cpp 
     src/calc.cpp
     src/error.cpp
     src/global_pool.cpp
-    src/prime_factor.cpp
+    src/pexpo_eval_ctx.cpp
     src/tmp_pool.cpp
-    src/big_int.cpp
   PUBLIC
     FILE_SET public_headers
     TYPE HEADERS

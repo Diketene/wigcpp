@@ -1,7 +1,6 @@
 /* Copyright (c) 2025 Diketene. Licensed under GPL-3.0 */
 
 #include "gtest/gtest.h"
-#include <cstdlib>
 #include "wigcpp/wigcpp.hpp"
 
 TEST(test_3j, test_cg) {

@@ -6,22 +6,22 @@
 #include "internal/tmp_pool.hpp"
 
 using namespace wigcpp::internal::global;
-using namespace wigcpp::internal::prime_calc;
+using namespace wigcpp::internal::prime;
 using namespace wigcpp::internal::tmp;
 
 TEST(test_prime_factor, test_aligned) {
   {
     PoolManager::ensure(1000, 3);
     const auto &pool = PoolManager::get();
-    const auto *ptr = &pool[0];
-    EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(ptr) % 64, 0);
-    ptr = &pool[1];
-    EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(ptr) % 64, 0);
-    auto &tmp = TempManager::get(1000, pool.aligned_bytes());
-    ptr = &tmp[0];
-    EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(ptr) % 64, 0);
-    ptr = &tmp[index(TempIndex::prefact)];
-    EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(ptr) % 64, 0);
+    auto view = pool[0];
+    EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(view.ptr) % 64, 0);
+    view = pool[1];
+    EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(view.ptr) % 64, 0);
+    auto &tmp = TempManager::get(1000, pool.stride());
+    view = tmp.view(0);
+    EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(view.ptr) % 64, 0);
+    view = tmp.view(prefact);
+    EXPECT_EQ(reinterpret_cast<std::ptrdiff_t>(view.ptr) % 64, 0);
   }
 }
 

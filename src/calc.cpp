@@ -8,13 +8,18 @@
  */
 
 #include "internal/calc.hpp"
+#include "internal/prime_ops.hpp"
 #include "internal/error.hpp"
+#include "internal/tmp_pool.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
 
 namespace wigcpp::internal::calc {
+
+using namespace wigcpp::internal::prime;
+
 def::double_type Calculator::calc_cg(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2,
                                      int two_m1, int two_m2, int two_J, int two_M) noexcept {
   if (TrivialZero::is_zero_3j(two_j1, two_j2, two_J, two_m1, two_m2, -two_M)) {
@@ -56,15 +61,16 @@ def::double_type Calculator::calc_9j(const global::GlobalFactorialPool &pool, Te
   return result;
 }
 
-void Calculator::split_sqrt_add(const global::PrimeTable &prime_table, prime_exponents_view &src_dest_fpf,
-                                mwi::big_int &big_sqrt, prime_exponents_view &add_fpf) noexcept {
+void Calculator::split_sqrt_add(const global::PrimeTable &prime_table, exp_t *__restrict src_dest_fpf,
+                                std::uint32_t &used_src, mwi::big_int &big_sqrt, exp_t *__restrict add_fpf,
+                                std::uint32_t &used_add) noexcept {
   const auto &prime_list = prime_table.prime_list;
   big_sqrt = 1;
-  const int num_blocks = std::max(src_dest_fpf.block_used, add_fpf.block_used);
-  src_dest_fpf.expand_blocks(num_blocks);
-  add_fpf.expand_blocks(num_blocks);
+  const int num_blocks = std::max(used_src, used_add);
+  ensure_used(used_src, num_blocks);
+  ensure_used(used_add, num_blocks);
 
-  for (int i = 0; i < src_dest_fpf.block_used; ++i) {
+  for (auto i = 0u; i < used_src; ++i) {
     exp_t sqrt_fpf = src_dest_fpf[i] & 1;
     src_dest_fpf[i] += sqrt_fpf;
     src_dest_fpf[i] /= 2;
@@ -79,23 +85,24 @@ void Calculator::split_sqrt_add(const global::PrimeTable &prime_table, prime_exp
 }
 
 void Calculator::delta_coeff(const GlobalFactorialPool &pool, int two_a, int two_b, int two_c,
-                             global::prime_exponents_view &prefact_fpf) noexcept {
+                             exp_t *__restrict prefact_fpf, std::uint32_t &used) noexcept {
   const std::size_t max_factorial = (two_a + two_b + two_c) / 2;
   if (max_factorial > pool.prime_table.max_factorial) {
     std::fprintf(stderr, "error in delta_coeff: \n");
     error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
   }
 
-  const auto &p_n1 = pool[(two_a + two_b - two_c) / 2];
-  const auto &p_n2 = pool[(two_a - two_b + two_c) / 2];
-  const auto &p_n3 = pool[(-two_a + two_b + two_c) / 2];
+  const auto v_n1 = pool[(two_a + two_b - two_c) / 2];
+  const auto v_n2 = pool[(two_a - two_b + two_c) / 2];
+  const auto v_n3 = pool[(-two_a + two_b + two_c) / 2];
 
-  const auto &p_d1 = pool[(two_a + two_b + two_c) / 2 + 1];
+  const auto v_d1 = pool[(two_a + two_b + two_c) / 2 + 1];
 
-  prefact_fpf.expand_blocks(p_d1.block_used);
-  /* expand_blocks method contains the behavior of setting the calculation buffer prefact_fpf to zero */
+  // prefact_fpf.expand_blocks(p_d1.block_used);
+  ensure_used(used, v_d1.used);
 
-  prefact_fpf.add3_sub(p_n1, p_n2, p_n3, p_d1);
+  // prefact_fpf.add3_sub(p_n1, p_n2, p_n3, p_d1);
+  add3_sub(prefact_fpf, used, v_n1, v_n2, v_n3, v_d1);
 }
 
 void Calculator::calcsum_cg(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_m1,
@@ -110,8 +117,9 @@ void Calculator::calcsum_cg(const global::GlobalFactorialPool &pool, TempStorage
     error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
   }
 
-  const int max_used = pool[max_factorial].block_used;
-  csi[index(TempIndex::min_nume)].set_max(max_used);
+  const int max_used = pool[max_factorial].used;
+  // csi[min_nume)].set_max(max_used);
+  fill_max(csi.data(min_nume), csi.used(min_nume), max_used);
 
   const int k_lim = k_max - k_min;
 
@@ -128,27 +136,33 @@ void Calculator::calcsum_cg(const global::GlobalFactorialPool &pool, TempStorage
   const int fixed3 = (two_j1 + two_j2 - two_J) / 2 - k_min;
 
   for (int k = 0; k <= k_lim; ++k) {
-    const auto &p_d1 = pool[k_min + k];
-    const auto &p_d2 = pool[offset1 + k];
-    const auto &p_d3 = pool[offset2 + k];
+    const auto v_d1 = pool[k_min + k];
+    const auto v_d2 = pool[offset1 + k];
+    const auto v_d3 = pool[offset2 + k];
 
-    const auto &p_d4 = pool[fixed1 - k];
-    const auto &p_d5 = pool[fixed2 - k];
-    const auto &p_d6 = pool[fixed3 - k];
+    const auto v_d4 = pool[fixed1 - k];
+    const auto v_d5 = pool[fixed2 - k];
+    const auto v_d6 = pool[fixed3 - k];
 
-    auto &nume_fpf = csi[index(TempIndex::iter_start) + k];
+    const auto idx = iter_start + static_cast<std::uint32_t>(k);
 
-    nume_fpf.sum0_sub6(p_d1, p_d2, p_d3, p_d4, p_d5, p_d6, max_used);
-    csi[index(TempIndex::min_nume)].keep_min(nume_fpf);
+    exp_t *nume_fpf = csi.data(idx);
+    std::uint32_t &used = csi.used(idx);
+
+    sub6(nume_fpf, used, v_d1, v_d2, v_d3, v_d4, v_d5, v_d6, max_used);
+    // csi[min_nume)].keep_min(nume_fpf);
+    store_min(csi.data(min_nume), csi.used(min_nume), csi.view(idx));
   }
 
   const int sign = k_min;
   csi.sum_prod = 0;
 
   for (int k = 0; k <= k_lim; ++k) {
-    auto &nume_fpf = csi[index(TempIndex::iter_start) + k];
-    nume_fpf.expand_sub(csi[index(TempIndex::min_nume)]);
-    csi.pexpo_tmp.evaluate(pool.prime_table, csi.big_prod, nume_fpf);
+    const auto idx = iter_start + static_cast<uint32_t>(k);
+    exp_t *nume_fpf = csi.data(idx);
+    std::uint32_t &used = csi.used(idx);
+    expand_sub(nume_fpf, used, csi.view(min_nume));
+    csi.pexpo_tmp.evaluate(pool.prime_table, csi.big_prod, csi.view(idx));
 
     if ((k ^ sign) & 1) {
       csi.sum_prod -= csi.big_prod;
@@ -157,21 +171,23 @@ void Calculator::calcsum_cg(const global::GlobalFactorialPool &pool, TempStorage
     }
   }
 
-  csi[index(TempIndex::prefact)].set_zero(0);
+  exp_t *dest = csi.data(prefact);
+  std::uint32_t &used = csi.used(prefact);
+  reset_row(dest, used);
 
   {
-    delta_coeff(pool, two_j1, two_j2, two_J, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_j1, two_j2, two_J, dest, used);
 
-    const auto &p_n4 = pool[(two_j1 - two_m1) / 2];
-    const auto &p_n5 = pool[(two_j1 + two_m1) / 2];
-    const auto &p_n6 = pool[(two_j2 + two_m2) / 2];
-    const auto &p_n7 = pool[(two_j2 - two_m2) / 2];
-    const auto &p_n8 = pool[(two_J + two_M) / 2];
-    const auto &p_n9 = pool[(two_J - two_M) / 2];
+    const auto v_n4 = pool[(two_j1 - two_m1) / 2];
+    const auto v_n5 = pool[(two_j1 + two_m1) / 2];
+    const auto v_n6 = pool[(two_j2 + two_m2) / 2];
+    const auto v_n7 = pool[(two_j2 - two_m2) / 2];
+    const auto v_n8 = pool[(two_J + two_M) / 2];
+    const auto v_n9 = pool[(two_J - two_M) / 2];
 
-    const auto &p_J = pool.prime_factor(two_J + 1);
+    const auto v_J = pool.prime_factor(two_J + 1);
 
-    csi[index(TempIndex::prefact)].add7(p_n4, p_n5, p_n6, p_n7, p_n8, p_n9, p_J);
+    add7(dest, used, v_n4, v_n5, v_n6, v_n7, v_n8, v_n9, v_J);
   }
 }
 
@@ -187,9 +203,9 @@ void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage
     error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
   }
 
-  const int max_used = pool[max_factorial].block_used;
+  const int max_used = pool[max_factorial].used;
 
-  csi[index(TempIndex::min_nume)].set_max(max_used);
+  fill_max(csi.data(min_nume), csi.used(min_nume), max_used);
 
   const int k_lim = k_max - k_min;
 
@@ -206,18 +222,20 @@ void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage
   const int fixed3 = (two_j1 + two_j2 - two_j3) / 2 - k_min;
 
   for (int k = 0; k <= k_lim; ++k) {
-    const auto &p_d1 = pool[k_min + k];
-    const auto &p_d2 = pool[offset1 + k];
-    const auto &p_d3 = pool[offset2 + k];
+    const auto v_d1 = pool[k_min + k];
+    const auto v_d2 = pool[offset1 + k];
+    const auto v_d3 = pool[offset2 + k];
 
-    const auto &p_d4 = pool[fixed1 - k];
-    const auto &p_d5 = pool[fixed2 - k];
-    const auto &p_d6 = pool[fixed3 - k];
+    const auto v_d4 = pool[fixed1 - k];
+    const auto v_d5 = pool[fixed2 - k];
+    const auto v_d6 = pool[fixed3 - k];
 
-    auto &nume_fpf = csi[index(TempIndex::iter_start) + k];
+    exp_t *nume_fpf = csi.data(iter_start + k);
+    std::uint32_t &used = csi.used(iter_start + k);
 
-    nume_fpf.sum0_sub6(p_d1, p_d2, p_d3, p_d4, p_d5, p_d6, max_used);
-    csi[index(TempIndex::min_nume)].keep_min(nume_fpf);
+    sub6(nume_fpf, used, v_d1, v_d2, v_d3, v_d4, v_d5, v_d6, max_used);
+    // csi[min_nume].keep_min(nume_fpf);
+    store_min(csi.data(min_nume), csi.used(min_nume), csi.view(iter_start + k));
   }
 
   csi.sum_prod = 0;
@@ -225,11 +243,10 @@ void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage
   const int sign = k_min ^ ((two_j1 - two_j2 - two_m3) / 2);
 
   for (int k = 0; k <= k_lim; ++k) {
-    auto &nume_fpf = csi[index(TempIndex::iter_start) + k];
+    const std::uint32_t idx = iter_start + k;
+    expand_sub(csi.data(idx), csi.used(idx), csi.view(min_nume));
 
-    nume_fpf.expand_sub(csi[index(TempIndex::min_nume)]);
-
-    csi.pexpo_tmp.evaluate(pool.prime_table, csi.big_prod, nume_fpf);
+    csi.pexpo_tmp.evaluate(pool.prime_table, csi.big_prod, csi.view(idx));
 
     if ((k ^ sign) & 1) {
       csi.sum_prod -= csi.big_prod;
@@ -238,29 +255,23 @@ void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage
     }
   }
 
-  csi[index(TempIndex::prefact)].set_zero(0);
-  /*
-  ** set_zero(0) adjusts the block_usd to 0,
-  ** it is lower than any positive value,
-  ** making sure that it will be changed by expand_blocks() method in delta_coeff()
-  */
-
+  reset_row(csi.data(prefact), csi.used(prefact));
   {
-    delta_coeff(pool, two_j1, two_j2, two_j3, csi[index(TempIndex::prefact)]);
+    delta_coeff(pool, two_j1, two_j2, two_j3, csi.data(prefact), csi.used(prefact));
 
-    const auto &p_n4 = pool[(two_j1 - two_m1) / 2];
-    const auto &p_n5 = pool[(two_j1 + two_m1) / 2];
-    const auto &p_n6 = pool[(two_j2 - two_m2) / 2];
-    const auto &p_n7 = pool[(two_j2 + two_m2) / 2];
-    const auto &p_n8 = pool[(two_j3 - two_m3) / 2];
-    const auto &p_n9 = pool[(two_j3 + two_m3) / 2];
+    const auto v_n4 = pool[(two_j1 - two_m1) / 2];
+    const auto v_n5 = pool[(two_j1 + two_m1) / 2];
+    const auto v_n6 = pool[(two_j2 - two_m2) / 2];
+    const auto v_n7 = pool[(two_j2 + two_m2) / 2];
+    const auto v_n8 = pool[(two_j3 - two_m3) / 2];
+    const auto v_n9 = pool[(two_j3 + two_m3) / 2];
 
-    csi[index(TempIndex::prefact)].add6(p_n4, p_n5, p_n6, p_n7, p_n8, p_n9);
+    add6(csi.data(prefact), csi.used(prefact), v_n4, v_n5, v_n6, v_n7, v_n8, v_n9);
   }
 }
 
 void Calculator::factor_6j(const GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3,
-                           int two_j4, int two_j5, int two_j6, prime_exponents_view &min_nume_fpf,
+                           int two_j4, int two_j5, int two_j6, exp_t *__restrict min_nume_fpf, std::uint32_t &used,
                            mwi::big_int &sum_prod) noexcept {
   const int two_a = two_j1, two_b = two_j2, two_c = two_j5, two_d = two_j4, two_e = two_j3, two_f = two_j6;
 
@@ -282,8 +293,8 @@ void Calculator::factor_6j(const GlobalFactorialPool &pool, TempStorage &csi, in
     error::error_process(error::ErrorCode::TOO_LARGE_FACTORIAL);
   }
 
-  const int max_used = pool[max_factorial].block_used;
-  min_nume_fpf.set_max(max_used);
+  const int max_used = pool[max_factorial].used;
+  fill_max(min_nume_fpf, used, max_used);
 
   const int k_lim = k_max - k_min;
   if (k_lim + 1 > csi.max_iter) [[unlikely]] {
@@ -301,32 +312,34 @@ void Calculator::factor_6j(const GlobalFactorialPool &pool, TempStorage &csi, in
   const int d7 = beta3 / 2 - k_min;
 
   for (int k = 0; k <= k_lim; ++k) {
-    const auto &p_n1 = pool[k_min + 1 + k];
+    const auto v_n1 = pool[k_min + 1 + k];
 
-    const auto &p_d1 = pool[d1 + k];
-    const auto &p_d2 = pool[d2 + k];
-    const auto &p_d3 = pool[d3 + k];
-    const auto &p_d4 = pool[d4 + k];
+    const auto v_d1 = pool[d1 + k];
+    const auto v_d2 = pool[d2 + k];
+    const auto v_d3 = pool[d3 + k];
+    const auto v_d4 = pool[d4 + k];
 
-    const auto &p_d5 = pool[d5 - k];
-    const auto &p_d6 = pool[d6 - k];
-    const auto &p_d7 = pool[d7 - k];
+    const auto v_d5 = pool[d5 - k];
+    const auto v_d6 = pool[d6 - k];
+    const auto v_d7 = pool[d7 - k];
 
-    auto &nume_fpf = csi[index(TempIndex::iter_start) + k];
+    exp_t *nume_fpf = csi.data(iter_start + k);
+    std::uint32_t &nume_used = csi.used(iter_start + k);
 
-    nume_fpf.sum_sub7(p_n1, p_d1, p_d2, p_d3, p_d4, p_d5, p_d6, p_d7, max_used);
+    sum_sub7(nume_fpf, nume_used, v_n1, v_d1, v_d2, v_d3, v_d4, v_d5, v_d6, v_d7, max_used);
 
-    min_nume_fpf.keep_min(nume_fpf);
+    store_min(min_nume_fpf, used, csi.view(iter_start + k));
   }
 
   sum_prod = 0;
 
   for (int k = 0; k <= k_lim; ++k) {
-    auto &nume_fpf = csi[index(TempIndex::iter_start) + k];
+    exp_t *nume_fpf = csi.data(iter_start + k);
+    std::uint32_t &nume_used = csi.used(iter_start + k);
 
-    nume_fpf.expand_sub(min_nume_fpf);
+    expand_sub(nume_fpf, nume_used, container::uniform_jagged_matrix<exp_t>::row_view{min_nume_fpf, used});
 
-    csi.pexpo_tmp.evaluate(pool.prime_table, csi.big_prod, nume_fpf);
+    csi.pexpo_tmp.evaluate(pool.prime_table, csi.big_prod, csi.view(iter_start + k));
 
     if ((k ^ k_min) & 1) {
       sum_prod -= csi.big_prod;
@@ -340,12 +353,13 @@ void Calculator::calcsum_6j(const GlobalFactorialPool &pool, TempStorage &csi, i
                             int two_j4, int two_j5, int two_j6) noexcept {
   const int two_a = two_j1, two_b = two_j2, two_c = two_j5, two_d = two_j4, two_e = two_j3, two_f = two_j6;
 
-  factor_6j(pool, csi, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, csi[index(TempIndex::min_nume)], csi.sum_prod);
-  csi[index(TempIndex::prefact)].set_zero(0);
-  delta_coeff(pool, two_a, two_b, two_e, csi[index(TempIndex::prefact)]);
-  delta_coeff(pool, two_c, two_d, two_e, csi[index(TempIndex::prefact)]);
-  delta_coeff(pool, two_a, two_c, two_f, csi[index(TempIndex::prefact)]);
-  delta_coeff(pool, two_b, two_d, two_f, csi[index(TempIndex::prefact)]);
+  factor_6j(pool, csi, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, csi.data(min_nume), csi.used(min_nume),
+            csi.sum_prod);
+  reset_row(csi.data(prefact), csi.used(prefact));
+  delta_coeff(pool, two_a, two_b, two_e, csi.data(prefact), csi.used(prefact));
+  delta_coeff(pool, two_c, two_d, two_e, csi.data(prefact), csi.used(prefact));
+  delta_coeff(pool, two_a, two_c, two_f, csi.data(prefact), csi.used(prefact));
+  delta_coeff(pool, two_b, two_d, two_f, csi.data(prefact), csi.used(prefact));
 }
 
 void Calculator::calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, int two_a, int two_b, int two_c,
@@ -353,43 +367,43 @@ void Calculator::calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, i
   const int two_k_min = std::max({std::abs(two_h - two_d), std::abs(two_b - two_f), std::abs(two_a - two_i)});
   const int two_k_max = std::min({two_h + two_d, two_b + two_f, two_a + two_i});
 
-  csi[index(TempIndex::min_nume)].set_zero(0);
+  reset_row(csi.data(min_nume), csi.used(min_nume));
 
   csi.sum_prod = 0;
 
   for (int two_k = two_k_min; two_k <= two_k_max; two_k += 2) {
 
-    factor_6j(pool, csi, two_a, two_b, two_c, two_f, two_i, two_k, csi[index(TempIndex::triprod_Fx) + 0], csi.triprod);
+    factor_6j(pool, csi, two_a, two_b, two_c, two_f, two_i, two_k, csi.data(triprod_Fx + 0), csi.used(triprod_Fx + 0),
+              csi.triprod);
 
-    factor_6j(pool, csi, two_f, two_d, two_e, two_h, two_b, two_k, csi[index(TempIndex::triprod_Fx) + 1],
+    factor_6j(pool, csi, two_f, two_d, two_e, two_h, two_b, two_k, csi.data(triprod_Fx + 1), csi.used(triprod_Fx + 1),
               csi.triprod_factor);
 
     csi.triprod_tmp = csi.triprod * csi.triprod_factor;
-    factor_6j(pool, csi, two_h, two_i, two_g, two_a, two_d, two_k, csi[index(TempIndex::triprod_Fx) + 2],
+    factor_6j(pool, csi, two_h, two_i, two_g, two_a, two_d, two_k, csi.data(triprod_Fx + 2), csi.used(triprod_Fx + 2),
               csi.triprod_factor);
 
     csi.triprod = csi.triprod_tmp * csi.triprod_factor;
 
-    csi[index(TempIndex::nume_triprod)].expand_sum3(csi[index(TempIndex::triprod_Fx) + 0],
-                                                    csi[index(TempIndex::triprod_Fx) + 1],
-                                                    csi[index(TempIndex::triprod_Fx) + 2]);
+    sum3(csi.data(nume_triprod), csi.used(nume_triprod), csi.view(triprod_Fx + 0), csi.view(triprod_Fx + 1),
+         csi.view(triprod_Fx + 2));
 
-    delta_coeff(pool, two_a, two_i, two_k, csi[index(TempIndex::nume_triprod)]);
-    delta_coeff(pool, two_f, two_b, two_k, csi[index(TempIndex::nume_triprod)]);
-    delta_coeff(pool, two_h, two_d, two_k, csi[index(TempIndex::nume_triprod)]);
+    delta_coeff(pool, two_a, two_i, two_k, csi.data(nume_triprod), csi.used(nume_triprod));
+    delta_coeff(pool, two_f, two_b, two_k, csi.data(nume_triprod), csi.used(nume_triprod));
+    delta_coeff(pool, two_h, two_d, two_k, csi.data(nume_triprod), csi.used(nume_triprod));
 
-    const auto &p_f1 = pool.prime_factor(two_k + 1);
+    const auto v_f1 = pool.prime_factor(two_k + 1);
 
-    csi[index(TempIndex::nume_triprod)].expand_add(p_f1);
+    expand_add(csi.data(nume_triprod), csi.used(nume_triprod), v_f1);
 
     if (two_k == two_k_min) {
-      csi[index(TempIndex::min_nume)].copy(csi[index(TempIndex::nume_triprod)]);
+      copy(csi.data(min_nume), csi.used(min_nume), csi.view(nume_triprod));
       csi.big_nume = 1;
       csi.big_div = 1;
     } else {
-      csi[index(TempIndex::min_nume)].expand_blocks(csi[index(TempIndex::nume_triprod)].block_used);
-      csi[index(TempIndex::min_nume)].keep_min_in_as_diff(csi[index(TempIndex::nume_triprod)]);
-      csi.pexpo_tmp.evaluate2(pool.prime_table, csi.big_div, csi.big_nume, csi[index(TempIndex::nume_triprod)]);
+      ensure_used(csi.used(min_nume), csi.view(nume_triprod).used);
+      store_min_and_diff(csi.data(min_nume), csi.used(min_nume), csi.data(nume_triprod), csi.used(nume_triprod));
+      csi.pexpo_tmp.evaluate2(pool.prime_table, csi.big_div, csi.big_nume, csi.view(nume_triprod));
     }
 
     csi.triprod_tmp = csi.triprod * csi.big_div;
@@ -403,21 +417,22 @@ void Calculator::calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, i
     }
   }
 
-  csi[index(TempIndex::prefact)].set_zero(0);
+  reset_row(csi.data(prefact), csi.used(prefact));
 
-  delta_coeff(pool, two_a, two_b, two_c, csi[index(TempIndex::prefact)]);
-  delta_coeff(pool, two_d, two_e, two_f, csi[index(TempIndex::prefact)]);
-  delta_coeff(pool, two_g, two_h, two_i, csi[index(TempIndex::prefact)]);
-  delta_coeff(pool, two_a, two_d, two_g, csi[index(TempIndex::prefact)]);
-  delta_coeff(pool, two_b, two_e, two_h, csi[index(TempIndex::prefact)]);
-  delta_coeff(pool, two_c, two_f, two_i, csi[index(TempIndex::prefact)]);
+  delta_coeff(pool, two_a, two_b, two_c, csi.data(prefact), csi.used(prefact));
+  delta_coeff(pool, two_d, two_e, two_f, csi.data(prefact), csi.used(prefact));
+  delta_coeff(pool, two_g, two_h, two_i, csi.data(prefact), csi.used(prefact));
+  delta_coeff(pool, two_a, two_d, two_g, csi.data(prefact), csi.used(prefact));
+  delta_coeff(pool, two_b, two_e, two_h, csi.data(prefact), csi.used(prefact));
+  delta_coeff(pool, two_c, two_f, two_i, csi.data(prefact), csi.used(prefact));
 }
 
 def::double_type Calculator::eval_calcsum_info(const global::PrimeTable &prime_table, TempStorage &csi) noexcept {
 
-  split_sqrt_add(prime_table, csi[index(TempIndex::prefact)], csi.big_sqrt, csi[index(TempIndex::min_nume)]);
+  split_sqrt_add(prime_table, csi.data(prefact), csi.used(prefact), csi.big_sqrt, csi.data(min_nume),
+                 csi.used(min_nume));
 
-  csi.pexpo_tmp.evaluate2(prime_table, csi.big_nume, csi.big_div, csi[index(TempIndex::prefact)]);
+  csi.pexpo_tmp.evaluate2(prime_table, csi.big_nume, csi.big_div, csi.view(prefact));
 
   csi.big_nume *= csi.sum_prod;
   std::swap(csi.big_nume_prod, csi.big_nume);
