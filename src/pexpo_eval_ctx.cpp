@@ -7,12 +7,13 @@
  *	if not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "internal/prime_factor.hpp"
+#include "internal/pexpo_eval_ctx.hpp"
 #include "internal/big_int.hpp"
 #include "internal/global_pool.hpp"
+#include "internal/uniform_jagged_matrix.hpp"
 #include <utility>
 
-namespace wigcpp::internal::prime_calc {
+namespace wigcpp::internal::prime {
 int pexpo_eval_temp::compute_prime_factor(std::int64_t prime, exp_t fpf) noexcept {
   def::u_mul_word_t fact = 1;
   auto up = static_cast<def::u_mul_word_t>(prime);
@@ -75,12 +76,12 @@ int pexpo_eval_temp::merge_factor(int factor_active, int active, std::array<mwi:
 }
 
 void pexpo_eval_temp::evaluate(const global::PrimeTable &prime_table, mwi::big_int &big_prod,
-                               const global::prime_exponents_view &in_fpf) noexcept {
+                               uniform_jagged_matrix<exp_t>::row_view in_fpf) noexcept {
   int active = 0;
   prod_pos[active] = 1;
 
-  for (int i = 0; i < in_fpf.block_used; ++i) {
-    const exp_t fpf = in_fpf[i];
+  for (auto i = 0u; i < in_fpf.used; ++i) {
+    const exp_t fpf = in_fpf.ptr[i];
 
     if (!fpf) {
       continue;
@@ -96,12 +97,12 @@ void pexpo_eval_temp::evaluate(const global::PrimeTable &prime_table, mwi::big_i
 }
 
 void pexpo_eval_temp::evaluate2(const global::PrimeTable &prime_table, mwi::big_int &big_prod_pos,
-                                mwi::big_int &big_prod_neg, const global::prime_exponents_view &in_fpf) noexcept {
+                                mwi::big_int &big_prod_neg, uniform_jagged_matrix<exp_t>::row_view in_fpf) noexcept {
   int active_pos = 0, active_neg = 0;
   prod_pos[active_pos] = 1;
   prod_neg[active_neg] = 1;
-  for (int i = 0; i < in_fpf.block_used; ++i) {
-    const exp_t fpf = in_fpf[i];
+  for (auto i = 0u; i < in_fpf.used; ++i) {
+    const exp_t fpf = in_fpf.ptr[i];
 
     if (!fpf) {
       continue;
@@ -130,4 +131,4 @@ void pexpo_eval_temp::reset() noexcept {
   big_up[0] = 0;
   big_up[1] = 0;
 }
-} // namespace wigcpp::internal::prime_calc
+} // namespace wigcpp::internal::prime
