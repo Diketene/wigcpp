@@ -8,6 +8,7 @@
  */
 
 #include "internal/tmp_pool.hpp"
+#include "internal/definitions.hpp"
 #include <cstring>
 
 namespace wigcpp::internal::tmp {
@@ -17,16 +18,8 @@ TempStorage::TempStorage(std::uint32_t max_iter, std::uint32_t aligned_length) n
 }
 
 void TempStorage::reset() noexcept {
-  std::memset(storage.row(0u), 0, storage.rows() * storage.stride() * sizeof(std::byte));
-  sum_prod = 0;
-  big_prod = 0;
-  big_sqrt = 0;
-  big_nume = 0;
-  big_div = 0;
-  big_nume_prod = 0;
-  triprod = 0;
-  triprod_tmp = 0;
-  triprod_factor = 0;
+  std::memset(storage.row(0), 0, storage.rows() * storage.stride() * sizeof(exp_t));
+  std::memset(storage.used_data(), 0, storage.rows() * sizeof(std::uint32_t));
   pexpo_tmp.reset();
 }
 

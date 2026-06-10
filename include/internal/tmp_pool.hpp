@@ -69,6 +69,10 @@ public:
   std::uint32_t stride() const noexcept {
     return storage.stride();
   }
+
+  std::uint32_t *used_data() noexcept {
+    return storage.used_data();
+  }
 };
 
 class TempManager {
