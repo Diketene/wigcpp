@@ -49,6 +49,10 @@ public:
   std::uint32_t stride() const noexcept {
     return stride_;
   }
+
+  std::uint32_t *used_data() noexcept {
+    return row_used.data();
+  }
 };
 } // namespace wigcpp::internal::container
 #endif /* WIGCPP_UNIFORM_JAGGED_MATRIX */
