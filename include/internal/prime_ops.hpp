@@ -21,23 +21,23 @@ consteval int sign(OP o) {
 
 using view_type = uniform_jagged_matrix<exp_t>::row_view;
 
-template <typename... ViewType>
-concept all_row_view = (std::same_as<ViewType, view_type> && ...);
+template <typename... ValueType>
+concept all_exp_t = (std::same_as<ValueType, exp_t> && ...);
 
-template <OP... ops, typename... ViewType>
-  requires all_row_view<ViewType...> && (sizeof...(ViewType) == sizeof...(ops))
-inline void combine(exp_t *__restrict dest, std::uint32_t used, ViewType... views) noexcept {
+template <OP... ops, typename... ValueType>
+  requires all_exp_t<ValueType...> && (sizeof...(ValueType) == sizeof...(ops))
+inline void combine(exp_t *__restrict dest, std::uint32_t used, const ValueType *__restrict... ptrs) noexcept {
   for (auto i = 0u; i < used; ++i) {
-    exp_t val = ((sign(ops) * views.ptr[i]) + ...);
+    exp_t val = ((sign(ops) * ptrs[i]) + ...);
     dest[i] += val;
   }
 }
 
-template <OP... ops, typename... ViewType>
-  requires all_row_view<ViewType...> && (sizeof...(ViewType) == sizeof...(ops))
-inline void sum(exp_t *__restrict dest, std::uint32_t used, ViewType... views) noexcept {
+template <OP... ops, typename... ValueType>
+  requires all_exp_t<ValueType...> && (sizeof...(ValueType) == sizeof...(ops))
+inline void sum(exp_t *__restrict dest, std::uint32_t used, const ValueType *__restrict... ptrs) noexcept {
   for (auto i = 0u; i < used; ++i) {
-    exp_t val = ((sign(ops) * views.ptr[i]) + ...);
+    exp_t val = ((sign(ops) * ptrs[i]) + ...);
     dest[i] = val;
   }
 }
@@ -84,12 +84,12 @@ inline void copy(exp_t *__restrict data, std::uint32_t &used, view_type view) no
 
 inline void expand_add(exp_t *__restrict data, std::uint32_t &used, view_type view) noexcept {
   ensure_used(used, view.used);
-  combine<OP::add>(data, view.used, view);
+  combine<OP::add>(data, view.used, view.ptr);
 }
 
 inline void expand_sub(exp_t *__restrict data, std::uint32_t &used, view_type view) noexcept {
   ensure_used(used, view.used);
-  combine<OP::sub>(data, view.used, view);
+  combine<OP::sub>(data, view.used, view.ptr);
 }
 
 inline void sum3(exp_t *__restrict data, std::uint32_t &used, view_type v1, view_type v2, view_type v3) noexcept {
@@ -105,35 +105,37 @@ inline void sum3(exp_t *__restrict data, std::uint32_t &used, view_type v1, view
 
 inline void add3_sub(exp_t *__restrict data, std::uint32_t used, view_type v1, view_type v2, view_type v3,
                      view_type v4) noexcept {
-  combine<OP::add, OP::add, OP::add, OP::sub>(data, used, v1, v2, v3, v4);
+  combine<OP::add, OP::add, OP::add, OP::sub>(data, used, v1.ptr, v2.ptr, v3.ptr, v4.ptr);
 }
 
 inline void add6(exp_t *__restrict data, std::uint32_t used, view_type v1, view_type v2, view_type v3, view_type v4,
                  view_type v5, view_type v6) noexcept {
-  combine<OP::add, OP::add, OP::add, OP::add, OP::add, OP::add>(data, used, v1, v2, v3, v4, v5, v6);
+  combine<OP::add, OP::add, OP::add, OP::add, OP::add, OP::add>(data, used, v1.ptr, v2.ptr, v3.ptr, v4.ptr, v5.ptr,
+                                                                v6.ptr);
 }
 
 inline void add7(exp_t *__restrict data, std::uint32_t used, view_type v1, view_type v2, view_type v3, view_type v4,
                  view_type v5, view_type v6, view_type v7) noexcept {
-  combine<OP::add, OP::add, OP::add, OP::add, OP::add, OP::add, OP::add>(data, used, v1, v2, v3, v4, v5, v6, v7);
+  combine<OP::add, OP::add, OP::add, OP::add, OP::add, OP::add, OP::add>(data, used, v1.ptr, v2.ptr, v3.ptr, v4.ptr,
+                                                                         v5.ptr, v6.ptr, v7.ptr);
 }
 
 inline void add_sub3(exp_t *__restrict data, std::uint32_t used, view_type v1, view_type v2, view_type v3,
                      view_type v4) noexcept {
-  combine<OP::add, OP::sub, OP::sub, OP::sub>(data, used, v1, v2, v3, v4);
+  combine<OP::add, OP::sub, OP::sub, OP::sub>(data, used, v1.ptr, v2.ptr, v3.ptr, v4.ptr);
 }
 
 inline void sum_sub7(exp_t *__restrict data, std::uint32_t &used, view_type v1, view_type v2, view_type v3,
                      view_type v4, view_type v5, view_type v6, view_type v7, view_type v8, std::uint32_t num) noexcept {
   used = num;
-  sum<OP::add, OP::sub, OP::sub, OP::sub, OP::sub, OP::sub, OP::sub, OP::sub>(data, num, v1, v2, v3, v4, v5, v6, v7,
-                                                                              v8);
+  sum<OP::add, OP::sub, OP::sub, OP::sub, OP::sub, OP::sub, OP::sub, OP::sub>(data, num, v1.ptr, v2.ptr, v3.ptr, v4.ptr,
+                                                                              v5.ptr, v6.ptr, v7.ptr, v8.ptr);
 }
 
 inline void sub6(exp_t *__restrict data, std::uint32_t &used, view_type v1, view_type v2, view_type v3, view_type v4,
                  view_type v5, view_type v6, std::uint32_t num) noexcept {
   used = num;
-  sum<OP::sub, OP::sub, OP::sub, OP::sub, OP::sub, OP::sub>(data, num, v1, v2, v3, v4, v5, v6);
+  sum<OP::sub, OP::sub, OP::sub, OP::sub, OP::sub, OP::sub>(data, num, v1.ptr, v2.ptr, v3.ptr, v4.ptr, v5.ptr, v6.ptr);
 }
 
 } // namespace wigcpp::internal::prime
