@@ -11,6 +11,14 @@ template <typename T, class Allocator = allocator::nothrow_allocator<T, 64>> cla
   vector<std::uint32_t> row_used;
   std::uint32_t stride_ = 0;
 
+  const T *row(std::uint32_t i) const noexcept {
+    return data.data() + i * stride_;
+  }
+
+  std::uint32_t used(std::uint32_t i) const noexcept {
+    return row_used[i];
+  }
+
 public:
   struct row_view {
     const T *ptr;
@@ -22,23 +30,15 @@ public:
       : data(rows * stride_), row_used(rows, 0), stride_(stride_) {
   }
 
-  std::uint32_t rows() const noexcept {
-    return row_used.size();
-  }
-
   T *row(std::uint32_t i) noexcept {
     return data.data() + i * stride_;
   }
 
-  const T *row(std::uint32_t i) const noexcept {
-    return data.data() + i * stride_;
+  std::uint32_t *used_data() noexcept {
+    return row_used.data();
   }
 
   std::uint32_t &used(std::uint32_t i) noexcept {
-    return row_used[i];
-  }
-
-  std::uint32_t used(std::uint32_t i) const noexcept {
     return row_used[i];
   }
 
@@ -50,8 +50,8 @@ public:
     return stride_;
   }
 
-  std::uint32_t *used_data() noexcept {
-    return row_used.data();
+  std::uint32_t rows() const noexcept {
+    return row_used.size();
   }
 };
 } // namespace wigcpp::internal::container
