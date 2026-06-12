@@ -121,14 +121,4 @@ void pexpo_eval_temp::evaluate2(const global::PrimeTable &prime_table, mwi::big_
   std::swap(this->prod_neg[active_neg], big_prod_neg);
 }
 
-void pexpo_eval_temp::reset() noexcept {
-  prod_pos[0] = 0;
-  prod_pos[1] = 0;
-  prod_neg[0] = 0;
-  prod_neg[1] = 0;
-  factor[0] = 0;
-  factor[1] = 0;
-  big_up[0] = 0;
-  big_up[1] = 0;
-}
 } // namespace wigcpp::internal::prime

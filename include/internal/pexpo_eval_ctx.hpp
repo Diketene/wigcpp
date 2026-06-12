@@ -36,8 +36,6 @@ public:
 
   void evaluate2(const global::PrimeTable &prime_table, mwi::big_int &big_prod_pos, mwi::big_int &big_prod_neg,
                  uniform_jagged_matrix<exp_t>::row_view in_fpf) noexcept;
-
-  void reset() noexcept;
 };
 } // namespace wigcpp::internal::prime
 
