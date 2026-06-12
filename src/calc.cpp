@@ -20,44 +20,44 @@ namespace wigcpp::internal::calc {
 
 using namespace wigcpp::internal::prime;
 
-def::double_type Calculator::calc_cg(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2,
-                                     int two_m1, int two_m2, int two_J, int two_M) noexcept {
+def::double_type Calculator::calc_cg(const global::GlobalFactorialPool &pool, TempStorage &csi, BigIntScratch &scratch,
+                                     int two_j1, int two_j2, int two_m1, int two_m2, int two_J, int two_M) noexcept {
   if (TrivialZero::is_zero_3j(two_j1, two_j2, two_J, two_m1, two_m2, -two_M)) {
     return 0;
   }
-  calcsum_cg(pool, csi, two_j1, two_m1, two_j2, two_m2, two_J, two_M);
-  auto result = eval_calcsum_info(pool.prime_table, csi);
+  calcsum_cg(pool, csi, scratch, two_j1, two_m1, two_j2, two_m2, two_J, two_M);
+  auto result = eval_calcsum_info(pool.prime_table, csi, scratch);
   return result;
 }
 
-def::double_type Calculator::calc_3j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2,
-                                     int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
+def::double_type Calculator::calc_3j(const global::GlobalFactorialPool &pool, TempStorage &csi, BigIntScratch &scratch,
+                                     int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
   if (TrivialZero::is_zero_3j(two_j1, two_j2, two_j3, two_m1, two_m2, two_m3)) {
     return 0;
   }
-  calcsum_3j(pool, csi, two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
-  auto result = eval_calcsum_info(pool.prime_table, csi);
+  calcsum_3j(pool, csi, scratch, two_j1, two_j2, two_j3, two_m1, two_m2, two_m3);
+  auto result = eval_calcsum_info(pool.prime_table, csi, scratch);
   return result;
 }
 
-def::double_type Calculator::calc_6j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2,
-                                     int two_j3, int two_j4, int two_j5, int two_j6) noexcept {
+def::double_type Calculator::calc_6j(const global::GlobalFactorialPool &pool, TempStorage &csi, BigIntScratch &scratch,
+                                     int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept {
   if (TrivialZero::is_zero_6j(two_j1, two_j2, two_j3, two_j4, two_j5, two_j6)) {
     return 0;
   }
-  calcsum_6j(pool, csi, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6);
-  auto result = eval_calcsum_info(pool.prime_table, csi);
+  calcsum_6j(pool, csi, scratch, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6);
+  auto result = eval_calcsum_info(pool.prime_table, csi, scratch);
   return result;
 }
 
-def::double_type Calculator::calc_9j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2,
-                                     int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8,
-                                     int two_j9) noexcept {
+def::double_type Calculator::calc_9j(const global::GlobalFactorialPool &pool, TempStorage &csi, BigIntScratch &scratch,
+                                     int two_j1, int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, int two_j7,
+                                     int two_j8, int two_j9) noexcept {
   if (TrivialZero::is_zero_9j(two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8, two_j9)) {
     return 0;
   }
-  calcsum_9j(pool, csi, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8, two_j9);
-  auto result = eval_calcsum_info(pool.prime_table, csi);
+  calcsum_9j(pool, csi, scratch, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, two_j7, two_j8, two_j9);
+  auto result = eval_calcsum_info(pool.prime_table, csi, scratch);
   return result;
 }
 
@@ -105,8 +105,8 @@ void Calculator::delta_coeff(const GlobalFactorialPool &pool, int two_a, int two
   add3_sub(prefact_fpf, used, v_n1, v_n2, v_n3, v_d1);
 }
 
-void Calculator::calcsum_cg(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_m1,
-                            int two_j2, int two_m2, int two_J, int two_M) noexcept {
+void Calculator::calcsum_cg(const global::GlobalFactorialPool &pool, TempStorage &csi, BigIntScratch &scratch,
+                            int two_j1, int two_m1, int two_j2, int two_m2, int two_J, int two_M) noexcept {
   const int k_min = std::max({0, two_j2 - two_J - two_m1, two_j1 - two_J + two_m2}) / 2;
   const int k_max = std::min({two_j1 + two_j2 - two_J, two_j1 - two_m1, two_j2 + two_m2}) / 2;
 
@@ -155,19 +155,19 @@ void Calculator::calcsum_cg(const global::GlobalFactorialPool &pool, TempStorage
   }
 
   const int sign = k_min;
-  csi.sum_prod = 0;
+  scratch[sum_prod] = 0;
 
   for (int k = 0; k <= k_lim; ++k) {
     const auto idx = iter_start + static_cast<uint32_t>(k);
     exp_t *nume_fpf = csi.data(idx);
     std::uint32_t &used = csi.used(idx);
     expand_sub(nume_fpf, used, csi.view(min_nume));
-    csi.pexpo_tmp.evaluate(pool.prime_table, csi.big_prod, csi.view(idx));
+    scratch.pexpo_tmp.evaluate(pool.prime_table, scratch[big_prod], csi.view(idx));
 
     if ((k ^ sign) & 1) {
-      csi.sum_prod -= csi.big_prod;
+      scratch[sum_prod] -= scratch[big_prod];
     } else {
-      csi.sum_prod += csi.big_prod;
+      scratch[sum_prod] += scratch[big_prod];
     }
   }
 
@@ -191,8 +191,8 @@ void Calculator::calcsum_cg(const global::GlobalFactorialPool &pool, TempStorage
   }
 }
 
-void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2,
-                            int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
+void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage &csi, BigIntScratch &scratch,
+                            int two_j1, int two_j2, int two_j3, int two_m1, int two_m2, int two_m3) noexcept {
 
   const int k_min = std::max({two_j1 + two_m2 - two_j3, two_j2 - two_m1 - two_j3, 0}) / 2;
   const int k_max = std::min({two_j2 + two_m2, two_j1 - two_m1, two_j1 + two_j2 - two_j3}) / 2;
@@ -238,7 +238,7 @@ void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage
     store_min(csi.data(min_nume), csi.used(min_nume), csi.view(iter_start + k));
   }
 
-  csi.sum_prod = 0;
+  scratch[sum_prod] = 0;
 
   const int sign = k_min ^ ((two_j1 - two_j2 - two_m3) / 2);
 
@@ -246,12 +246,12 @@ void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage
     const std::uint32_t idx = iter_start + k;
     expand_sub(csi.data(idx), csi.used(idx), csi.view(min_nume));
 
-    csi.pexpo_tmp.evaluate(pool.prime_table, csi.big_prod, csi.view(idx));
+    scratch.pexpo_tmp.evaluate(pool.prime_table, scratch[big_prod], csi.view(idx));
 
     if ((k ^ sign) & 1) {
-      csi.sum_prod -= csi.big_prod;
+      scratch[sum_prod] -= scratch[big_prod];
     } else {
-      csi.sum_prod += csi.big_prod;
+      scratch[sum_prod] += scratch[big_prod];
     }
   }
 
@@ -270,9 +270,9 @@ void Calculator::calcsum_3j(const global::GlobalFactorialPool &pool, TempStorage
   }
 }
 
-void Calculator::factor_6j(const GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3,
-                           int two_j4, int two_j5, int two_j6, exp_t *__restrict min_nume_fpf, std::uint32_t &used,
-                           mwi::big_int &sum_prod) noexcept {
+void Calculator::factor_6j(const GlobalFactorialPool &pool, TempStorage &csi, BigIntScratch &scratch, int two_j1,
+                           int two_j2, int two_j3, int two_j4, int two_j5, int two_j6, exp_t *__restrict min_nume_fpf,
+                           std::uint32_t &used, mwi::big_int &sum_prod) noexcept {
   const int two_a = two_j1, two_b = two_j2, two_c = two_j5, two_d = two_j4, two_e = two_j3, two_f = two_j6;
 
   const int alpha1 = two_a + two_b + two_e;
@@ -339,22 +339,22 @@ void Calculator::factor_6j(const GlobalFactorialPool &pool, TempStorage &csi, in
 
     expand_sub(nume_fpf, nume_used, container::uniform_jagged_matrix<exp_t>::row_view{min_nume_fpf, used});
 
-    csi.pexpo_tmp.evaluate(pool.prime_table, csi.big_prod, csi.view(iter_start + k));
+    scratch.pexpo_tmp.evaluate(pool.prime_table, scratch[big_prod], csi.view(iter_start + k));
 
     if ((k ^ k_min) & 1) {
-      sum_prod -= csi.big_prod;
+      sum_prod -= scratch[big_prod];
     } else {
-      sum_prod += csi.big_prod;
+      sum_prod += scratch[big_prod];
     }
   }
 };
 
-void Calculator::calcsum_6j(const GlobalFactorialPool &pool, TempStorage &csi, int two_j1, int two_j2, int two_j3,
-                            int two_j4, int two_j5, int two_j6) noexcept {
+void Calculator::calcsum_6j(const GlobalFactorialPool &pool, TempStorage &csi, BigIntScratch &scratch, int two_j1,
+                            int two_j2, int two_j3, int two_j4, int two_j5, int two_j6) noexcept {
   const int two_a = two_j1, two_b = two_j2, two_c = two_j5, two_d = two_j4, two_e = two_j3, two_f = two_j6;
 
-  factor_6j(pool, csi, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, csi.data(min_nume), csi.used(min_nume),
-            csi.sum_prod);
+  factor_6j(pool, csi, scratch, two_j1, two_j2, two_j3, two_j4, two_j5, two_j6, csi.data(min_nume), csi.used(min_nume),
+            scratch[sum_prod]);
   reset_row(csi.data(prefact), csi.used(prefact));
   delta_coeff(pool, two_a, two_b, two_e, csi.data(prefact), csi.used(prefact));
   delta_coeff(pool, two_c, two_d, two_e, csi.data(prefact), csi.used(prefact));
@@ -362,28 +362,29 @@ void Calculator::calcsum_6j(const GlobalFactorialPool &pool, TempStorage &csi, i
   delta_coeff(pool, two_b, two_d, two_f, csi.data(prefact), csi.used(prefact));
 }
 
-void Calculator::calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, int two_a, int two_b, int two_c,
-                            int two_d, int two_e, int two_f, int two_g, int two_h, int two_i) noexcept {
+void Calculator::calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, BigIntScratch &scratch, int two_a,
+                            int two_b, int two_c, int two_d, int two_e, int two_f, int two_g, int two_h,
+                            int two_i) noexcept {
   const int two_k_min = std::max({std::abs(two_h - two_d), std::abs(two_b - two_f), std::abs(two_a - two_i)});
   const int two_k_max = std::min({two_h + two_d, two_b + two_f, two_a + two_i});
 
   reset_row(csi.data(min_nume), csi.used(min_nume));
 
-  csi.sum_prod = 0;
+  scratch[sum_prod] = 0;
 
   for (int two_k = two_k_min; two_k <= two_k_max; two_k += 2) {
 
-    factor_6j(pool, csi, two_a, two_b, two_c, two_f, two_i, two_k, csi.data(triprod_Fx + 0), csi.used(triprod_Fx + 0),
-              csi.triprod);
+    factor_6j(pool, csi, scratch, two_a, two_b, two_c, two_f, two_i, two_k, csi.data(triprod_Fx + 0),
+              csi.used(triprod_Fx + 0), scratch[triprod]);
 
-    factor_6j(pool, csi, two_f, two_d, two_e, two_h, two_b, two_k, csi.data(triprod_Fx + 1), csi.used(triprod_Fx + 1),
-              csi.triprod_factor);
+    factor_6j(pool, csi, scratch, two_f, two_d, two_e, two_h, two_b, two_k, csi.data(triprod_Fx + 1),
+              csi.used(triprod_Fx + 1), scratch[triprod_factor]);
 
-    csi.triprod_tmp = csi.triprod * csi.triprod_factor;
-    factor_6j(pool, csi, two_h, two_i, two_g, two_a, two_d, two_k, csi.data(triprod_Fx + 2), csi.used(triprod_Fx + 2),
-              csi.triprod_factor);
+    scratch[triprod_tmp] = scratch[triprod] * scratch[triprod_factor];
+    factor_6j(pool, csi, scratch, two_h, two_i, two_g, two_a, two_d, two_k, csi.data(triprod_Fx + 2),
+              csi.used(triprod_Fx + 2), scratch[triprod_factor]);
 
-    csi.triprod = csi.triprod_tmp * csi.triprod_factor;
+    scratch[triprod] = scratch[triprod_tmp] * scratch[triprod_factor];
 
     sum3(csi.data(nume_triprod), csi.used(nume_triprod), csi.view(triprod_Fx + 0), csi.view(triprod_Fx + 1),
          csi.view(triprod_Fx + 2));
@@ -398,22 +399,22 @@ void Calculator::calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, i
 
     if (two_k == two_k_min) {
       copy(csi.data(min_nume), csi.used(min_nume), csi.view(nume_triprod));
-      csi.big_nume = 1;
-      csi.big_div = 1;
+      scratch[big_nume] = 1;
+      scratch[big_div] = 1;
     } else {
       ensure_used(csi.used(min_nume), csi.view(nume_triprod).used);
       store_min_and_diff(csi.data(min_nume), csi.used(min_nume), csi.data(nume_triprod), csi.used(nume_triprod));
-      csi.pexpo_tmp.evaluate2(pool.prime_table, csi.big_div, csi.big_nume, csi.view(nume_triprod));
+      scratch.pexpo_tmp.evaluate2(pool.prime_table, scratch[big_div], scratch[big_nume], csi.view(nume_triprod));
     }
 
-    csi.triprod_tmp = csi.triprod * csi.big_div;
+    scratch[triprod_tmp] = scratch[triprod] * scratch[big_div];
 
-    csi.sum_prod *= csi.big_nume;
+    scratch[sum_prod] *= scratch[big_nume];
 
     if ((two_k) & 1) {
-      csi.sum_prod -= csi.triprod_tmp;
+      scratch[sum_prod] -= scratch[triprod_tmp];
     } else {
-      csi.sum_prod += csi.triprod_tmp;
+      scratch[sum_prod] += scratch[triprod_tmp];
     }
   }
 
@@ -427,19 +428,20 @@ void Calculator::calcsum_9j(const GlobalFactorialPool &pool, TempStorage &csi, i
   delta_coeff(pool, two_c, two_f, two_i, csi.data(prefact), csi.used(prefact));
 }
 
-def::double_type Calculator::eval_calcsum_info(const global::PrimeTable &prime_table, TempStorage &csi) noexcept {
+def::double_type Calculator::eval_calcsum_info(const global::PrimeTable &prime_table, TempStorage &csi,
+                                               BigIntScratch &scratch) noexcept {
 
-  split_sqrt_add(prime_table, csi.data(prefact), csi.used(prefact), csi.big_sqrt, csi.data(min_nume),
+  split_sqrt_add(prime_table, csi.data(prefact), csi.used(prefact), scratch[big_sqrt], csi.data(min_nume),
                  csi.used(min_nume));
 
-  csi.pexpo_tmp.evaluate2(prime_table, csi.big_nume, csi.big_div, csi.view(prefact));
+  scratch.pexpo_tmp.evaluate2(prime_table, scratch[big_nume], scratch[big_div], csi.view(prefact));
 
-  csi.big_nume *= csi.sum_prod;
-  std::swap(csi.big_nume_prod, csi.big_nume);
+  scratch[big_nume] *= scratch[sum_prod];
+  std::swap(scratch[big_nume_prod], scratch[big_nume]);
 
-  const auto [d_nume_prod, exp_nume_prod] = csi.big_nume_prod.to_floating_point();
-  const auto [d_div, exp_div] = csi.big_div.to_floating_point();
-  const auto [d_sqrt, exp_sqrt] = csi.big_sqrt.to_floating_point();
+  const auto [d_nume_prod, exp_nume_prod] = scratch[big_nume_prod].to_floating_point();
+  const auto [d_div, exp_div] = scratch[big_div].to_floating_point();
+  const auto [d_sqrt, exp_sqrt] = scratch[big_sqrt].to_floating_point();
 
   const def::double_type r = (d_nume_prod / d_div) / std::sqrt(d_sqrt);
   const int res_exponent = exp_nume_prod - exp_div - exp_sqrt / 2;
