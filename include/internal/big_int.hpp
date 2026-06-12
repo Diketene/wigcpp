@@ -48,24 +48,22 @@ inline auto mul_kernel(half src, half factor, half from_lower, half add_src) noe
 
 class big_int {
 private:
-  container::vector<half> data;
+  static inline constexpr std::size_t sbo_size = 64 / def::sizeof_mwi_item;
+  container::vector<half, sbo_size> data;
 
 public:
-  big_int() noexcept {
-    data.reserve(8);
+  big_int() noexcept : data{} {
     data.resize(1, 0);
   }
 
-  big_int(half init_value) noexcept {
-    data.reserve(8);
-    data.resize(1, 0);
-    data[0] = init_value;
+  big_int(half init_value) noexcept : data{} {
+    data.resize(1, init_value);
   }
 
   big_int(std::size_t size, half init_value) noexcept : data(size, init_value) {
   }
 
-  explicit big_int(container::vector<half> &&vec) noexcept : data(std::move(vec)) {
+  explicit big_int(container::vector<half, sbo_size> &&vec) noexcept : data(std::move(vec)) {
   }
 
   std::size_t size() const noexcept {

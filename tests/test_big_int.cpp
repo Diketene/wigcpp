@@ -34,9 +34,9 @@ TEST(test_mwi_new, big_int_test) {
   d = std::move(c); // move_assignment
   EXPECT_EQ(d.size(), 1);
   EXPECT_EQ(d.capacity(), 8);
-  EXPECT_EQ(d[0], 42);        // check if the first word is still 42
-  EXPECT_EQ(c.size(), 0);     // c should be empty after move
-  EXPECT_EQ(c.capacity(), 0); // c should have no capacity after move
+  EXPECT_EQ(d[0], 42); // check if the first word is still 42
+  EXPECT_EQ(c.size(), 1);
+  EXPECT_EQ(c.capacity(), 8);
 
   big_int e;
   e = d;

@@ -273,7 +273,7 @@ big_int operator*(const big_int &src, const big_int &factor) noexcept {
   const std::size_t factor_size = factor.size();
   const std::size_t result_size = src_size + factor_size;
 
-  container::vector<half> result(result_size);
+  container::vector<half, big_int::sbo_size> result(result_size);
 
   const half src_sign_bits = def::full_sign_word(src.data.back());
   const half factor_sign_bits = def::full_sign_word(factor.data.back());
