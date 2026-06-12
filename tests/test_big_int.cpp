@@ -10,38 +10,39 @@
 TEST(test_mwi_new, big_int_test) {
   using namespace wigcpp::internal::mwi;
   using namespace wigcpp::internal::def;
+  constexpr auto sbo_size = 64 / sizeof_mwi_item;
 
   big_int a; // default constructor
   EXPECT_EQ(a.size(), 1);
-  EXPECT_EQ(a.capacity(), 8);
+  EXPECT_EQ(a.capacity(), sbo_size);
 
   big_int b = a; // copy constructor
   EXPECT_EQ(b.size(), 1);
-  EXPECT_EQ(b.capacity(), 8);
+  EXPECT_EQ(b.capacity(), sbo_size);
 
   big_int c = std::move(a); // move constructor
   EXPECT_EQ(c.size(), 1);
-  EXPECT_EQ(c.capacity(), 8);
+  EXPECT_EQ(c.capacity(), sbo_size);
 
   c = 42;
   EXPECT_EQ(c.size(), 1);
   EXPECT_EQ(c[0], 42);
 
-  EXPECT_EQ(c.capacity(), 8); // capacity should be rounded up to the next power of 2
-  EXPECT_EQ(c[0], 42);        // check if the first word is still 42
+  EXPECT_EQ(c.capacity(), sbo_size); // capacity should be rounded up to the next power of 2
+  EXPECT_EQ(c[0], 42);               // check if the first word is still 42
 
   big_int d;
   d = std::move(c); // move_assignment
   EXPECT_EQ(d.size(), 1);
-  EXPECT_EQ(d.capacity(), 8);
+  EXPECT_EQ(d.capacity(), sbo_size);
   EXPECT_EQ(d[0], 42); // check if the first word is still 42
   EXPECT_EQ(c.size(), 1);
-  EXPECT_EQ(c.capacity(), 8);
+  EXPECT_EQ(c.capacity(), sbo_size);
 
   big_int e;
   e = d;
   EXPECT_EQ(e.size(), 1);
-  EXPECT_EQ(e.capacity(), 8);
+  EXPECT_EQ(e.capacity(), sbo_size);
   EXPECT_EQ(e[0], 42); // check if the first word is still 42
   EXPECT_EQ(d[0], 42); // check if the first word is still 42
 }
