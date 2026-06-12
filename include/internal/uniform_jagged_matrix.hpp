@@ -7,7 +7,7 @@ namespace wigcpp::internal::container {
 
 template <typename T, class Allocator = allocator::nothrow_allocator<T, 64>> class uniform_jagged_matrix {
   // row major uniform stride jagged matrix, 64 byte aligned defaultly
-  vector<T, Allocator> data;
+  vector<T, 0, Allocator> data;
   vector<std::uint32_t> row_used;
   std::uint32_t stride_ = 0;
 

@@ -82,7 +82,7 @@ TEST(test_vector, test_non_trivial) {
 
 TEST(test_vector, test_no_throw_alignment) {
   using wigcpp::internal::container::vector;
-  using AlignedVec = vector<int, wigcpp::internal::allocator::nothrow_allocator<int, 64>>;
+  using AlignedVec = vector<int, 0, wigcpp::internal::allocator::nothrow_allocator<int, 64>>;
   AlignedVec a;
   a.reserve(10);
   EXPECT_EQ(reinterpret_cast<uintptr_t>(a.data()) % 64, 0);
