@@ -29,7 +29,7 @@ template <typename T, std::size_t N = 0, class Allocator = allocator::nothrow_al
   using size_type = std::size_t;
 
   inline static Allocator allocator;
-  alignas(64) T stack_buf_[N > 0 ? N : 1];
+  T stack_buf_[N > 0 ? N : 1];
 
   value_type *data_;
   value_type *first_free;
