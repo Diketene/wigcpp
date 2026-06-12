@@ -6,7 +6,6 @@
 #include "internal/tmp_pool.hpp"
 
 using namespace wigcpp::internal::global;
-using namespace wigcpp::internal::prime;
 using namespace wigcpp::internal::tmp;
 
 TEST(test_prime_factor, test_aligned) {
