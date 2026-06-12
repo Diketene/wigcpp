@@ -20,7 +20,6 @@ TempStorage::TempStorage(std::uint32_t max_iter, std::uint32_t aligned_length) n
 void TempStorage::reset() noexcept {
   std::memset(storage.row(0), 0, storage.rows() * storage.stride() * sizeof(exp_t));
   std::memset(storage.used_data(), 0, storage.rows() * sizeof(std::uint32_t));
-  pexpo_tmp.reset();
 }
 
 void TempManager::init(int max_two_j, std::size_t stride) noexcept {

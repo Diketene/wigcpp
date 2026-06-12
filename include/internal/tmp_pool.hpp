@@ -10,16 +10,15 @@
 #ifndef __WIGCPP_TMP_POOL__
 #define __WIGCPP_TMP_POOL__
 
-#include "definitions.hpp"
-#include "internal/big_int.hpp"
+#include "internal/definitions.hpp"
 #include "internal/uniform_jagged_matrix.hpp"
-#include "internal/pexpo_eval_ctx.hpp"
 #include <cstddef>
 #include <cstdio>
 #include <memory>
 
 namespace wigcpp::internal::tmp {
-using namespace wigcpp::internal::global;
+using namespace wigcpp::internal::def::prime;
+using namespace wigcpp::internal::container;
 
 constexpr auto prefact = 0u;
 constexpr auto min_nume = 1u;
@@ -32,18 +31,6 @@ class TempStorage {
 
 public:
   const int max_iter;
-
-  mwi::big_int sum_prod;
-  mwi::big_int big_prod;
-  mwi::big_int big_sqrt;
-  mwi::big_int big_nume;
-  mwi::big_int big_div;
-  mwi::big_int big_nume_prod;
-  mwi::big_int triprod;
-  mwi::big_int triprod_tmp;
-  mwi::big_int triprod_factor;
-
-  prime::pexpo_eval_temp pexpo_tmp;
 
   TempStorage(std::uint32_t max_iter, std::uint32_t stride) noexcept;
   TempStorage() = delete;
