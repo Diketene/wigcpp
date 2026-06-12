@@ -10,15 +10,38 @@
 #ifndef __WIGCPP_CALC__
 #define __WIGCPP_CALC__
 
-#include "internal/definitions.hpp"
 #include "internal/global_pool.hpp"
 #include "internal/tmp_pool.hpp"
-#include "internal/big_int.hpp"
+#include "internal/pexpo_eval_ctx.hpp"
+#include <array>
 #include <climits>
+#include <cstddef>
 
 namespace wigcpp::internal::calc {
 using namespace wigcpp::internal::global;
 using namespace wigcpp::internal::tmp;
+
+static inline constexpr std::size_t sum_prod = 0, big_prod = 1, big_sqrt = 2, big_nume = 3, big_div = 4,
+                                    big_nume_prod = 5, triprod = 6, triprod_tmp = 7, triprod_factor = 8;
+
+class BigIntScratch {
+  using big_int = mwi::big_int;
+  using pexpo_eval_temp = prime::pexpo_eval_temp;
+  static inline constexpr std::size_t scratch_slots = 9;
+
+  std::array<big_int, scratch_slots> big_int_array;
+
+public:
+  pexpo_eval_temp pexpo_tmp;
+
+  big_int &operator[](std::size_t index) noexcept {
+    return big_int_array[index];
+  }
+
+  const big_int &operator[](std::size_t index) const noexcept {
+    return big_int_array[index];
+  }
+};
 
 class TrivialZero {
   static void negative(int two_j1, int two_j2, int two_j3, int &sign) noexcept {
@@ -131,5 +154,6 @@ public:
                                   int two_j3, int two_j4, int two_j5, int two_j6, int two_j7, int two_j8,
                                   int two_j9) noexcept;
 };
+
 } // namespace wigcpp::internal::calc
 #endif /* __WIGCPP_CALC__*/
