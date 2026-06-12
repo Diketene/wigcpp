@@ -55,18 +55,18 @@ TEST(test_mwi_new, test_operator_add) {
   a += b; // operator +=(const big_int &rhs)
   EXPECT_EQ(a[0], 30);
 
-  uword_t scalar = 5;
-  a += scalar; // operator +=(def::uword_t scalar)
+  half scalar = 5;
+  a += scalar; // operator +=(half scalar)
   EXPECT_EQ(a[0], 35);
 
-  a = 10;            // operator=(def::uword_t scalar)
+  a = 10;            // operator=(half scalar)
   big_int c = a + b; // operator +(const big_int &lhs, const big_int &rhs)
   EXPECT_EQ(c[0], 30);
 
-  big_int d = a + scalar; // operator +(const big_int &src, def::uword_t scalar)
+  big_int d = a + scalar; // operator +(const big_int &src, half scalar)
   EXPECT_EQ(d[0], 15);
 
-  big_int e = scalar + a; // operator + (def::uword_t scalar, const big_int &src)
+  big_int e = scalar + a; // operator + (half scalar, const big_int &src)
   EXPECT_EQ(e[0], 15);
   EXPECT_EQ(e.size(), 1);
 
@@ -81,7 +81,7 @@ TEST(test_mwi_new, test_operator_add) {
     EXPECT_EQ(h[0], 0x80'00'00'00'00'00'00'00u);
     EXPECT_EQ(h[1], 0u);
 
-    f += 1; // operator +=(def::uword_t scalar)
+    f += 1; // operator +=(half scalar)
     EXPECT_EQ(f.size(), 2);
     EXPECT_EQ(f[0], 0x80'00'00'00'00'00'00'00u);
     EXPECT_EQ(f[1], 0u);

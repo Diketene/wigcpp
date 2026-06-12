@@ -8,7 +8,7 @@
 #include <array>
 
 namespace wigcpp::internal::mwi {
-
+using namespace detail;
 std::pair<def::double_type, int> big_int::to_floating_point() const noexcept {
   std::size_t high = size() - 1;
 
@@ -21,13 +21,13 @@ std::pair<def::double_type, int> big_int::to_floating_point() const noexcept {
   def::double_type ds = 0;
 
   for (std::size_t i = 2; i >= 1; i--) {
-    def::uword_t wi = (high >= i) ? data[high - i] : 0;
+    half wi = (high >= i) ? data[high - i] : 0;
     auto di = static_cast<def::double_type>(wi);
     di = std::ldexp(di, -(static_cast<int>(i) * static_cast<int>(def::shift_bits)));
     ds += di;
   }
 
-  def::uword_t wi = data[high];
+  half wi = data[high];
   auto di = static_cast<def::double_type>(static_cast<def::word_t>(wi));
   ds += di;
 
@@ -35,13 +35,13 @@ std::pair<def::double_type, int> big_int::to_floating_point() const noexcept {
   return {ds, exp};
 }
 
-big_int &big_int::operator+=(def::uword_t scalar) noexcept {
+big_int &big_int::operator+=(half scalar) noexcept {
   const std::size_t this_oldsz = size();
 
-  const def::uword_t this_sign_bits = def::full_sign_word(data.back());
-  const def::uword_t scalar_sign_bits = def::full_sign_word(scalar);
+  const half this_sign_bits = def::full_sign_word(data.back());
+  const half scalar_sign_bits = def::full_sign_word(scalar);
 
-  def::uword_t carry = 0;
+  half carry = 0;
 
   {
     auto [s, overflow] = add_kernel(this->data[0], scalar, carry);
@@ -55,8 +55,8 @@ big_int &big_int::operator+=(def::uword_t scalar) noexcept {
     carry = overflow;
   }
 
-  def::uword_t next_word = this_sign_bits + scalar_sign_bits + carry;
-  def::uword_t next_sign_word = def::full_sign_word(next_word);
+  half next_word = this_sign_bits + scalar_sign_bits + carry;
+  half next_sign_word = def::full_sign_word(next_word);
 
   if (next_word != next_sign_word || ((next_word ^ data.back()) & def::sign_bit)) {
     data.reserve(this_oldsz + 1);
@@ -69,10 +69,10 @@ big_int &big_int::operator+=(const big_int &rhs) noexcept {
   const std::size_t this_oldsz = size();
   const std::size_t rhs_sz = rhs.size();
 
-  const def::uword_t this_sign_bits = def::full_sign_word(data.back());
-  const def::uword_t rhs_sign_bits = def::full_sign_word(rhs.data.back());
+  const half this_sign_bits = def::full_sign_word(data.back());
+  const half rhs_sign_bits = def::full_sign_word(rhs.data.back());
 
-  def::uword_t carry = 0;
+  half carry = 0;
 
   if (rhs_sz <= this_oldsz) {
     data.reserve(this_oldsz + 1);
@@ -101,8 +101,8 @@ big_int &big_int::operator+=(const big_int &rhs) noexcept {
     }
   }
 
-  def::uword_t next_word = this_sign_bits + rhs_sign_bits + carry;
-  def::uword_t next_sign_word = def::full_sign_word(next_word);
+  half next_word = this_sign_bits + rhs_sign_bits + carry;
+  half next_sign_word = def::full_sign_word(next_word);
 
   if (next_word != next_sign_word || ((next_word ^ data.back()) & def::sign_bit)) {
 
@@ -115,13 +115,13 @@ big_int &big_int::operator+=(const big_int &rhs) noexcept {
   return *this;
 }
 
-big_int &big_int::operator-=(def::uword_t scalar) noexcept {
+big_int &big_int::operator-=(half scalar) noexcept {
   const std::size_t this_oldsz = size();
 
-  const def::uword_t this_sign_bits = def::full_sign_word(data.back());
-  const def::uword_t scalar_sign_bits = def::full_sign_word(scalar);
+  const half this_sign_bits = def::full_sign_word(data.back());
+  const half scalar_sign_bits = def::full_sign_word(scalar);
 
-  def::uword_t carry = 0;
+  half carry = 0;
 
   {
     auto [s, borrow] = sub_kernel(this->data[0], scalar, carry);
@@ -135,8 +135,8 @@ big_int &big_int::operator-=(def::uword_t scalar) noexcept {
     carry = borrow;
   }
 
-  def::uword_t next_word = this_sign_bits - scalar_sign_bits - carry;
-  def::uword_t next_sign_word = def::full_sign_word(next_word);
+  half next_word = this_sign_bits - scalar_sign_bits - carry;
+  half next_sign_word = def::full_sign_word(next_word);
 
   if (next_word != next_sign_word || ((next_word ^ data.back()) & def::sign_bit)) {
     data.reserve(this_oldsz + 1);
@@ -150,10 +150,10 @@ big_int &big_int::operator-=(const big_int &rhs) noexcept {
   const std::size_t this_oldsz = size();
   const std::size_t rhs_sz = rhs.size();
 
-  const def::uword_t this_sign_bits = def::full_sign_word(data.back());
-  const def::uword_t rhs_sign_bits = def::full_sign_word(rhs.data.back());
+  const half this_sign_bits = def::full_sign_word(data.back());
+  const half rhs_sign_bits = def::full_sign_word(rhs.data.back());
 
-  def::uword_t carry = 0;
+  half carry = 0;
   if (rhs_sz <= this_oldsz) {
     data.reserve(this_oldsz + 1);
     for (std::size_t i = 0; i < rhs_sz; i++) {
@@ -181,8 +181,8 @@ big_int &big_int::operator-=(const big_int &rhs) noexcept {
     }
   }
 
-  def::uword_t next_word = this_sign_bits - rhs_sign_bits - carry;
-  def::uword_t next_sign_word = def::full_sign_word(next_word);
+  half next_word = this_sign_bits - rhs_sign_bits - carry;
+  half next_sign_word = def::full_sign_word(next_word);
   if (next_word != next_sign_word || ((next_word ^ data.back()) & def::sign_bit)) {
     /* same as the += operator */
     data.push_back(next_word);
@@ -191,9 +191,9 @@ big_int &big_int::operator-=(const big_int &rhs) noexcept {
   return *this;
 }
 
-big_int &big_int::operator*=(def::uword_t factor) noexcept {
+big_int &big_int::operator*=(half factor) noexcept {
   data.reserve(size() + 1);
-  def::uword_t from_lower = 0;
+  half from_lower = 0;
   for (std::size_t i = 0; i < size(); ++i) {
     auto [p, next_lower] = mul_kernel(this->data[i], factor, from_lower, 0);
     this->data[i] = p;
@@ -219,13 +219,13 @@ big_int big_int::operator-() const noexcept {
   return tmp;
 }
 
-big_int operator+(const big_int &src, def::uword_t scalar) noexcept {
+big_int operator+(const big_int &src, half scalar) noexcept {
   big_int tmp = src;
   tmp += scalar;
   return tmp;
 }
 
-big_int operator+(def::uword_t scalar, const big_int &src) noexcept {
+big_int operator+(half scalar, const big_int &src) noexcept {
   big_int tmp = src;
   tmp += scalar;
   return tmp;
@@ -237,13 +237,13 @@ big_int operator+(const big_int &lhs, const big_int &rhs) noexcept {
   return tmp;
 }
 
-big_int operator-(const big_int &src, def::uword_t scalar) noexcept {
+big_int operator-(const big_int &src, half scalar) noexcept {
   big_int tmp = src;
   tmp -= scalar;
   return tmp;
 }
 
-big_int operator-(def::uword_t scalar, const big_int &src) noexcept {
+big_int operator-(half scalar, const big_int &src) noexcept {
   big_int tmp = src;
   tmp -= scalar;
   return tmp;
@@ -255,13 +255,13 @@ big_int operator-(const big_int &lhs, const big_int &rhs) noexcept {
   return tmp;
 }
 
-big_int operator*(const big_int &src, def::uword_t factor) noexcept {
+big_int operator*(const big_int &src, half factor) noexcept {
   big_int tmp = src;
   tmp *= factor;
   return tmp;
 }
 
-big_int operator*(def::uword_t factor, const big_int &src) noexcept {
+big_int operator*(half factor, const big_int &src) noexcept {
   big_int tmp = src;
   tmp *= factor;
   return tmp;
@@ -273,33 +273,33 @@ big_int operator*(const big_int &src, const big_int &factor) noexcept {
   const std::size_t factor_size = factor.size();
   const std::size_t result_size = src_size + factor_size;
 
-  container::vector<def::uword_t> result(result_size);
+  container::vector<half> result(result_size);
 
-  const def::uword_t src_sign_bits = def::full_sign_word(src.data.back());
-  const def::uword_t factor_sign_bits = def::full_sign_word(factor.data.back());
+  const half src_sign_bits = def::full_sign_word(src.data.back());
+  const half factor_sign_bits = def::full_sign_word(factor.data.back());
 
   for (std::size_t j = 0; j < factor_size; j++) {
     const std::size_t lim_i = result_size - j;
     const std::size_t lim_i2 = lim_i < src_size ? lim_i : src_size;
-    const def::uword_t factor_j = factor[j];
+    const half factor_j = factor[j];
 
-    def::uword_t from_lower = 0;
+    half from_lower = 0;
 
     for (std::size_t i = 0; i < lim_i2; i++) {
-      auto [p, next_lower] = big_int::mul_kernel(src[i], factor_j, from_lower, result[i + j]);
+      auto [p, next_lower] = mul_kernel(src[i], factor_j, from_lower, result[i + j]);
       result[i + j] = p;
       from_lower = next_lower;
     }
 
     if (src_sign_bits) {
       for (std::size_t i = lim_i2; i < lim_i; i++) {
-        auto [p, next_lower] = big_int::mul_kernel(src_sign_bits, factor_j, from_lower, result[i + j]);
+        auto [p, next_lower] = mul_kernel(src_sign_bits, factor_j, from_lower, result[i + j]);
         result[i + j] = p;
         from_lower = next_lower;
       }
     } else {
       for (std::size_t i = lim_i2; from_lower && i < lim_i; i++) {
-        auto [p, next_lower] = big_int::mul_kernel(0, factor_j, from_lower, result[i + j]);
+        auto [p, next_lower] = mul_kernel(0, factor_j, from_lower, result[i + j]);
         result[i + j] = p;
         from_lower = next_lower;
       }
@@ -311,23 +311,23 @@ big_int operator*(const big_int &src, const big_int &factor) noexcept {
       const std::size_t lim_i = result_size - j;
       const std::size_t lim_i2 = lim_i < src_size ? lim_i : src_size;
 
-      def::uword_t from_lower = 0;
+      half from_lower = 0;
 
       for (std::size_t i = 0; i < lim_i2; i++) {
-        auto [p, next_lower] = big_int::mul_kernel(src[i], factor_sign_bits, from_lower, result[i + j]);
+        auto [p, next_lower] = mul_kernel(src[i], factor_sign_bits, from_lower, result[i + j]);
         result[i + j] = p;
         from_lower = next_lower;
       }
 
       if (src_sign_bits) {
         for (std::size_t i = lim_i2; i < lim_i; i++) {
-          auto [p, next_lower] = big_int::mul_kernel(src_sign_bits, factor_sign_bits, from_lower, result[i + j]);
+          auto [p, next_lower] = mul_kernel(src_sign_bits, factor_sign_bits, from_lower, result[i + j]);
           result[i + j] = p;
           from_lower = next_lower;
         }
       } else {
         for (std::size_t i = lim_i2; from_lower && i < lim_i; i++) {
-          auto [p, next_lower] = big_int::mul_kernel(0, factor_sign_bits, from_lower, result[i + j]);
+          auto [p, next_lower] = mul_kernel(0, factor_sign_bits, from_lower, result[i + j]);
           result[i + j] = p;
           from_lower = next_lower;
         }
@@ -335,8 +335,8 @@ big_int operator*(const big_int &src, const big_int &factor) noexcept {
     }
   }
 
-  const def::uword_t *first_free = result.cend();
-  const def::uword_t *begin = result.cbegin();
+  const half *first_free = result.cend();
+  const half *begin = result.cbegin();
   std::size_t i = result_size;
 
   while (first_free - begin > 1 && *(first_free - 1) == def::full_sign_word(*(first_free - 2))) {
@@ -352,13 +352,13 @@ big_int operator*(const big_int &src, const big_int &factor) noexcept {
 
 std::string big_int::to_hex_str() const {
 
-  constexpr std::size_t hex_digits_per_word = sizeof(def::uword_t) * 2;
+  constexpr std::size_t hex_digits_per_word = sizeof(half) * 2;
 
   auto parser = [](uint8_t nibble) { return nibble < 10 ? '0' + nibble : 'a' + (nibble - 10); };
 
-  auto word_to_hex = [&](def::uword_t word, char *buffer_current) {
+  auto word_to_hex = [&](half word, char *buffer_current) {
     std::uint8_t mask = 0x0F;
-    constexpr std::size_t digits_per_word = sizeof(def::uword_t) * 2;
+    constexpr std::size_t digits_per_word = sizeof(half) * 2;
     std::array<char, digits_per_word> hex_digits;
     for (std::size_t i = 0; i < digits_per_word; i++) {
       hex_digits[i] = parser((word >> (digits_per_word - 1 - i) * 4) & mask);

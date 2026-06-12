@@ -15,35 +15,40 @@
 #include <string>
 
 namespace wigcpp::internal::mwi {
+using half = def::uword_t;
+using full = def::udword_t;
+static inline constexpr auto half_bits = def::shift_bits;
+
+namespace detail {
+inline auto add_kernel(half src1, half src2, half carry) noexcept {
+  auto s = static_cast<full>(src1), t = static_cast<full>(src2), c = static_cast<full>(carry);
+  auto sum = s + t + c;
+  auto res = static_cast<half>(sum);
+  auto c_out = static_cast<half>(sum >> half_bits);
+  return std::pair(res, c_out);
+}
+
+inline auto sub_kernel(half src1, half src2, half carry) noexcept {
+  auto s = static_cast<full>(src1), t = static_cast<full>(src2), c = static_cast<full>(carry);
+  auto sub = s - t - c;
+  auto res = static_cast<half>(sub);
+  auto c_out = static_cast<half>((sub >> half_bits) & 1);
+  return std::pair(res, c_out);
+}
+
+inline auto mul_kernel(half src, half factor, half from_lower, half add_src) noexcept {
+  auto s = static_cast<full>(src), f = static_cast<full>(factor), fl = static_cast<full>(from_lower),
+       as = static_cast<full>(add_src);
+  auto p = s * f + fl + as;
+  auto res = static_cast<half>(p);
+  auto out = static_cast<half>(p >> half_bits);
+  return std::pair(res, out);
+}
+} // namespace detail
+
 class big_int {
 private:
-  container::vector<def::uword_t> data;
-
-  static inline auto add_kernel(def::uword_t src1, def::uword_t src2, def::uword_t carry) noexcept {
-    def::udword_t s = static_cast<def::udword_t>(src1), t = static_cast<def::udword_t>(src2),
-                  sum = s + t + static_cast<def::udword_t>(carry);
-    auto result = static_cast<def::uword_t>(sum);
-    auto carry_out = static_cast<def::uword_t>(sum >> (sizeof(def::uword_t) << 3));
-    return std::pair<def::uword_t, def::uword_t>(result, carry_out);
-  }
-
-  static inline auto sub_kernel(def::uword_t src1, def::uword_t src2, def::uword_t carry) noexcept {
-    def::udword_t s = static_cast<def::udword_t>(src1), t = static_cast<def::udword_t>(src2),
-                  sub = s - t - static_cast<def::udword_t>(carry);
-    auto result = static_cast<def::uword_t>(sub);
-    auto carry_out = static_cast<def::uword_t>((sub >> def::shift_bits) & 1);
-    return std::pair<def::uword_t, def::uword_t>(result, carry_out);
-  }
-
-  static inline auto mul_kernel(def::uword_t src, def::uword_t factor, def::uword_t from_lower,
-                                def::uword_t add_src) noexcept {
-    auto s = static_cast<def::udword_t>(src), f = static_cast<def::udword_t>(factor);
-    def::udword_t p = s * f + static_cast<def::udword_t>(from_lower) + static_cast<def::udword_t>(add_src);
-
-    auto from_lower_out = static_cast<def::uword_t>(p >> def::shift_bits);
-    auto product = static_cast<def::uword_t>(p);
-    return std::pair<def::uword_t, def::uword_t>(product, from_lower_out);
-  }
+  container::vector<half> data;
 
 public:
   big_int() noexcept {
@@ -51,16 +56,16 @@ public:
     data.resize(1, 0);
   }
 
-  big_int(def::uword_t init_value) noexcept {
+  big_int(half init_value) noexcept {
     data.reserve(8);
     data.resize(1, 0);
     data[0] = init_value;
   }
 
-  big_int(std::size_t size, def::uword_t init_value) noexcept : data(size, init_value) {
+  big_int(std::size_t size, half init_value) noexcept : data(size, init_value) {
   }
 
-  explicit big_int(container::vector<def::uword_t> &&vec) noexcept : data(std::move(vec)) {
+  explicit big_int(container::vector<half> &&vec) noexcept : data(std::move(vec)) {
   }
 
   std::size_t size() const noexcept {
@@ -84,15 +89,15 @@ public:
 
   std::pair<def::double_type, int> to_floating_point() const noexcept;
 
-  const def::uword_t &operator[](std::size_t index) const noexcept {
+  const half &operator[](std::size_t index) const noexcept {
     return data[index];
   }
 
-  def::uword_t &operator[](std::size_t index) noexcept {
+  half &operator[](std::size_t index) noexcept {
     return data[index];
   }
 
-  big_int &operator=(def::uword_t v) noexcept {
+  big_int &operator=(half v) noexcept {
     const std::size_t sz = size();
     if (sz == 1) {
       data[0] = v;
@@ -103,35 +108,35 @@ public:
     return *this;
   }
 
-  big_int &operator+=(def::uword_t scalar) noexcept;
+  big_int &operator+=(half scalar) noexcept;
 
   big_int &operator+=(const big_int &rhs) noexcept;
 
-  big_int &operator-=(def::uword_t scalar) noexcept;
+  big_int &operator-=(half scalar) noexcept;
 
   big_int &operator-=(const big_int &rhs) noexcept;
 
-  big_int &operator*=(def::uword_t factor) noexcept;
+  big_int &operator*=(half factor) noexcept;
 
   big_int &operator*=(const big_int &rhs) noexcept;
 
   [[nodiscard]] big_int operator-() const noexcept;
 
-  friend big_int operator+(const big_int &src, def::uword_t scalar) noexcept;
+  friend big_int operator+(const big_int &src, half scalar) noexcept;
 
-  friend big_int operator+(def::uword_t scalar, const big_int &src) noexcept;
+  friend big_int operator+(half scalar, const big_int &src) noexcept;
 
   friend big_int operator+(const big_int &lhs, const big_int &rhs) noexcept;
 
-  friend big_int operator-(const big_int &src, def::uword_t scalar) noexcept;
+  friend big_int operator-(const big_int &src, half scalar) noexcept;
 
-  friend big_int operator-(def::uword_t scalar, const big_int &src) noexcept;
+  friend big_int operator-(half scalar, const big_int &src) noexcept;
 
   friend big_int operator-(const big_int &lhs, const big_int &rhs) noexcept;
 
-  friend big_int operator*(const big_int &src, def::uword_t factor) noexcept;
+  friend big_int operator*(const big_int &src, half factor) noexcept;
 
-  friend big_int operator*(def::uword_t factor, const big_int &src) noexcept;
+  friend big_int operator*(half factor, const big_int &src) noexcept;
 
   friend big_int operator*(const big_int &src, const big_int &factor) noexcept;
 
