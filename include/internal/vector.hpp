@@ -12,7 +12,7 @@
 
 #include "internal/nothrow_allocator.hpp"
 #include "internal/error.hpp"
-#include "internal/templates.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
@@ -22,28 +22,17 @@
 
 namespace wigcpp::internal::container {
 
-template <typename T, std::size_t N = 0, class Allocator = allocator::nothrow_allocator<T>> class vector {
+template <typename T, class Allocator = allocator::nothrow_allocator<T>> class vector {
   // vector with Small Buffer Optimization
   using alloc_traits = std::allocator_traits<Allocator>;
   using value_type = T;
   using size_type = std::size_t;
 
-  inline static Allocator allocator;
-  T stack_buf_[N > 0 ? N : 1];
+  [[no_unique_address]] Allocator allocator;
 
   value_type *data_;
   value_type *first_free;
   value_type *cap;
-
-  static inline constexpr bool has_sbo = (N > 0);
-
-  bool on_heap() const noexcept {
-    if constexpr (has_sbo) {
-      return data_ != stack_buf_;
-    } else {
-      return data_ != nullptr;
-    }
-  }
 
   [[nodiscard]] value_type *alloc(size_type capacity) noexcept {
     value_type *p = alloc_traits::allocate(allocator, capacity);
@@ -63,16 +52,13 @@ template <typename T, std::size_t N = 0, class Allocator = allocator::nothrow_al
   }
 
   void destroy_elements() noexcept {
-    for (value_type *it = first_free; it != data_;) {
-      --it;
+    for (value_type *it = data_; it != first_free; ++it) {
       destroy_at(it);
     }
   }
 
   void release_memory() noexcept {
-    if (on_heap()) {
-      alloc_traits::deallocate(allocator, data_, capacity());
-    }
+    alloc_traits::deallocate(allocator, data_, capacity());
   }
 
   void free() noexcept {
@@ -80,20 +66,16 @@ template <typename T, std::size_t N = 0, class Allocator = allocator::nothrow_al
       destroy_elements();
     }
     release_memory();
-    if constexpr (has_sbo) {
-      data_ = stack_buf_;
-    } else {
-      data_ = nullptr;
-    }
-    first_free = data_;
-    cap = data_ + (has_sbo ? N : 0);
+    data_ = first_free = cap = nullptr;
   }
 
   void grow_to(size_type new_cap) noexcept {
     T *new_data = alloc(new_cap);
 
     if constexpr (std::is_trivially_copyable_v<value_type>) {
-      std::memcpy(new_data, data_, size() * sizeof(T));
+      if (size() > 0) {
+        std::memcpy(new_data, data_, size() * sizeof(T));
+      }
     } else {
       for (size_type i = 0; i < size(); ++i) {
         construct_at(new_data + i, std::move(data_[i]));
@@ -111,27 +93,40 @@ template <typename T, std::size_t N = 0, class Allocator = allocator::nothrow_al
     cap = data_ + new_cap;
   }
 
+  template <typename F> void resize_impl(size_type n, F init) noexcept {
+    reserve(n);
+
+    if (n < size()) {
+      if constexpr (!std::is_trivially_destructible_v<value_type>) {
+        for (value_type *it = data_ + n; it != first_free; ++it) {
+          it->~value_type();
+        }
+      }
+    } else if (n > size()) {
+      for (value_type *it = first_free; it != data_ + n; ++it) {
+        init(it);
+      }
+    }
+
+    first_free = data_ + n;
+  }
+
 public:
   static_assert(std::is_nothrow_default_constructible_v<value_type>,
                 "value_type T must have nothrow default constructor");
   static_assert(std::is_nothrow_copy_constructible_v<value_type>, "value_type T must have nothrow copy constructor.");
   static_assert(std::is_nothrow_destructible_v<value_type>, "value_type T must have nothrow destructor");
 
-  vector() noexcept {
-    if constexpr (has_sbo) {
-      data_ = stack_buf_;
-      first_free = stack_buf_;
-      cap = stack_buf_ + N;
-    } else {
-      data_ = nullptr;
-      first_free = nullptr;
-      cap = nullptr;
-    }
+  vector() noexcept : allocator(), data_(nullptr), first_free(nullptr), cap(nullptr) {
   }
 
-  vector(const vector &src) noexcept : vector() {
+  explicit vector(const Allocator &alloc) noexcept
+      : allocator(alloc), data_(nullptr), first_free(nullptr), cap(nullptr) {
+  }
+
+  vector(const vector &src) noexcept : allocator(src.allocator), data_(nullptr), first_free(nullptr), cap(nullptr) {
     if (src.size() > 0) {
-      reserve(src.size());
+      reserve(src.capacity());
 
       if constexpr (std::is_trivially_copyable_v<T>) {
         std::memcpy(data_, src.data(), src.size() * sizeof(T));
@@ -144,26 +139,9 @@ public:
     }
   }
 
-  vector(vector &&src) noexcept : vector() {
-    if constexpr (has_sbo) {
-      if (src.on_heap()) {
-        data_ = src.data();
-        first_free = src.first_free;
-        cap = src.cap;
-        src.data_ = src.stack_buf_;
-        src.first_free = src.stack_buf_;
-        src.cap = src.stack_buf_ + N;
-      } else {
-        const size_type sz = src.size();
-        std::memcpy(stack_buf_, src.stack_buf_, sz * sizeof(T));
-        first_free = stack_buf_ + sz;
-      }
-    } else {
-      data_ = src.data_;
-      first_free = src.first_free;
-      cap = src.cap;
-      src.data_ = src.first_free = src.cap = nullptr;
-    }
+  vector(vector &&src) noexcept
+      : allocator(std::move(src.allocator)), data_(src.data_), first_free(src.first_free), cap(src.cap) {
+    src.data_ = src.first_free = src.cap = nullptr;
   }
 
   vector &operator=(const vector &src) noexcept {
@@ -172,15 +150,18 @@ public:
     }
 
     free();
-    reserve(src.size());
-    if constexpr (std::is_trivially_copyable_v<T>) {
-      std::memcpy(data_, src.data(), src.size() * sizeof(T));
-    } else {
-      for (size_type i = 0; i < src.size(); ++i) {
-        construct_at(data_ + i, src.data_[i]);
+    allocator = src.allocator;
+    if (src.size() > 0) {
+      reserve(src.capacity());
+      if constexpr (std::is_trivially_copyable_v<T>) {
+        std::memcpy(data_, src.data(), src.size() * sizeof(T));
+      } else {
+        for (size_type i = 0; i < src.size(); ++i) {
+          construct_at(data_ + i, src.data_[i]);
+        }
       }
+      first_free = data_ + src.size();
     }
-    first_free = data_ + src.size();
     return *this;
   }
 
@@ -189,25 +170,11 @@ public:
       return *this;
     }
     free();
-    if constexpr (has_sbo) {
-      if (src.on_heap()) {
-        data_ = src.data_;
-        first_free = src.first_free;
-        cap = src.cap;
-        src.data_ = src.stack_buf_;
-        src.first_free = src.stack_buf_;
-        src.cap = src.stack_buf_ + N;
-      } else {
-        const size_type sz = src.size();
-        std::memcpy(stack_buf_, src.stack_buf_, sz * sizeof(T));
-        first_free = stack_buf_ + sz;
-      }
-    } else {
-      data_ = src.data_;
-      first_free = src.first_free;
-      cap = src.cap;
-      src.data_ = src.first_free = src.cap = nullptr;
-    }
+    allocator = std::move(src.allocator);
+    data_ = src.data_;
+    first_free = src.first_free;
+    cap = src.cap;
+    src.data_ = src.first_free = src.cap = nullptr;
     return *this;
   }
 
@@ -222,11 +189,13 @@ public:
         construct_at(data_ + i, args...);
       }
     } else {
-      if constexpr (sizeof...(Args) == 1) {
-        const value_type &val = templates::first_value(args...);
-        std::uninitialized_fill_n(data_, size, val);
+      if constexpr (sizeof...(Args) == 0) {
+        std::memset(data_, 0, size * sizeof(value_type));
+      } else if constexpr (sizeof...(Args) == 1) {
+        const value_type &val = (args, ...);
+        std::fill_n(data_, size, val);
       } else {
-        static_assert(sizeof...(Args) == 1, "constructor for trival types must have less than 2 parameters");
+        static_assert(sizeof...(Args) <= 1, "trivial type constructor expects at most one argument");
       }
     }
 
@@ -234,9 +203,7 @@ public:
   }
 
   vector(size_type size) noexcept : vector() {
-    reserve(size);
-    std::uninitialized_value_construct_n(data_, size);
-    first_free = data_ + size;
+    resize(size);
   }
 
   ~vector() noexcept {
@@ -302,23 +269,28 @@ public:
   void reserve(size_type n) noexcept {
     if (n <= capacity())
       return;
-    grow_to(n);
+    const auto new_cap = std::max(capacity() * 2, n);
+    grow_to(new_cap);
   }
 
-  void resize(size_type n, const T &val = T{}) noexcept {
-    if (n > capacity()) {
-      grow_to(n);
-    }
-    if (n > size()) {
-      if constexpr (std::is_trivially_copyable_v<T>) {
-        std::uninitialized_fill_n(first_free, n - size(), val);
+  void resize(size_type n) noexcept {
+    resize_impl(n, [this](value_type *p) {
+      if constexpr (std::is_trivially_constructible_v<value_type>) {
+        std::memset(p, 0, sizeof(value_type));
       } else {
-        for (T *it = first_free; it != data_ + n; ++it) {
-          construct_at(it, val);
-        }
+        construct_at(p);
       }
-    }
-    first_free = data_ + n;
+    });
+  }
+
+  void resize(size_type n, const value_type &val) noexcept {
+    resize_impl(n, [&](value_type *p) {
+      if constexpr (std::is_trivially_copyable_v<value_type>) {
+        *p = val;
+      } else {
+        construct_at(p, val);
+      }
+    });
   }
 
   template <typename... Args> void emplace_back(Args &&...args) noexcept {
